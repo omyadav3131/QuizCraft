@@ -1,0 +1,157 @@
+# app/admin/routes.py
+from flask import render_template, request, redirect, url_for, flash
+from flask_login import login_required, current_user
+from app.admin import admin_bp
+from app.models import db, Question, Category, User
+
+def admin_required(f):
+    from functools import wraps
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin():
+            flash('Admin access required', 'danger')
+            return redirect(url_for('auth.login'))
+        return f(*args, **kwargs)
+    return wrapper
+
+@admin_bp.route('/')
+@login_required
+@admin_required
+def index():
+    questions = Question.query.order_by(Question.id.desc()).all()
+    return render_template('admin/index.html', questions=questions)
+
+@admin_bp.route('/categories', methods=['GET','POST'])
+@login_required
+@admin_required
+def categories():
+    if request.method == 'POST':
+        name = request.form.get('name').strip()
+        if name:
+            if Category.query.filter_by(name=name).first():
+                flash('Category already exists', 'warning')
+            else:
+                db.session.add(Category(name=name))
+                db.session.commit()
+                flash('Category added', 'success')
+        return redirect(url_for('admin.categories'))
+    cats = Category.query.order_by(Category.name).all()
+    return render_template('admin/categories.html', categories=cats)
+
+@admin_bp.route('/question/new', methods=['GET','POST'])
+@login_required
+@admin_required
+def new_question():
+    cats = Category.query.order_by(Category.name).all()
+    if request.method == 'POST':
+        q = Question(
+            text=request.form['text'],
+            option1=request.form['option1'],
+            option2=request.form['option2'],
+            option3=request.form.get('option3'),
+            option4=request.form.get('option4'),
+            correct_option=int(request.form['correct_option']),
+            explanation=request.form.get('explanation',''),
+            category_id=int(request.form['category']) if request.form.get('category') else None,
+            difficulty=request.form.get('difficulty')
+        )
+        db.session.add(q); db.session.commit()
+        flash('Question added', 'success')
+        return redirect(url_for('admin.index'))
+    return render_template('admin/question_form.html', categories=cats, question=None)
+
+@admin_bp.route('/question/edit/<int:q_id>', methods=['GET','POST'])
+@login_required
+@admin_required
+def edit_question(q_id):
+    q = Question.query.get_or_404(q_id)
+    cats = Category.query.order_by(Category.name).all()
+    if request.method == 'POST':
+        q.text = request.form['text']
+        q.option1 = request.form['option1']
+        q.option2 = request.form['option2']
+        q.option3 = request.form.get('option3')
+        q.option4 = request.form.get('option4')
+        q.correct_option = int(request.form['correct_option'])
+        q.explanation = request.form.get('explanation','')
+        q.category_id = int(request.form['category']) if request.form.get('category') else None
+        q.difficulty = request.form.get('difficulty')
+        db.session.commit()
+        flash('Question updated', 'success')
+        return redirect(url_for('admin.index'))
+    return render_template('admin/question_form.html', categories=cats, question=q)
+
+@admin_bp.route('/question/delete/<int:q_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_question(q_id):
+    q = Question.query.get_or_404(q_id)
+    db.session.delete(q); db.session.commit()
+    flash('Question deleted', 'success')
+    return redirect(url_for('admin.index'))
+
+@admin_bp.route('/users')
+@login_required
+@admin_required
+def users():
+    all_users = User.query.order_by(User.id.desc()).all()
+    return render_template('admin/users.html', users=all_users)
+
+@admin_bp.route('/questions/bulk-add', methods=['GET','POST'])
+@login_required
+@admin_required
+def bulk_add_questions():
+    cats = Category.query.order_by(Category.name).all()
+    if request.method == 'POST':
+        # Get number of questions to add
+        num_questions = int(request.form.get('num_questions', 1))
+        added_count = 0
+        errors = []
+        
+        for i in range(1, num_questions + 1):
+            text = request.form.get(f'text_{i}', '').strip()
+            option1 = request.form.get(f'option1_{i}', '').strip()
+            option2 = request.form.get(f'option2_{i}', '').strip()
+            option3 = request.form.get(f'option3_{i}', '').strip()
+            option4 = request.form.get(f'option4_{i}', '').strip()
+            correct_option = request.form.get(f'correct_option_{i}', '').strip()
+            category_id = request.form.get(f'category_{i}', '').strip()
+            difficulty = request.form.get(f'difficulty_{i}', '').strip()
+            explanation = request.form.get(f'explanation_{i}', '').strip()
+            
+            # Skip empty questions
+            if not text or not option1 or not option2 or not correct_option:
+                if text or option1 or option2:  # Partially filled
+                    errors.append(f'Question {i}: Missing required fields')
+                continue
+            
+            try:
+                q = Question(
+                    text=text,
+                    option1=option1,
+                    option2=option2,
+                    option3=option3 if option3 else None,
+                    option4=option4 if option4 else None,
+                    correct_option=int(correct_option),
+                    explanation=explanation if explanation else None,
+                    category_id=int(category_id) if category_id else None,
+                    difficulty=difficulty if difficulty else None
+                )
+                db.session.add(q)
+                added_count += 1
+            except Exception as e:
+                errors.append(f'Question {i}: {str(e)}')
+        
+        if added_count > 0:
+            db.session.commit()
+            flash(f'{added_count} question(s) added successfully!', 'success')
+        if errors:
+            for error in errors:
+                flash(error, 'warning')
+        
+        if added_count == 0 and not errors:
+            flash('No questions were added. Please fill at least one complete question.', 'warning')
+        
+        return redirect(url_for('admin.index'))
+    
+    return render_template('admin/bulk_add_questions.html', categories=cats)

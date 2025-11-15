@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+  <div class="text-center mb-4">
+    <h2>Select Difficulty Level</h2>
+    <p class="lead">Category: <strong>{{ category.name }}</strong></p>
+  </div>
+  
+  <div class="row justify-content-center">
+    <div class="col-md-4 mb-3">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <h3 class="card-title text-success">Easy</h3>
+          <p class="card-text">10 Easy Questions</p>
+          <a href="{{ url_for('quiz.start_quiz', category_id=category.id, difficulty='Easy') }}" class="btn btn-success btn-lg">Start Easy Quiz</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <h3 class="card-title text-warning">Medium</h3>
+          <p class="card-text">10 Medium Questions</p>
+          <a href="{{ url_for('quiz.start_quiz', category_id=category.id, difficulty='Medium') }}" class="btn btn-warning btn-lg">Start Medium Quiz</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <h3 class="card-title text-danger">Hard</h3>
+          <p class="card-text">10 Hard Questions</p>
+          <a href="{{ url_for('quiz.start_quiz', category_id=category.id, difficulty='Hard') }}" class="btn btn-danger btn-lg">Start Hard Quiz</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="text-center mt-4">
+    <a href="{{ url_for('quiz.select') }}" class="btn btn-secondary">Back to Categories</a>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+  <h2>Select Quiz Category</h2>
+  <div class="row mt-4">
+    {% for category in categories %}
+    <div class="col-md-4 mb-3">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">{{ category.name }}</h5>
+          <a href="{{ url_for('quiz.start', category_id=category.id) }}" class="btn btn-primary">Start Quiz</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% if not categories %}
+  <p class="text-muted">No categories available. Please contact admin.</p>
+  {% endif %}
+</div>
+{% endblock %}
+

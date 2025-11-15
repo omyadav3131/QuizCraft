@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>Bulk Add Questions</h3>
+  <div>
+    <a class="btn btn-secondary" href="{{ url_for('admin.index') }}">Back to Questions</a>
+  </div>
+</div>
+
+<div class="alert alert-info">
+  <strong>Instructions:</strong> Enter the number of questions you want to add, then fill in the details for each question. 
+  You can leave questions blank if you don't want to add them.
+</div>
+
+<form method="post" id="bulkForm">
+  <div class="mb-3">
+    <label for="num_questions" class="form-label">Number of Questions to Add:</label>
+    <input type="number" name="num_questions" id="num_questions" class="form-control" min="1" max="20" value="5" required>
+    <small class="form-text text-muted">You can add up to 20 questions at once.</small>
+  </div>
+  
+  <button type="button" class="btn btn-info mb-3" onclick="generateForms()">Generate Question Forms</button>
+  
+  <div id="questionsContainer"></div>
+  
+  <div class="mt-4">
+    <button type="submit" class="btn btn-success">Add All Questions</button>
+    <a class="btn btn-secondary" href="{{ url_for('admin.index') }}">Cancel</a>
+  </div>
+</form>
+
+<script>
+function generateForms() {
+  const numQuestions = parseInt(document.getElementById('num_questions').value);
+  const container = document.getElementById('questionsContainer');
+  container.innerHTML = '';
+  
+  if (numQuestions > 20) {
+    alert('Maximum 20 questions allowed at once');
+    return;
+  }
+  
+  // Build category options
+  const categoryOptions = `
+    {% for c in categories %}
+    <option value="{{ c.id }}">{{ c.name }}</option>
+    {% endfor %}
+  `;
+  
+  for (let i = 1; i <= numQuestions; i++) {
+    const questionDiv = document.createElement('div');
+    questionDiv.className = 'card mb-4';
+    questionDiv.innerHTML = `
+      <div class="card-header bg-light">
+        <h5>Question ${i}</h5>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="form-label">Question Text *</label>
+          <textarea name="text_${i}" class="form-control" rows="2" placeholder="Enter question text"></textarea>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Option 1 *</label>
+            <input type="text" name="option1_${i}" class="form-control" placeholder="Option 1">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Option 2 *</label>
+            <input type="text" name="option2_${i}" class="form-control" placeholder="Option 2">
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Option 3 (Optional)</label>
+            <input type="text" name="option3_${i}" class="form-control" placeholder="Option 3">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Option 4 (Optional)</label>
+            <input type="text" name="option4_${i}" class="form-control" placeholder="Option 4">
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-3">
+            <label class="form-label">Correct Option *</label>
+            <select name="correct_option_${i}" class="form-select" required>
+              <option value="">Select</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Category</label>
+            <select name="category_${i}" class="form-select">
+              <option value="">-- Select --</option>
+              ${categoryOptions}
+            </select>
+          </div>
+          <div class="col-md-5">
+            <label class="form-label">Difficulty</label>
+            <select name="difficulty_${i}" class="form-select">
+              <option value="">-- Select --</option>
+              <option value="Easy">Easy</option>
+              <option value="Medium">Medium</option>
+              <option value="Hard">Hard</option>
+            </select>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Explanation (Optional)</label>
+          <textarea name="explanation_${i}" class="form-control" rows="2" placeholder="Explanation for the answer"></textarea>
+        </div>
+      </div>
+    `;
+    container.appendChild(questionDiv);
+  }
+}
+
+// Auto-generate forms on page load
+window.onload = function() {
+  generateForms();
+};
+</script>
+{% endblock %}
+

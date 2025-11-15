@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>{{ 'Edit' if question else 'New' }} Question</h3>
+<form method="post">
+  <div class="mb-3">
+    <label>Question</label>
+    <textarea name="text" class="form-control" required>{{ question.text if question else '' }}</textarea>
+  </div>
+  <div class="row">
+    <div class="col mb-3"><input name="option1" class="form-control" placeholder="Option 1" value="{{ question.option1 if question else '' }}" required></div>
+    <div class="col mb-3"><input name="option2" class="form-control" placeholder="Option 2" value="{{ question.option2 if question else '' }}" required></div>
+  </div>
+  <div class="row">
+    <div class="col mb-3"><input name="option3" class="form-control" placeholder="Option 3" value="{{ question.option3 if question else '' }}"></div>
+    <div class="col mb-3"><input name="option4" class="form-control" placeholder="Option 4" value="{{ question.option4 if question else '' }}"></div>
+  </div>
+  <div class="mb-3">
+    <label>Correct Option (1-4)</label>
+    <input name="correct_option" type="number" min="1" max="4" class="form-control" value="{{ question.correct_option if question else '' }}" required>
+  </div>
+  <div class="mb-3">
+    <label>Category</label>
+    <select name="category" class="form-select">
+      <option value="">-- Select --</option>
+      {% for c in categories %}
+        <option value="{{ c.id }}" {% if question and question.category_id==c.id %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label>Difficulty</label>
+    <select name="difficulty" class="form-select">
+      <option {% if question and question.difficulty=='Easy' %}selected{% endif %}>Easy</option>
+      <option {% if question and question.difficulty=='Medium' %}selected{% endif %}>Medium</option>
+      <option {% if question and question.difficulty=='Hard' %}selected{% endif %}>Hard</option>
+    </select>
+  </div>
+  <div class="mb-3">
+    <label>Explanation (optional)</label>
+    <textarea name="explanation" class="form-control">{{ question.explanation if question else '' }}</textarea>
+  </div>
+  <button class="btn btn-success" type="submit">Save</button>
+  <a class="btn btn-secondary" href="{{ url_for('admin.index') }}">Cancel</a>
+</form>
+{% endblock %}
