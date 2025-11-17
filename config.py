@@ -1,3 +1,11 @@
+"""
+HEADER_COMMENT_AUTOGEN
+FILE: config.py
+PURPOSE: Brief description of this file and where to edit it.
+
+TIPS: Add your notes here to help future edits.
+"""
+
 # config.py
 import os
 basedir = os.path.abspath(os.path.dirname(__file__))

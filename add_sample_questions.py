@@ -1,3 +1,11 @@
+"""
+HEADER_COMMENT_AUTOGEN
+FILE: add_sample_questions.py
+PURPOSE: Brief description of this file and where to edit it.
+
+TIPS: Add your notes here to help future edits.
+"""
+
 # add_sample_questions.py
 from app import create_app, db
 from app.models import Question, Category

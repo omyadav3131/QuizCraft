@@ -1,3 +1,11 @@
+"""
+HEADER_COMMENT_AUTOGEN
+FILE: app\quiz\__init__.py
+PURPOSE: Brief description of this file and where to edit it.
+
+TIPS: Add your notes here to help future edits.
+"""
+
 # app/quiz/__init__.py
 from flask import Blueprint
 

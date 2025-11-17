@@ -1,42 +1,86 @@
+<!-- HEADER_COMMENT_AUTOGEN -->
+<!-- FILE: app\templates\login.html -->
+<!-- PURPOSE: Brief description of this template and common edit points. -->
+
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="login-main">
-        <div class="login-form">
-            <form method="post" novalidate>
-                <div class="login-intro">
-                    <h1>Login to  <br> Quiz Buzz!</h1>
-                    <p>Create any type of test, from easy <br> to complex.</p>
-                </div>
-                {{ form.hidden_tag() }}
-                <div class="form-para">
-                    <svg width="30px" height="30px" viewBox="0 0 16 16" class="bi bi-person" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd" d="M10 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm6 5c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
-                    </svg>
-                    {{ form.username(placeholder="Username") }}
-                    {% for error in form.username.errors %}
-                <span style="color:red;"> {{ error }} </span>
-                {% endfor %}
-                </div>
-                <div class="form-para">
-                    <svg width="30px" height="30px" viewBox="0 0 16 16" class="bi bi-key" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd" d="M0 8a4 4 0 0 1 7.465-2H14a.5.5 0 0 1 .354.146l1.5 1.5a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0L13 9.207l-.646.647a.5.5 0 0 1-.708 0L11 9.207l-.646.647a.5.5 0 0 1-.708 0L9 9.207l-.646.647A.5.5 0 0 1 8 10h-.535A4 4 0 0 1 0 8zm4-3a3 3 0 1 0 2.712 4.285A.5.5 0 0 1 7.163 9h.63l.853-.854a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.793-.793-1-1h-6.63a.5.5 0 0 1-.451-.285A3 3 0 0 0 4 5z"/>
-                        <path d="M4 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
-                    </svg>
-                    {{ form.password(placeholder="Password") }}
-                    {% for error in form.password.errors %}
-                <span style="color:red;"> {{ error }} </span>
-                {% endfor %}
-                </div>
-                <!-- <p>{{ form.remember_me() }} {{ form.remember_me.label }}</div> -->
-                <div class="form-para">
-                    <p>Forgot Password? {{ form.submit(class="btn btn-primary") }}</p>
-                </div>
-                <div class="form-para">
-                    <p>New User? <a href="{{ url_for('auth.register') }}">Click to Register!</a></p>
-                </div>
-            </form>
+<div class="auth-page-container">
+  <div class="row no-gutters h-100">
+    <div class="col-lg-6 d-flex align-items-center justify-content-center py-5">
+      <div class="auth-form-wrapper">
+        <div class="auth-header mb-4">
+          <h1>Login</h1>
+          <p>Welcome back! Sign in to your account</p>
         </div>
-        <img src="{{ url_for('static', filename='images/boy-with-glasses.jpg') }}" class="login-img">
+
+        {% if get_flashed_messages() %}
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {% for message in get_flashed_messages() %}
+              <i class="fas fa-exclamation-circle"></i> {{ message }}
+            {% endfor %}
+            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+          </div>
+        {% endif %}
+
+        <form method="post" novalidate class="auth-form">
+          {{ form.hidden_tag() }}
+
+          <div class="form-group mb-3">
+            <label for="username" class="form-label">
+              <i class="fas fa-user text-primary"></i> Username
+            </label>
+            {{ form.username(class="form-control form-control-lg", placeholder="Enter your username", id="username") }}
+            {% for error in form.username.errors %}
+              <small class="text-danger d-block mt-1"><i class="fas fa-times-circle"></i> {{ error }}</small>
+            {% endfor %}
+          </div>
+
+          <div class="form-group mb-4">
+            <label for="password" class="form-label">
+              <i class="fas fa-lock text-primary"></i> Password
+            </label>
+            {{ form.password(class="form-control form-control-lg", placeholder="Enter your password", id="password") }}
+            {% for error in form.password.errors %}
+              <small class="text-danger d-block mt-1"><i class="fas fa-times-circle"></i> {{ error }}</small>
+            {% endfor %}
+          </div>
+
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="remember" name="remember">
+            <label class="form-check-label" for="remember">
+              Remember me
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </button>
+
+          <div class="divider">
+            <span>Don't have an account?</span>
+          </div>
+
+          <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-lg w-100">
+            <i class="fas fa-user-plus"></i> Create Account
+          </a>
+
+          <div class="text-center mt-4">
+            <a href="#" class="forgot-password">Forgot Password?</a>
+          </div>
+        </form>
+      </div>
     </div>
+
+    <div class="col-lg-6 auth-image-section d-none d-lg-flex align-items-center justify-content-center">
+      <div class="auth-image-content">
+        <img src="{{ url_for('static', filename='images/boy-with-glasses.jpg') }}" alt="Login" class="auth-image">
+        <div class="auth-image-overlay">
+          <h2>Quiz Master</h2>
+          <p>Learn, Practice & Excel</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

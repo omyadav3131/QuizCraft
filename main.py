@@ -1,3 +1,11 @@
+"""
+HEADER_COMMENT_AUTOGEN
+FILE: main.py
+PURPOSE: Brief description of this file and where to edit it.
+
+TIPS: Add your notes here to help future edits.
+"""
+
 # main.py
 from app import create_app
 import os

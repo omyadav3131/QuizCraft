@@ -1,0 +1,220 @@
+<!-- HEADER_COMMENT_AUTOGEN -->
+<!-- FILE: DEPLOYMENT_PROCESS.txt -->
+<!-- PURPOSE: Text file. -->
+
+DEPLOYMENT PROCESS — Flask Quiz App
+===================================
+
+This guide contains step-by-step instructions for deploying this Flask Quiz App.
+It covers three common options: Heroku (quick PaaS), Render (PaaS alternative), and Docker/VPS (full control).
+
+Important: Always store secrets (SECRET_KEY, DB credentials) in environment variables.
+
+---
+
+Prerequisites & prep
+--------------------
+- Ensure `requirements.txt` lists dependencies. If using Heroku, include `gunicorn`.
+- Check `Procfile` exists (present in this repo: `web: gunicorn main:app`).
+- Use PostgreSQL (or another server DB) for production; SQLite is not recommended for PaaS or scaling.
+- Migrations: This repo contains `migrations/` (Alembic). Use `flask db upgrade` or `python create_db.py` to create DB.
+
+Common env vars to set:
+- SECRET_KEY: production secret (random string)
+- DATABASE_URL: Postgres URL (app will use it automatically)
+- FLASK_ENV: set to "production" for safety
+
+Notes on persistent storage:
+- On Heroku the filesystem is ephemeral, so don't rely on it for uploads. Use S3 for persistent media.
+
+---
+
+Option A — Heroku (Quick)
+-------------------------
+1. Install Heroku CLI and log in.
+
+2. Prepare your repo (if not already in git):
+
+   git init
+   git add .
+   git commit -m "Deploy to Heroku"
+
+3. Create Heroku app and add Postgres:
+
+   heroku create my-quiz-app
+   heroku addons:create heroku-postgresql:hobby-dev
+
+4. Set environment variables:
+
+   heroku config:set SECRET_KEY="<your-secret>"
+   heroku config:set FLASK_ENV=production
+
+Heroku will set DATABASE_URL automatically when Postgres is added.
+
+5. Push the repo to Heroku (use `main` or `master` branch):
+
+   git push heroku main
+
+6. Run database migrations or the creation script:
+
+   heroku run python create_db.py
+   # or if using Flask-Migrate
+   heroku run flask db upgrade
+
+7. Open the app:
+
+   heroku open
+
+8. View logs (useful for debug):
+
+   heroku logs --tail
+
+Notes:
+- `Procfile` contains: `web: gunicorn main:app`. This is correct.
+- DO NOT store secrets in the repo. Use `heroku config:set`.
+
+---
+
+Option B — Render (UI-based PaaS)
+---------------------------------
+1. Create Render account and connect your GitHub/GitLab repo.
+2. Create a new Web Service → Choose Python.
+   - Build command: `pip install -r requirements.txt`
+   - Start command: `gunicorn main:app`
+3. Add a PostgreSQL instance with Render's DB service.
+4. Set env vars in Render dashboard: SECRET_KEY, FLASK_ENV=production.
+5. Deploy and then run migrations via a one-off shell (Render dashboard or CLI):
+   - `flask db upgrade` or `python create_db.py`
+6. Use the Render docs for automatic deploy on push and SSL provisioning.
+
+---
+
+Option C — Docker + VPS (Nginx + Gunicorn)
+-------------------------------------------
+This is for full control. You can run on a VPS like DigitalOcean, AWS EC2, or your own server.
+
+A. Dockerfile example (use this if you want to deploy via Docker Hub or Docker Compose):
+
+   # Dockerfile
+   FROM python:3.11-slim
+   ENV PYTHONDONTWRITEBYTECODE=1
+   ENV PYTHONUNBUFFERED=1
+
+   WORKDIR /app
+   COPY requirements.txt .
+   RUN pip install --no-cache-dir -r requirements.txt
+   COPY . .
+   ENV FLASK_ENV=production
+
+   CMD ["gunicorn", "main:app", "-w", "3", "-b", "0.0.0.0:8000"]
+
+B. docker-compose.yml for Postgres + app:
+
+   version: '3.8'
+   services:
+     web:
+       build: .
+       ports:
+         - "8000:8000"
+       environment:
+         - DATABASE_URL=postgresql://postgres:postgres@db:5432/quizdb
+         - SECRET_KEY=your-secret
+       depends_on:
+         - db
+     db:
+       image: postgres:13
+       restart: always
+       environment:
+         POSTGRES_PASSWORD: postgres
+         POSTGRES_DB: quizdb
+       volumes:
+         - pgdata:/var/lib/postgresql/data
+   volumes:
+     pgdata:
+
+C. Run locally with Docker Compose:
+
+   docker compose up -d --build
+   docker compose exec web python create_db.py
+
+D. Nginx for reverse-proxy (on VPS, proxy to gunicorn port):
+
+   server {
+       listen 80;
+       server_name example.com;
+
+       location /static/ {
+           alias /home/youruser/app/static/;  # adjust to your files
+       }
+
+       location / {
+           proxy_pass http://127.0.0.1:8000;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+       }
+   }
+
+E. systemd unit for Gunicorn (if not using Docker):
+
+   [Unit]
+   Description=Gunicorn instance to serve quiz app
+   After=network.target
+
+   [Service]
+   User=www-data
+   Group=www-data
+   WorkingDirectory=/home/youruser/app
+   Environment="PATH=/home/youruser/app/venv/bin"
+   Environment="DATABASE_URL=postgresql://user:pass@localhost/dbname"
+   ExecStart=/home/youruser/app/venv/bin/gunicorn --workers 3 --bind unix:app.sock -m 007 main:app
+
+   [Install]
+   WantedBy=multi-user.target
+
+F. Use Certbot for SSL after pointing domain to VPS. Or use a load balancer that handles SSL.
+
+---
+
+Database & Migrations
+---------------------
+- Use `python create_db.py` to generate initial DB and default admin (if included in the script).
+- For migrations: use `flask db migrate` and `flask db upgrade` (or alembic commands).
+- On PaaS, after you set `DATABASE_URL`, run `flask db upgrade` or `python create_db.py`.
+
+---
+
+Environment variables & security best practices
+-----------------------------------------------
+- Do not commit `SECRET_KEY` or `DATABASE_URL` to Git.
+- Use remote storage for media (S3) if you store files.
+- Turn off debug. Set FLASK_ENV=production.
+- Use HTTPS and secure cookies. Add `SESSION_COOKIE_SECURE=True`, `REMEMBER_COOKIE_SECURE=True`, and proper CORS settings if needed.
+
+---
+
+Troubleshooting & debugging
+---------------------------
+- Heroku logs: `heroku logs --tail`.
+- Render logs: use dashboard logs.
+- For DB connection errors verify `DATABASE_URL` is correct and the DB has been created / migrations applied.
+- For static files missing on VPS, ensure Nginx is pointing to correct static folder and Flask static_url_path is default '/static'.
+- If app can't bind on port 80, use a reverse proxy (Nginx) and bind gunicorn to unix socket or 127.0.0.1:8000.
+
+---
+
+Extras / Good-to-haves
+----------------------
+- Add `runtime.txt` for Heroku specifying Python version: e.g. `python-3.11.9`.
+- Add `Procfile` — already exists in this repo.
+- Add a `deploy.sh` script (optional) to automate pushing and migration.
+
+---
+
+If you want, I can:
+- Create a `Dockerfile` and `docker-compose.yml` in this repository.
+- Add a `deploy.sh` script for Heroku.
+- Test a Heroku deployment for you locally (I can list exact commands and help step-by-step).
+
+End of guide.

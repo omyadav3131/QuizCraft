@@ -1,3 +1,11 @@
+"""
+HEADER_COMMENT_AUTOGEN
+FILE: app\routes.py
+PURPOSE: Brief description of this file and where to edit it.
+
+TIPS: Add your notes here to help future edits.
+"""
+
 from app import app
 from flask import render_template, request, redirect, url_for, session, g, flash
 from werkzeug.urls import url_parse

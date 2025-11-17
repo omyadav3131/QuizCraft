@@ -1,3 +1,7 @@
+<!-- HEADER_COMMENT_AUTOGEN -->
+<!-- FILE: README.md -->
+<!-- PURPOSE: Documentation file. -->
+
 # Flask Quiz App
 
 A Fully responsive Quiz built using Python's Flask

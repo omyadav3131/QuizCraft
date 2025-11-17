@@ -1,15 +1,39 @@
+<!-- HEADER_COMMENT_AUTOGEN -->
+<!-- FILE: app\templates\quiz\result.html -->
+<!-- PURPOSE: Brief description of this template and common edit points. -->
+
 {% extends 'base.html' %}
+
 {% block content %}
-<div class="container mt-5 text-center">
-  <div class="card">
-    <div class="card-body">
-      <h2 class="card-title">Quiz Completed!</h2>
-      <h1 class="display-1 text-primary">{{ score }}/{{ total }}</h1>
-      <p class="lead">Your Score: {{ ((score / total * 100) if total > 0 else 0) | round(1) }}%</p>
-      <div class="mt-4">
-        <a href="{{ url_for('quiz.select') }}" class="btn btn-primary">Take Another Quiz</a>
-        <a href="{{ url_for('home') }}" class="btn btn-secondary">Go Home</a>
-      </div>
+<div class="quiz-container">
+  <div class="result-container">
+    <h2><i class="fas fa-trophy"></i> Quiz Completed!</h2>
+    
+    <div class="result-score">{{ score }}/{{ total }}</div>
+    
+    <div class="result-percentage">
+      Score: {{ ((score / total * 100) if total > 0 else 0) | round(1) }}%
+    </div>
+    
+    <div class="result-message">
+      {% if (score / total * 100) >= 80 %}
+        <i class="fas fa-star icon-warning"></i> Excellent! You're a master!
+      {% elif (score / total * 100) >= 60 %}
+        <i class="fas fa-thumbs-up icon-success"></i> Good job! Keep practicing!
+      {% elif (score / total * 100) >= 40 %}
+        <i class="fas fa-lightbulb icon-warning"></i> Not bad! Try again to improve!
+      {% else %}
+        <i class="fas fa-book icon-danger"></i> Study more and try again!
+      {% endif %}
+    </div>
+    
+    <div class="result-buttons">
+      <a href="{{ url_for('quiz.select') }}" class="btn btn-primary">
+        <i class="fas fa-redo-alt"></i> Take Another Quiz
+      </a>
+      <a href="{{ url_for('home') }}" class="btn btn-secondary">
+        <i class="fas fa-home"></i> Go Home
+      </a>
     </div>
   </div>
 </div>

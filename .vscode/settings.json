@@ -1,3 +1,7 @@
+/* HEADER_COMMENT_AUTOGEN */
+/* FILE: .vscode\settings.json */
+/* PURPOSE: JSON config - be careful editing. */
+
 {
     "python.pythonPath": "venv\\Scripts\\python.exe",
     "python.linting.pylintArgs": [

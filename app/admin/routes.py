@@ -1,3 +1,11 @@
+"""
+HEADER_COMMENT_AUTOGEN
+FILE: app\admin\routes.py
+PURPOSE: Brief description of this file and where to edit it.
+
+TIPS: Add your notes here to help future edits.
+"""
+
 # app/admin/routes.py
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
@@ -18,8 +26,23 @@ def admin_required(f):
 @login_required
 @admin_required
 def index():
-    questions = Question.query.order_by(Question.id.desc()).all()
-    return render_template('admin/index.html', questions=questions)
+    # Get all categories and their questions
+    categories = Category.query.order_by(Category.name).all()
+    category_questions = {}
+    total_questions = 0
+    
+    for cat in categories:
+        questions = Question.query.filter_by(category_id=cat.id).order_by(
+            Question.difficulty.desc(), 
+            Question.id.desc()
+        ).all()
+        category_questions[cat.id] = questions
+        total_questions += len(questions)
+    
+    return render_template('admin/index.html', 
+                         categories=categories,
+                         category_questions=category_questions,
+                         total_questions=total_questions)
 
 @admin_bp.route('/categories', methods=['GET','POST'])
 @login_required
@@ -96,6 +119,81 @@ def delete_question(q_id):
 def users():
     all_users = User.query.order_by(User.id.desc()).all()
     return render_template('admin/users.html', users=all_users)
+
+
+@admin_bp.route('/user/new', methods=['GET','POST'])
+@login_required
+@admin_required
+def new_user():
+    if request.method == 'POST':
+        username = request.form.get('username','').strip()
+        email = request.form.get('email','').strip() or None
+        password = request.form.get('password','').strip()
+        role = request.form.get('role', 'user')
+
+        if not username or not password:
+            flash('Username and password are required', 'warning')
+            return redirect(url_for('admin.new_user'))
+
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists', 'warning')
+            return redirect(url_for('admin.new_user'))
+
+        u = User(username=username, email=email, role=role)
+        u.set_password(password)
+        db.session.add(u)
+        db.session.commit()
+        flash('User created successfully', 'success')
+        return redirect(url_for('admin.users'))
+
+    return render_template('admin/user_form.html', user=None)
+
+
+@admin_bp.route('/user/edit/<int:user_id>', methods=['GET','POST'])
+@login_required
+@admin_required
+def edit_user(user_id):
+    u = User.query.get_or_404(user_id)
+    if request.method == 'POST':
+        username = request.form.get('username','').strip()
+        email = request.form.get('email','').strip() or None
+        password = request.form.get('password','').strip()
+        role = request.form.get('role', 'user')
+
+        if username:
+            # check uniqueness
+            other = User.query.filter_by(username=username).first()
+            if other and other.id != u.id:
+                flash('Username already taken', 'warning')
+                return redirect(url_for('admin.edit_user', user_id=u.id))
+            u.username = username
+
+        u.email = email
+        u.role = role
+        if password:
+            u.set_password(password)
+
+        db.session.commit()
+        flash('User updated', 'success')
+        return redirect(url_for('admin.users'))
+
+    return render_template('admin/user_form.html', user=u)
+
+
+@admin_bp.route('/user/delete/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_user(user_id):
+    u = User.query.get_or_404(user_id)
+    # Prevent deleting own account
+    if u.id == current_user.id:
+        flash('You cannot delete your own account', 'warning')
+        return redirect(url_for('admin.users'))
+
+    db.session.delete(u)
+    db.session.commit()
+    flash('User deleted', 'success')
+    return redirect(url_for('admin.users'))
 
 @admin_bp.route('/questions/bulk-add', methods=['GET','POST'])
 @login_required

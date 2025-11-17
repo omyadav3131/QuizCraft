@@ -1,22 +1,52 @@
+<!-- HEADER_COMMENT_AUTOGEN -->
+<!-- FILE: app\templates\quiz\select.html -->
+<!-- PURPOSE: Brief description of this template and common edit points. -->
+
 {% extends 'base.html' %}
+
 {% block content %}
-<div class="container mt-5">
-  <h2>Select Quiz Category</h2>
-  <div class="row mt-4">
-    {% for category in categories %}
-    <div class="col-md-4 mb-3">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">{{ category.name }}</h5>
-          <a href="{{ url_for('quiz.start', category_id=category.id) }}" class="btn btn-primary">Start Quiz</a>
-        </div>
-      </div>
+<div class="quiz-container">
+  <div class="container-max1200">
+    <div class="admin-header">
+      <h1><i class="fas fa-list"></i> Select Category</h1>
+      <p>Choose a subject and test your knowledge</p>
     </div>
-    {% endfor %}
+    
+    <div class="categories-grid">
+      {% for category in categories %}
+      <div class="category-card">
+        <div class="category-icon">
+          {% if 'Programming' in category.name %}
+            <i class="fas fa-code"></i>
+          {% elif 'SQL' in category.name %}
+            <i class="fas fa-database"></i>
+          {% elif 'Data' in category.name %}
+            <i class="fas fa-sitemap"></i>
+          {% elif 'Quantitative' in category.name %}
+            <i class="fas fa-calculator"></i>
+          {% elif 'General' in category.name %}
+            <i class="fas fa-lightbulb"></i>
+          {% elif 'Logical' in category.name %}
+            <i class="fas fa-puzzle-piece"></i>
+          {% else %}
+            <i class="fas fa-book"></i>
+          {% endif %}
+        </div>
+        <h5>{{ category.name }}</h5>
+        <p><small>Test your skills across multiple difficulty levels</small></p>
+        <a href="{{ url_for('quiz.start', category_id=category.id) }}" class="btn btn-primary btn-sm">
+          <i class="fas fa-arrow-right"></i> Start
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    
+    {% if not categories %}
+    <div class="alert alert-info text-center">
+      <i class="fas fa-info-circle"></i> No categories available. Please contact admin.
+    </div>
+    {% endif %}
   </div>
-  {% if not categories %}
-  <p class="text-muted">No categories available. Please contact admin.</p>
-  {% endif %}
 </div>
 {% endblock %}
 

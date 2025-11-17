@@ -1,0 +1,197 @@
+<!-- HEADER_COMMENT_AUTOGEN -->
+<!-- FILE: PROJECT_STRUCTURE.txt -->
+<!-- PURPOSE: Text file. -->
+
+Flask Quiz App - Project Structure
+====================================
+
+flask-quiz-app-main/
+│
+├── 📄 main.py                          # Entry point - runs Flask app
+├── 📄 config.py                        # Configuration (DB, SECRET_KEY)
+├── 📄 create_db.py                     # Creates database & default admin
+├── 📄 requirements.txt                 # Python dependencies
+├── 📄 README_RUN.md                    # Setup instructions
+├── 📄 generate_run_guide_pdf.py        # Creates PDF from README_RUN.md
+├── 📄 Procfile                         # Heroku deployment config
+│
+├── 📁 app/                             # Main Flask application
+│   ├── 📄 __init__.py                  # App factory
+│   ├── 📄 models.py                    # Database models (User, Question, Category, etc)
+│   ├── 📄 forms.py                     # WTForms for login, register
+│   ├── 📄 routes.py                    # Legacy routes (old code)
+│   │
+│   ├── 📁 auth/                        # Authentication module
+│   │   ├── 📄 __init__.py              # Registers auth blueprint
+│   │   ├── 📄 routes.py                # Login, Register, Logout
+│   │   └── 📄 forms.py                 # Login/Register forms
+│   │
+│   ├── 📁 quiz/                        # Quiz module
+│   │   ├── 📄 __init__.py              # Registers quiz blueprint
+│   │   └── 📄 routes.py                # Quiz selection, questions, results
+│   │
+│   ├── 📁 admin/                       # Admin module
+│   │   ├── 📄 __init__.py              # Registers admin blueprint
+│   │   └── 📄 routes.py                # Admin dashboard, user/question CRUD
+│   │
+│   ├── 📁 static/                      # Static files (CSS, images, etc)
+│   │   ├── 📁 css/
+│   │   │   ├── 📄 professional.css     # Main theme (800+ lines, BootstrapMade style)
+│   │   │   ├── 📄 styles.css           # Old gradient styles (deprecated)
+│   │   │   └── 📄 mob-styles.css       # Old mobile styles (deprecated)
+│   │   │
+│   │   └── 📁 images/                  # Background images for auth pages
+│   │       ├── 📄 boy-with-glasses.jpg
+│   │       └── 📄 kids-studying-from-home.gif
+│   │
+│   └── 📁 templates/                   # HTML templates
+│       ├── 📄 base.html                # Base navbar template
+│       ├── 📄 home.html                # Home page
+│       ├── 📄 index.html               # Legacy home (old)
+│       ├── 📄 login.html               # Login page (two-column centered layout)
+│       ├── 📄 register.html            # Register page (two-column centered layout)
+│       ├── 📄 question.html            # Old question display
+│       ├── 📄 score.html               # Old results page
+│       │
+│       ├── 📁 auth/
+│       │   ├── 📄 login.html           # Auth login page
+│       │   └── 📄 register.html        # Auth register page
+│       │
+│       ├── 📁 quiz/
+│       │   ├── 📄 select.html          # Category selection (grid)
+│       │   ├── 📄 select_difficulty.html # Difficulty selection (grid)
+│       │   ├── 📄 question.html        # Question display with options
+│       │   └── 📄 result.html          # Quiz result display
+│       │
+│       └── 📁 admin/
+│           ├── 📄 index.html           # Admin dashboard (questions grouped by category)
+│           ├── 📄 categories.html      # Manage categories
+│           ├── 📄 users.html           # Manage users (Add/Edit/Delete)
+│           ├── 📄 user_form.html       # Create/Edit user form
+│           ├── 📄 question_form.html   # Create/Edit question form
+│           └── 📄 bulk_add_questions.html # Bulk import questions
+│
+├── 📁 migrations/                      # Database migrations (Alembic)
+│   ├── 📄 alembic.ini
+│   ├── 📄 env.py
+│   ├── 📄 script.py.mako
+│   │
+│   └── 📁 versions/
+│       ├── 📄 4f3f4537bb29_users_table.py
+│       ├── 📄 59069a416ef2_question_table.py
+│       ├── 📄 9c77048e7767_questions_table.py
+│       ├── 📄 a635661f4a03_users_table.py
+│       └── 📄 e96865e4fa62_users_added_marks.py
+│
+├── 📁 venv/                            # Virtual environment (created locally)
+│   ├── 📁 Lib/site-packages/           # Installed packages
+│   ├── 📁 Scripts/                     # Executables (python.exe, flask.exe, etc)
+│   └── ...
+│
+└── 📁 __pycache__/                     # Python cache (auto-generated)
+
+═══════════════════════════════════════════════════════════════════════
+
+KEY FILES & THEIR PURPOSE:
+═══════════════════════════════════════════════════════════════════════
+
+📌 ENTRY POINTS:
+  • main.py                → Run the Flask app (python main.py)
+  • create_db.py          → Initialize database (python create_db.py)
+
+📌 CORE LOGIC:
+  • app/__init__.py        → Flask app factory, blueprints registration
+  • app/models.py          → Database models (User, Question, Category, Attempt, etc)
+  • app/config.py          → Configuration (SQLite DB path, SECRET_KEY)
+
+📌 ROUTES & MODULES:
+  • app/auth/routes.py     → Login/Register/Logout endpoints
+  • app/quiz/routes.py     → Quiz flow (category→difficulty→questions→results)
+  • app/admin/routes.py    → Admin panel (question/user CRUD, dashboard)
+
+📌 TEMPLATES & STYLING:
+  • app/static/css/professional.css   → Main theme (professional BootstrapMade-inspired)
+  • app/templates/base.html           → Navbar & layout wrapper
+  • app/templates/auth/*.html         → Login/Register centered forms
+  • app/templates/quiz/*.html         → Quiz user flow
+  • app/templates/admin/*.html        → Admin dashboard & management
+
+📌 SETUP & DOCUMENTATION:
+  • requirements.txt       → Python dependencies
+  • README_RUN.md          → Setup & run instructions for partner
+  • generate_run_guide_pdf.py → Converts README_RUN.md to PDF
+
+═══════════════════════════════════════════════════════════════════════
+
+DATABASE STRUCTURE:
+═══════════════════════════════════════════════════════════════════════
+
+User (id, username, email, password_hash, role)
+  └── Attempt (id, user_id, score, total, category_id, difficulty, created_at)
+      └── AttemptAnswer (id, attempt_id, question_id, chosen_option, correct)
+
+Category (id, name)
+  └── Question (id, text, option1-4, correct_option, difficulty, category_id, explanation)
+
+═══════════════════════════════════════════════════════════════════════
+
+WHAT'S INSIDE:
+═══════════════════════════════════════════════════════════════════════
+
+✅ 270 Questions (10 Easy + 10 Medium + 10 Hard per category)
+✅ 9 Categories (C, C++, Java, Python, SQL, Data Structures, GK, Quant, Logic)
+✅ Professional UI (Centered layouts, BootstrapMade style, Blue theme)
+✅ Admin Dashboard (User management, question management, grouped by category)
+✅ User Authentication (Login, Register, Admin vs Regular user separation)
+✅ Quiz Flow (Select category → difficulty → answer questions → view results)
+✅ Responsive Design (Mobile-friendly, works on all screen sizes)
+
+═══════════════════════════════════════════════════════════════════════
+
+URLS & ENDPOINTS:
+═══════════════════════════════════════════════════════════════════════
+
+USER PAGES:
+  GET  /                          → Home page
+  GET  /auth/login                → Login form
+  POST /auth/login                → Process login
+  GET  /auth/register             → Register form
+  POST /auth/register             → Create new user
+  GET  /auth/logout               → Logout user
+
+QUIZ PAGES:
+  GET  /quiz/select               → Category selection (user)
+  GET  /quiz/start/<cat_id>       → Difficulty selection
+  GET  /quiz/start/<cat_id>/<diff> → Start quiz
+  GET  /quiz/question/<q_id>      → Display question
+  POST /quiz/question/<q_id>      → Submit answer
+  GET  /quiz/result               → Show results
+
+ADMIN PAGES (login required + is_admin):
+  GET  /admin                     → Dashboard (questions by category)
+  GET  /admin/users               → Users list
+  GET  /admin/user/new            → Create user form
+  POST /admin/user/new            → Save new user
+  GET  /admin/user/edit/<id>      → Edit user form
+  POST /admin/user/edit/<id>      → Save user changes
+  POST /admin/user/delete/<id>    → Delete user
+
+  GET  /admin/categories          → Manage categories
+  POST /admin/categories          → Add category
+  
+  GET  /admin/question/new        → Create question form
+  POST /admin/question/new        → Save new question
+  GET  /admin/question/edit/<id>  → Edit question form
+  POST /admin/question/edit/<id>  → Save question changes
+  POST /admin/question/delete/<id> → Delete question
+  
+  GET  /admin/questions/bulk-add  → Bulk import form
+  POST /admin/questions/bulk-add  → Import multiple questions
+
+═══════════════════════════════════════════════════════════════════════
+
+DEFAULT ADMIN CREDENTIALS (created by create_db.py):
+  Username: admin
+  Password: admin123
+
+═══════════════════════════════════════════════════════════════════════

@@ -1,3 +1,11 @@
+"""
+HEADER_COMMENT_AUTOGEN
+FILE: app\quiz\routes.py
+PURPOSE: Brief description of this file and where to edit it.
+
+TIPS: Add your notes here to help future edits.
+"""
+
 # app/quiz/routes.py
 from flask import render_template, request, redirect, url_for, session, flash
 from flask_login import login_required, current_user

@@ -1,3 +1,7 @@
+<!-- HEADER_COMMENT_AUTOGEN -->
+<!-- FILE: app\templates\auth\login.html -->
+<!-- PURPOSE: Brief description of this template and common edit points. -->
+
 {% extends 'base.html' %}
 
 {% block content %}
@@ -15,7 +19,7 @@
                     </svg>
                     {{ form.username(placeholder="Username") }}
                     {% for error in form.username.errors %}
-                <span style="color:red;"> {{ error }} </span>
+                <span class="form-error">{{ error }}</span>
                 {% endfor %}
                 </div>
                 <div class="form-para">
@@ -25,7 +29,7 @@
                     </svg>
                     {{ form.password(placeholder="Password") }}
                     {% for error in form.password.errors %}
-                <span style="color:red;"> {{ error }} </span>
+                <span class="form-error">{{ error }}</span>
                     {% endfor %}
                 </div>
                 <div class="form-para">
@@ -36,7 +40,7 @@
                 </div>
             </form>
         </div>
-        <img src="{{ url_for('static', filename='images/boy-with-glasses.jpg') }}" class="login-img">
+        <img src="{{ url_for('static', filename='images/boy-with-glasses.jpg') }}" class="login-img" alt="Student illustration">
     </div>
 {% endblock %}
 

@@ -1,3 +1,11 @@
+"""
+HEADER_COMMENT_AUTOGEN
+FILE: app\auth\routes.py
+PURPOSE: Brief description of this file and where to edit it.
+
+TIPS: Add your notes here to help future edits.
+"""
+
 from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from . import auth_bp
@@ -30,7 +38,11 @@ def login():
         if u and u.check_password(form.password.data):
             login_user(u)
             flash('Logged in successfully', 'success')
-            next_page = request.args.get('next') or url_for('home')
+            # Redirect admin users to admin panel
+            if u.is_admin():
+                return redirect(url_for('admin.index'))
+            # Regular users go to quiz
+            next_page = request.args.get('next') or url_for('quiz.select')
             return redirect(next_page)
         flash('Invalid username or password', 'danger')
     return render_template('auth/login.html', form=form)

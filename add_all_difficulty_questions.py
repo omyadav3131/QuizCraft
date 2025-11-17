@@ -1,3 +1,11 @@
+"""
+HEADER_COMMENT_AUTOGEN
+FILE: add_all_difficulty_questions.py
+PURPOSE: Brief description of this file and where to edit it.
+
+TIPS: Add your notes here to help future edits.
+"""
+
 # add_all_difficulty_questions.py
 # This script adds 10 Easy, 10 Medium, and 10 Hard questions for each category
 from app import create_app, db

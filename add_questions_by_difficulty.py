@@ -1,3 +1,11 @@
+"""
+HEADER_COMMENT_AUTOGEN
+FILE: add_questions_by_difficulty.py
+PURPOSE: Brief description of this file and where to edit it.
+
+TIPS: Add your notes here to help future edits.
+"""
+
 # add_questions_by_difficulty.py
 from app import create_app, db
 from app.models import Question, Category

@@ -1,32 +1,206 @@
+<!-- HEADER_COMMENT_AUTOGEN -->
+<!-- FILE: app\templates\admin\index.html -->
+<!-- PURPOSE: Brief description of this template and common edit points. -->
+
 {% extends 'base.html' %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center">
-  <h3>Questions (Admin)</h3>
-  <div>
-    <a class="btn btn-outline-info" href="{{ url_for('admin.users') }}">View Users</a>
-    <a class="btn btn-outline-secondary" href="{{ url_for('admin.categories') }}">Categories</a>
-    <a class="btn btn-success" href="{{ url_for('admin.bulk_add_questions') }}">Bulk Add Questions</a>
-    <a class="btn btn-primary" href="{{ url_for('admin.new_question') }}">Add Single Question</a>
+<div class="admin-container">
+  <div class="admin-wrapper">
+    <div class="admin-header">
+      <h1><i class="fas fa-cog"></i> Admin Dashboard</h1>
+      <p>Manage all quiz questions, categories and users</p>
+    </div>
+
+    <div class="admin-cards">
+      <div class="admin-card">
+        <h3>Total Questions</h3>
+        <div class="count">{{ total_questions }}</div>
+        <p class="text-muted">All categories</p>
+      </div>
+      <div class="admin-card">
+        <h3>Categories</h3>
+        <div class="count">{{ categories|length }}</div>
+        <p class="text-muted">Active</p>
+      </div>
+      <div class="admin-card">
+        <h3>Difficulty Levels</h3>
+        <div class="count">3</div>
+        <p class="text-muted">Easy, Medium, Hard</p>
+      </div>
+    </div>
+
+    <div class="admin-header">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h2>Questions by Category</h2>
+        <div class="btn-group">
+          <a class="btn btn-primary" href="{{ url_for('admin.new_question') }}">
+            <i class="fas fa-plus"></i> Add Single Question
+          </a>
+          <a class="btn btn-success" href="{{ url_for('admin.bulk_add_questions') }}">
+            <i class="fas fa-upload"></i> Bulk Add Questions
+          </a>
+          <a class="btn btn-outline-primary" href="{{ url_for('admin.categories') }}">
+            <i class="fas fa-list"></i> Categories
+          </a>
+          <a class="btn btn-outline-secondary" href="{{ url_for('admin.users') }}">
+            <i class="fas fa-users"></i> Users
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion" id="categoriesAccordion">
+      {% for category in categories %}
+      <div class="category-section">
+        <div class="category-header" data-toggle="collapse" data-target="#category-{{ category.id }}" role="button">
+          <div class="category-title">
+            <i class="fas fa-chevron-down category-toggle"></i>
+            <span class="category-name">{{ category.name }}</span>
+            <span class="badge badge-info">{{ category_questions[category.id]|length }} questions</span>
+          </div>
+        </div>
+
+        <div id="category-{{ category.id }}" class="collapse" data-parent="#categoriesAccordion">
+          <div class="category-content">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Question</th>
+                    <th>Difficulty</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if category_questions[category.id] %}
+                    {% for q in category_questions[category.id] %}
+                    <tr>
+                      <td><span class="badge badge-primary">{{ q.id }}</span></td>
+                      <td class="question-cell">{{ q.text }}</td>
+                      <td>
+                        {% if q.difficulty == 'Easy' %}
+                          <span class="badge badge-success"><i class="fas fa-level-down-alt"></i> Easy</span>
+                        {% elif q.difficulty == 'Medium' %}
+                          <span class="badge badge-warning"><i class="fas fa-equals"></i> Medium</span>
+                        {% elif q.difficulty == 'Hard' %}
+                          <span class="badge badge-danger"><i class="fas fa-level-up-alt"></i> Hard</span>
+                        {% else %}
+                          <span class="badge badge-secondary">-</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        <a href="{{ url_for('admin.edit_question', q_id=q.id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                          <i class="fas fa-edit"></i>
+                        </a>
+                        <form action="{{ url_for('admin.delete_question', q_id=q.id) }}" method="post" class="form-inline-delete">
+                          <button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('Are you sure?')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </form>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  {% else %}
+                    <tr>
+                      <td colspan="4" class="text-center text-muted py-3">
+                        <i class="fas fa-inbox"></i> No questions in this category
+                      </td>
+                    </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
   </div>
 </div>
 
-<table class="table table-striped mt-3">
-<thead><tr><th>ID</th><th>Text</th><th>Category</th><th>Difficulty</th><th>Actions</th></tr></thead>
-<tbody>
-{% for q in questions %}
-<tr>
-  <td>{{ q.id }}</td>
-  <td style="max-width:400px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ q.text }}</td>
-  <td>{{ q.category.name if q.category else '-' }}</td>
-  <td>{{ q.difficulty or '-' }}</td>
-  <td>
-    <a href="{{ url_for('admin.edit_question', q_id=q.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
-    <form action="{{ url_for('admin.delete_question', q_id=q.id) }}" method="post" style="display:inline">
-      <button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('Delete question?')">Delete</button>
-    </form>
-  </td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
+<style>
+.accordion {
+  margin-bottom: 2rem;
+}
+
+.category-section {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1rem;
+  overflow: hidden;
+  border-left: 4px solid #0d6efd;
+}
+
+.category-header {
+  padding: 1.25rem;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: background-color 0.3s ease;
+}
+
+.category-header:hover {
+  background-color: #e9ecef;
+}
+
+.category-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.category-toggle {
+  transition: transform 0.3s ease;
+  color: #0d6efd;
+}
+
+.category-header[aria-expanded="true"] .category-toggle {
+  transform: rotate(-180deg);
+}
+
+.category-name {
+  flex: 1;
+}
+
+.category-content {
+  padding: 1rem;
+}
+
+.collapse.show ~ .category-header {
+  background-color: #e9ecef;
+}
+
+@media (max-width: 768px) {
+  .category-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .btn-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .btn-group .btn {
+    width: 100%;
+  }
+}
+</style>
+
+<script>
+document.querySelectorAll('.category-header').forEach(header => {
+  header.addEventListener('click', function() {
+    const toggle = this.querySelector('.category-toggle');
+    this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true');
+  });
+});
+</script>
 {% endblock %}

@@ -1,0 +1,984 @@
+/* HEADER_COMMENT_AUTOGEN */
+/* FILE: app\static\css\professional.css */
+/* PURPOSE: Styles for related templates/components. Edit in `app/static/css`. */
+
+/* ==============================
+   QUIZ MASTER - PROFESSIONAL THEME
+   ============================== */
+
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Raleway', 'Segoe UI', sans-serif;
+    background-color: #f4f6f9;
+    color: #444;
+    line-height: 1.6;
+}
+
+/* ==================== NAVBAR ==================== */
+
+nav {
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 0 !important;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+nav::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(to right, #0d6efd, #0dcaf0);
+}
+
+.nav-brand {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0d6efd;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 !important;
+    padding: 1rem 1.5rem !important;
+}
+
+.nav-links {
+    list-style: none !important;
+    display: flex !important;
+    gap: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.nav-links {
+    display: flex !important;
+    gap: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.nav-links a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem !important;
+    text-decoration: none !important;
+    color: #333 !important;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+}
+
+.nav-links a:hover {
+    color: #0d6efd !important;
+    border-bottom-color: #0d6efd;
+    background: rgba(13, 110, 253, 0.05);
+}
+
+/* ==================== HOME PAGE ==================== */
+
+.home-container {
+    min-height: calc(100vh - 70px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 3rem 1rem;
+}
+
+.home-content {
+    background: white;
+    border-radius: 10px;
+    padding: 4rem 3rem;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-width: 600px;
+}
+
+.home-content h1 {
+    font-size: 3rem;
+    color: #0d6efd;
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.home-content p {
+    font-size: 1.1rem;
+    color: #666;
+    margin-bottom: 2.5rem;
+    line-height: 1.8;
+}
+
+.home-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ==================== BUTTONS ==================== */
+
+.btn {
+    padding: 10px 24px !important;
+    border-radius: 5px !important;
+    font-weight: 600 !important;
+    border: none !important;
+    transition: all 0.3s ease !important;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #0d6efd, #0dcaf0) !important;
+    color: white !important;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(13, 110, 253, 0.3) !important;
+}
+
+.btn-secondary {
+    background: #6c757d !important;
+    color: white !important;
+}
+
+.btn-secondary:hover {
+    background: #5c636a !important;
+    transform: translateY(-2px);
+}
+
+.btn-success {
+    background: #198754 !important;
+    color: white !important;
+}
+
+.btn-success:hover {
+    background: #157347 !important;
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: #dc3545 !important;
+    color: white !important;
+}
+
+.btn-danger:hover {
+    background: #c82333 !important;
+    transform: translateY(-2px);
+}
+
+.btn-warning {
+    background: #ffc107 !important;
+    color: #333 !important;
+}
+
+.btn-warning:hover {
+    background: #ffb800 !important;
+    transform: translateY(-2px);
+}
+
+/* ==================== AUTH PAGES ==================== */
+
+.auth-page-container {
+    min-height: calc(100vh - 70px);
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-page-container .row {
+    width: 100%;
+    max-width: 1400px;
+}
+
+.auth-form-wrapper {
+    width: 100%;
+    max-width: 450px;
+    padding: 2rem;
+    margin: 0 auto;
+}
+
+/* center form content inside the left column */
+.auth-form-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.auth-header h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.auth-header p {
+    color: #999;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.auth-form {
+    margin-top: 2rem;
+}
+
+.auth-form {
+    width: 100%;
+    max-width: 380px;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.95rem;
+    margin-bottom: 0.7rem;
+}
+
+.form-control {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+}
+
+.form-control-lg {
+    padding: 0.875rem 1.25rem;
+    font-size: 1rem;
+}
+
+.auth-image-section {
+    background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+    position: relative;
+    overflow: hidden;
+    min-height: 600px;
+}
+
+.auth-image-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-image {
+    width: 70%;
+    height: auto;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 2;
+}
+
+.auth-image-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+    z-index: 3;
+}
+
+.auth-image-overlay h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.auth-image-overlay p {
+    font-size: 0.95rem;
+    margin: 0.5rem 0 0 0;
+}
+
+.divider {
+    position: relative;
+    margin: 2rem 0;
+    text-align: center;
+}
+
+.divider span {
+    background: white;
+    padding: 0 1rem;
+    color: #999;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #e0e0e0;
+    z-index: 1;
+}
+
+.btn-outline-primary {
+    color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    background: transparent !important;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background: #0d6efd !important;
+    color: white !important;
+    transform: translateY(-2px);
+}
+
+.forgot-password {
+    color: #0d6efd;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.forgot-password:hover {
+    color: #0dcaf0;
+}
+
+/* ==================== QUIZ PAGES ==================== */
+
+.quiz-container {
+    min-height: calc(100vh - 70px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f4f6f9;
+    padding: 2rem 1rem;
+}
+
+.card {
+    border: none !important;
+    border-radius: 10px !important;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08) !important;
+    max-width: 700px;
+    width: 100%;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #0d6efd, #0dcaf0) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 10px 10px 0 0 !important;
+    padding: 1.5rem !important;
+    font-weight: 700;
+}
+
+.card-body {
+    padding: 2rem !important;
+}
+
+.card-title {
+    font-size: 1.3rem !important;
+    color: #333 !important;
+    margin-bottom: 1.5rem !important;
+    font-weight: 700 !important;
+    line-height: 1.6;
+}
+
+/* ==================== CATEGORY SELECTION ==================== */
+
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.category-card {
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border-top: 3px solid #0d6efd;
+}
+
+.category-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(13, 110, 253, 0.15);
+}
+
+.category-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #0d6efd;
+}
+
+.category-card h5 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.category-card p {
+    color: #999;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+/* ==================== DIFFICULTY SELECTION ==================== */
+
+.difficulty-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 2rem;
+    padding: 2rem 1rem;
+}
+
+.difficulty-card {
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border-top: 5px solid #0d6efd;
+}
+
+.difficulty-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.difficulty-card h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #333;
+    margin: 1rem 0;
+}
+
+.difficulty-card p {
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.difficulty-card small {
+    color: #999;
+}
+
+.difficulty-easy {
+    border-top-color: #198754;
+}
+
+.difficulty-medium {
+    border-top-color: #ffc107;
+}
+
+.difficulty-hard {
+    border-top-color: #dc3545;
+}
+
+/* ==================== QUESTION PAGE ==================== */
+
+.question-progress {
+    width: 100%;
+    height: 6px;
+    background: #e0e0e0;
+    border-radius: 3px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.question-progress-bar {
+    height: 100%;
+    background: linear-gradient(to right, #0d6efd, #0dcaf0);
+    transition: width 0.3s ease;
+}
+
+.question-number {
+    color: #999;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.form-check {
+    margin-bottom: 1rem;
+}
+
+.form-check-input {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 0.3rem !important;
+}
+
+.form-check-input:hover {
+    border-color: #0d6efd;
+}
+
+.form-check-input:checked {
+    background: linear-gradient(135deg, #0d6efd, #0dcaf0) !important;
+    border-color: transparent !important;
+}
+
+.form-check-label {
+    font-weight: 500;
+    cursor: pointer;
+    color: #333;
+    margin-left: 0.7rem;
+    transition: all 0.3s ease;
+}
+
+.form-check:hover .form-check-label {
+    color: #0d6efd;
+}
+
+/* ==================== RESULT PAGE ==================== */
+
+.result-container {
+    background: white;
+    border-radius: 10px;
+    padding: 3rem;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+}
+
+.result-score {
+    font-size: 4rem;
+    font-weight: 800;
+    color: #0d6efd;
+    margin: 2rem 0;
+}
+
+.result-percentage {
+    font-size: 1.5rem;
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+.result-message {
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 2rem;
+    font-weight: 600;
+}
+
+.result-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ==================== ADMIN PAGES ==================== */
+
+.admin-container {
+    min-height: calc(100vh - 70px);
+    background-color: #f4f6f9;
+    padding: 2rem 1rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.admin-wrapper {
+    width: 100%;
+    max-width: 1200px;
+}
+
+.admin-header {
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.admin-header h1 {
+    color: #0d6efd;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.admin-header p {
+    color: #999;
+    margin: 0.5rem 0 0 0;
+}
+
+.table-responsive {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem;
+}
+
+.table {
+    margin-bottom: 0 !important;
+}
+
+.table thead {
+    background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+    color: white;
+}
+
+.table tbody tr {
+    border-bottom: 1px solid #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+.table tbody tr:hover {
+    background: #f8f9ff;
+}
+
+.admin-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+    justify-items: center;
+}
+
+.admin-card {
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    border-top: 4px solid #0d6efd;
+    text-align: center;
+    width: 100%;
+    max-width: 300px;
+}
+
+.admin-card h3 {
+    font-size: 1.5rem;
+    color: #333;
+    margin: 0;
+}
+
+.admin-card .count {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #0d6efd;
+    margin: 1rem 0;
+}
+
+.admin-card p {
+    margin: 0.5rem 0 0 0;
+    color: #999;
+    font-size: 0.9rem;
+}
+
+.admin-header h2 {
+    color: #333;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 1rem 0 0.5rem 0;
+}
+
+.btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.gap-2 {
+    gap: 1rem;
+}
+
+.question-cell {
+    max-width: 350px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+}
+
+.admin-stat-title {
+    margin: 0;
+    color: #0d6efd;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.admin-stat-subtitle {
+    margin: 0.5rem 0 0 0;
+    color: #999;
+    font-size: 0.9rem;
+}
+
+/* ==================== ALERTS ==================== */
+
+.alert {
+    border: none !important;
+    border-radius: 5px !important;
+    padding: 1rem 1.5rem !important;
+    font-weight: 600;
+}
+
+.alert-danger {
+    background: #f8d7da !important;
+    color: #721c24 !important;
+}
+
+.alert-success {
+    background: #d4edda !important;
+    color: #155724 !important;
+}
+
+.alert-info {
+    background: #d1ecf1 !important;
+    color: #0c5460 !important;
+}
+
+.alert-flash {
+    text-align: center;
+    margin: 1rem;
+    border-radius: 5px;
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 768px) {
+    .form-container {
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .form-right {
+        display: none !important;
+    }
+
+    .home-content {
+        padding: 2rem;
+    }
+
+    .home-content h1 {
+        font-size: 2rem;
+    }
+
+    .categories-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .difficulty-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .nav-links li a {
+        padding: 0.8rem 1rem !important;
+        font-size: 12px;
+    }
+}
+
+/* ==================== REGISTER PAGE (CENTER FIX) ==================== */
+/* Adds layout rules for register-main + register-form used in auth/register.html */
+.register-main {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    justify-items: center;
+    background: transparent;
+}
+
+.register-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.register-form {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 40px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* ==================== LOGIN PAGE (CENTER FIX) ==================== */
+.login-main {
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    justify-items: center;
+    background: transparent;
+}
+
+.login-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.login-form {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 40px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.login-form form {
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .login-main {
+        grid-template-columns: 1fr;
+        padding: 24px;
+    }
+
+    .login-img {
+        display: none;
+    }
+
+    .login-form {
+        padding: 24px 16px;
+        max-width: 420px;
+    }
+}
+
+.register-form form {
+    width: 100%;
+}
+
+/* Small screens: place register content in a single column and hide hero image */
+@media (max-width: 768px) {
+    .register-main {
+        grid-template-columns: 1fr;
+        padding: 24px;
+    }
+
+    .register-img {
+        display: none;
+    }
+
+    .register-form {
+        padding: 24px 16px;
+        max-width: 420px;
+    }
+}
+/* ===== FORCE CENTER FIX FOR REGISTER / LOGIN PAGE ===== */
+
+.auth-page-container {
+    width: 100%;
+    min-height: calc(100vh - 80px);  /* navbar ke niche full height */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 20px;
+}
+
+/* row ko center me rakhne ke liye */
+.auth-page-container .row {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto !important;
+}
+
+/* form + image perfect center */
+    .auth-form-wrapper {
+    width: 100%;
+    max-width: 450px;
+    margin: 0 auto !important;
+}
+
+/* Bootstrap 4 mistaken override fix */
+.col-lg-6 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+/* Compatibility fixes and helper classes */
+.form-error { color: #dc3545; font-size: 0.9rem; }
+.container-max1200 { width: 100%; max-width: 1200px; margin: 0 auto; }
+.card--max900 { max-width: 900px; width: 100%; margin: 0 auto; }
+.card--max700 { max-width: 700px; width: 100%; margin: 0 auto; }
+.actions-flex { margin-top: 2rem; display:flex; gap:1rem; }
+.btn-flex { flex: 1; }
+.icon-warning { color: #ffc107; }
+.icon-success { color: #28a745; }
+.icon-danger { color: #dc3545; }
+.card-subtitle { margin: 0; font-weight: normal; opacity: 0.9; }
+.actions-center { justify-content: center; }
+/* ===== FORCE CENTER FIX FOR REGISTER / LOGIN PAGE ===== */
+
+.auth-page-container {
+    width: 100%;
+    min-height: calc(100vh - 80px);  /* navbar ke niche full height */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 20px;
+}
+
+/* row ko center me rakhne ke liye */
+.auth-page-container .row {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto !important;
+}
+
+/* form + image perfect center */
+.auth-form-wrapper {
+    width: 100%;
+    max-width: 450px;
+    margin: 0 auto !important;
+}
+
+/* Bootstrap 4 mistaken override fix */
+.col-lg-6 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

@@ -1,21 +1,63 @@
+<!-- HEADER_COMMENT_AUTOGEN -->
+<!-- FILE: app\templates\admin\categories.html -->
+<!-- PURPOSE: Brief description of this template and common edit points. -->
+
 {% extends 'base.html' %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h3>Categories</h3>
-  <div>
-    <a class="btn btn-outline-info" href="{{ url_for('admin.users') }}">View Users</a>
-    <a class="btn btn-outline-secondary" href="{{ url_for('admin.index') }}">Back to Questions</a>
+<div class="admin-container">
+  <div class="admin-wrapper">
+    <div class="admin-header">
+      <h1><i class="fas fa-layer-group"></i> Manage Categories</h1>
+      <p>Add and view all quiz categories</p>
+    </div>
+
+    <div class="admin-header">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h2>Add New Category</h2>
+        <div class="btn-group">
+          <a class="btn btn-outline-secondary" href="{{ url_for('admin.index') }}" title="Back to Questions">
+            <i class="fas fa-arrow-left"></i> Questions
+          </a>
+          <a class="btn btn-outline-secondary" href="{{ url_for('admin.users') }}" title="View Users">
+            <i class="fas fa-users"></i> Users
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <form method="post" class="row g-2 p-3 bg-white">
+        <div class="col-auto">
+          <input name="name" class="form-control form-control-lg" placeholder="Enter category name" required>
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-primary btn-lg" type="submit">
+            <i class="fas fa-plus"></i> Add Category
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="admin-header mt-4">
+      <h2><i class="fas fa-list"></i> Existing Categories</h2>
+    </div>
+
+    <div class="table-responsive">
+      <div class="admin-cards">
+        {% if categories %}
+          {% for c in categories %}
+            <div class="admin-card">
+              <h4>{{ c.name }}</h4>
+              <p class="text-muted">Active Category</p>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="alert alert-info w-100" role="alert">
+            <i class="fas fa-info-circle"></i> No categories found. Add one above.
+          </div>
+        {% endif %}
+      </div>
+    </div>
   </div>
 </div>
-<form method="post" class="row g-2">
-  <div class="col-auto"><input name="name" class="form-control" placeholder="New category"></div>
-  <div class="col-auto"><button class="btn btn-primary" type="submit">Add</button></div>
-</form>
-<ul class="list-group mt-3">
-  {% for c in categories %}
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-      {{ c.name }}
-    </li>
-  {% endfor %}
-</ul>
 {% endblock %}

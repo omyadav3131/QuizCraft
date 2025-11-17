@@ -1,14 +1,32 @@
+<!-- HEADER_COMMENT_AUTOGEN -->
+<!-- FILE: app\templates\home.html -->
+<!-- PURPOSE: Brief description of this template and common edit points. -->
+
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="text-center py-5">
-  <h1 class="display-5 accent">Flask Quiz Application</h1>
-  <p class="lead">Automated MCQ quizzes with categories, difficulties, per-question feedback and leaderboard.</p>
-  {% if not current_user.is_authenticated %}
-    <a class="btn btn-primary" href="{{ url_for('auth.register') }}">Get Started</a>
-    <a class="btn btn-outline-primary" href="{{ url_for('auth.login') }}">Login</a>
-  {% else %}
-    <a class="btn btn-primary" href="{{ url_for('quiz.select') }}">Take a Quiz</a>
-  {% endif %}
+<div class="home-container">
+  <div class="home-content">
+    <h1><i class="fas fa-graduation-cap"></i> Quiz Master</h1>
+    <p>Test your knowledge across multiple categories and difficulty levels. Learn, practice, and excel!</p>
+    
+    <div class="home-buttons">
+      {% if not current_user.is_authenticated %}
+        <a class="btn btn-primary" href="{{ url_for('auth.register') }}">
+          <i class="fas fa-user-plus"></i> Get Started
+        </a>
+        <a class="btn btn-secondary" href="{{ url_for('auth.login') }}">
+          <i class="fas fa-sign-in-alt"></i> Login
+        </a>
+      {% else %}
+        <a class="btn btn-primary" href="{{ url_for('quiz.select') }}">
+          <i class="fas fa-play-circle"></i> Start Quiz
+        </a>
+        <a class="btn btn-secondary" href="{{ url_for('home') }}">
+          <i class="fas fa-home"></i> Home
+        </a>
+      {% endif %}
+    </div>
+  </div>
 </div>
 {% endblock %}

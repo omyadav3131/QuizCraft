@@ -1,3 +1,11 @@
+"""
+HEADER_COMMENT_AUTOGEN
+FILE: ensure_10_questions_per_difficulty.py
+PURPOSE: Brief description of this file and where to edit it.
+
+TIPS: Add your notes here to help future edits.
+"""
+
 # ensure_10_questions_per_difficulty.py
 from app import create_app, db
 from app.models import Question, Category
