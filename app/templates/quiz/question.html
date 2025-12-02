@@ -6,52 +6,61 @@
 
 {% block content %}
 <div class="quiz-container">
-  <div class="card card--max700">
+  <!-- Timer moved outside question box -->
+  <div class="quiz-timer-container" id="quizTimerContainer">
+    <div class="quiz-timer" id="quizTimer">
+      <i class="fas fa-clock"></i> 
+      <span id="timerDisplay">10:00</span>
+    </div>
+    <div class="question-progress">
+      <style>
+        /* dynamic progress width set per page to avoid inline style attr */
+        .question-progress-bar { width: {{ (question_num / total * 100) }}%; }
+      </style>
+      <div class="question-progress-bar"></div>
+    </div>
+  </div>
+  
+  <!-- Question box - larger with better styling -->
+  <div class="card card--max700 question-box-large">
     <div class="card-header">
       <div class="question-number">
         Question {{ question_num }} of {{ total }}
       </div>
-      <div class="question-progress">
-        <style>
-          /* dynamic progress width set per page to avoid inline style attr */
-          .question-progress-bar { width: {{ (question_num / total * 100) }}%; }
-        </style>
-        <div class="question-progress-bar"></div>
-      </div>
     </div>
     
-    <div class="card-body">
-      <h4 class="card-title">{{ question.text }}</h4>
+    <div class="card-body question-body-large">
+      <h2 class="card-title question-text-large">{{ question.text }}</h2>
       
       <form method="post">
-        <div>
-          <div class="form-check">
+        <div class="options-container">
+          <div class="form-check option-item">
             <input class="form-check-input" type="radio" name="option" id="option1" value="1" required>
-            <label class="form-check-label" for="option1">
+            <label class="form-check-label option-label-large" for="option1">
               <span class="option-number">A.</span> {{ question.option1 }}
             </label>
           </div>
           
-          <div class="form-check">
+          <div class="form-check option-item">
             <input class="form-check-input" type="radio" name="option" id="option2" value="2" required>
-            <label class="form-check-label" for="option2">
+            <label class="form-check-label option-label-large" for="option2">
               <span class="option-number">B.</span> {{ question.option2 }}
             </label>
           </div>
           
           {% if question.option3 %}
-          <div class="form-check">
+          <div class="form-check option-item">
             <input class="form-check-input" type="radio" name="option" id="option3" value="3" required>
-            <label class="form-check-label" for="option3">
+            <label class="form-check-label option-label-large" for="option3">
               <span class="option-number">C.</span> {{ question.option3 }}
             </label>
           </div>
           {% endif %}
           
           {% if question.option4 %}
-          <div class="form-check">
+          <div class="form-check option-item">
             <input class="form-check-input" type="radio" name="option" id="option4" value="4" required>
-            <label class="form-check-label" for="option4">
+            <label class="form-check-label option-label-large" for="option4">
               <span class="option-number">D.</span> {{ question.option4 }}
             </label>
           </div>
@@ -71,5 +80,188 @@
     </div>
   </div>
 </div>
+
+<script>
+// Timer functionality
+let timeRemaining = {{ time_remaining }}; // seconds
+const timerDisplay = document.getElementById('timerDisplay');
+const timerContainer = document.getElementById('quizTimerContainer');
+const form = document.querySelector('form');
+
+function updateTimer() {
+    const minutes = Math.floor(timeRemaining / 60);
+    const seconds = timeRemaining % 60;
+    timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    
+    // Change color when time is running out
+    if (timeRemaining <= 60) {
+        timerContainer.style.background = '#fee';
+        timerContainer.style.borderColor = '#dc3545';
+        timerDisplay.style.color = '#dc3545';
+    } else if (timeRemaining <= 180) {
+        timerContainer.style.background = '#fff8e1';
+        timerContainer.style.borderColor = '#ffc107';
+        timerDisplay.style.color = '#ffc107';
+    } else {
+        timerContainer.style.background = '#e3f2fd';
+        timerContainer.style.borderColor = '#2196f3';
+        timerDisplay.style.color = '#2196f3';
+    }
+    
+    if (timeRemaining <= 0) {
+        // Time's up! Auto-submit the form
+        alert('Time is up! Quiz will be submitted automatically.');
+        form.submit();
+        return;
+    }
+    
+    timeRemaining--;
+}
+
+// Update timer every second
+const timerInterval = setInterval(updateTimer, 1000);
+
+// Initial display
+updateTimer();
+</script>
+
+<style>
+/* Timer moved outside - larger and more visible */
+.quiz-timer-container {
+  max-width: 800px;
+  margin: 0 auto 2rem auto;
+  padding: 1.5rem 2rem;
+  background: #e3f2fd;
+  border: 3px solid #2196f3;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+  text-align: center;
+}
+
+.quiz-timer {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2196f3;
+  margin-bottom: 1rem;
+}
+
+.quiz-timer i {
+  margin-right: 0.5rem;
+}
+
+.question-progress {
+  width: 100%;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 1rem;
+}
+
+.question-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #2196f3, #21cbf3);
+  transition: width 0.3s ease;
+}
+
+/* Question box - larger and redesigned */
+.question-box-large {
+  max-width: 900px;
+  margin: 0 auto;
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.question-box-large .card-header {
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 14px 14px 0 0;
+}
+
+.question-number {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: white;
+}
+
+.question-body-large {
+  padding: 2.5rem 3rem;
+}
+
+.question-text-large {
+  font-size: 1.8rem;
+  font-weight: 600;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  color: #212529;
+}
+
+/* Options - larger with better spacing */
+.options-container {
+  margin-top: 2rem;
+}
+
+.option-item {
+  padding: 1.2rem 1.5rem;
+  margin-bottom: 1rem;
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.option-item:hover {
+  background: #e9ecef;
+  border-color: #667eea;
+  transform: translateX(5px);
+}
+
+.option-label-large {
+  font-size: 1.3rem;
+  line-height: 1.6;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  color: #495057;
+}
+
+.option-number {
+  font-weight: 700;
+  color: #667eea;
+  margin-right: 0.75rem;
+  font-size: 1.4rem;
+}
+
+.form-check-input {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 768px) {
+  .quiz-timer {
+    font-size: 2rem;
+  }
+  
+  .quiz-timer-container {
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .question-body-large {
+    padding: 1.5rem 1.5rem;
+  }
+  
+  .question-text-large {
+    font-size: 1.4rem;
+  }
+  
+  .option-label-large {
+    font-size: 1.1rem;
+  }
+}
+</style>
+
 {% endblock %}
 

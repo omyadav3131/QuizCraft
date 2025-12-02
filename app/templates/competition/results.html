@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <!-- Winner Section -->
+            {% if competition.status == 'completed' and competition.winner %}
+            <div class="card shadow-lg mb-5" style="border: 3px solid gold; background: linear-gradient(135deg, #fff9e6 0%, #fffef0 100%);">
+                <div class="card-body text-center p-5">
+                    <h2 class="mb-3">🏆 Competition Complete!</h2>
+                    <h3 class="text-success mb-4" style="font-size: 28px;">{{ competition.winner.username }} is the Winner! 🎉</h3>
+                    
+                    <div class="row text-center">
+                        {% for attempt in attempts | sort(attribute='score', reverse=True) %}
+                        <div class="col-md-6 mb-4">
+                            <div class="result-card" style="background: linear-gradient(135deg, {% if attempt.user_id == competition.winner_id %}#FFD700 0%, #FFA500{% else %}#C0C0C0 0%, #808080{% endif %} 100%); padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+                                <h4 class="text-white mb-3">{{ attempt.user.username }}</h4>
+                                {% if attempt.user_id == competition.winner_id %}
+                                <div class="mb-3" style="font-size: 48px;">🥇</div>
+                                {% endif %}
+                                <div class="stat mb-3">
+                                    <span class="stat-value text-white" style="font-size: 32px; font-weight: bold; display: block;">{{ attempt.correct_answers }}/{{ attempt.total_questions }}</span>
+                                    <p class="text-white mb-0">Correct Answers</p>
+                                </div>
+                                <div class="stat mb-3">
+                                    <span class="stat-value text-white" style="font-size: 32px; font-weight: bold; display: block;">{{ "%.1f"|format(attempt.score) }}%</span>
+                                    <p class="text-white mb-0">Accuracy</p>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-value text-white" style="font-size: 24px; font-weight: bold; display: block;">{{ attempt.time_taken }}s</span>
+                                    <p class="text-white mb-0">Time Taken</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info alert-lg" style="font-size: 16px;">
+                ⏳ Competition is still in progress. Some players haven't completed yet.
+            </div>
+            {% endif %}
+            
+            <!-- Detailed Results Table -->
+            <div class="card shadow-lg">
+                <div class="card-header" style="background-color: #0d6efd; color: white;">
+                    <h5 class="mb-0">📊 Detailed Results</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr style="background-color: #f8f9fa;">
+                                    <th>Player</th>
+                                    <th>Correct/Total</th>
+                                    <th>Accuracy</th>
+                                    <th>Time Taken</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attempt in attempts | sort(attribute='score', reverse=True) %}
+                                <tr>
+                                    <td><strong>{{ attempt.user.username }}</strong></td>
+                                    <td>{{ attempt.correct_answers }}/{{ attempt.total_questions }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 25px;">
+                                            <div class="progress-bar" role="progressbar" 
+                                                 style="width: {{ attempt.score }}%; background-color: {% if attempt.score >= 80 %}#28a745{% elif attempt.score >= 60 %}#ffc107{% else %}#dc3545{% endif %};">
+                                                {{ "%.1f"|format(attempt.score) }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ attempt.time_taken }}s</td>
+                                    <td>
+                                        {% if attempt.status == 'completed' %}
+                                        <span class="badge bg-success">✓ Completed</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">In Progress</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Competition Info -->
+            <div class="card shadow-lg mt-4">
+                <div class="card-header" style="background-color: #6c757d; color: white;">
+                    <h5 class="mb-0">ℹ️ Competition Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Code:</strong> <code style="background: #f0f0f0; padding: 5px; border-radius: 3px;">{{ competition.code }}</code></p>
+                            <p><strong>Category:</strong> {{ competition.category.name }}</p>
+                            <p><strong>Difficulty:</strong> {{ competition.difficulty }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Questions:</strong> {{ competition.num_questions }}</p>
+                            <p><strong>Created:</strong> {{ competition.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                            {% if competition.started_at %}
+                            <p><strong>Started:</strong> {{ competition.started_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 text-center">
+                <a href="{{ url_for('competition.competition_menu') }}" class="btn btn-primary btn-lg">← Back to Hub</a>
+                <a href="{{ url_for('competition.create_competition') }}" class="btn btn-success btn-lg">🎮 New Competition</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.result-card {
+    transition: transform 0.3s ease;
+}
+
+.result-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat {
+    margin-bottom: 15px;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: bold;
+    display: block;
+}
+</style>
+<script>
+// Auto-refresh results page if competition is still in progress
+document.addEventListener('DOMContentLoaded', function() {
+    var status = '{{ competition.status }}';
+    if (status !== 'completed') {
+        setTimeout(function() {
+            window.location.reload();
+        }, 2000); // Refresh every 2 seconds until completed
+    }
+});
+</script>
+{% endblock %}

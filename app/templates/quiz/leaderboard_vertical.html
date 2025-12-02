@@ -1,0 +1,95 @@
+<!-- HEADER_COMMENT_AUTOGEN -->
+<!-- FILE: app\templates\quiz\leaderboard_vertical.html -->
+<!-- PURPOSE: Vertical card-style leaderboard template -->
+
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="leaderboard-vertical-container">
+    <div class="container">
+        <div class="leaderboard-header">
+            <h1><i class="fas fa-trophy"></i> Leaderboard{% if category_name %} - {{ category_name }}{% endif %}</h1>
+            <p class="leaderboard-subtitle">
+                {% if category_name %}
+                    Top performers in {{ category_name }}
+                {% else %}
+                    Top performers across all quizzes
+                {% endif %}
+            </p>
+            {% if categories %}
+            <div class="leaderboard-filters">
+                <form method="GET" action="{{ url_for('quiz.leaderboard') }}" class="category-filter-form">
+                    <label for="category">Filter by Category:</label>
+                    <select name="category" id="category" onchange="this.form.submit()" class="form-control">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if selected_category == cat.id %}selected{% endif %}>
+                            {{ cat.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="leaderboard-cards">
+            {% for entry in entries %}
+            <div class="leaderboard-card {% if loop.index == 1 %}gold-card{% elif loop.index == 2 %}silver-card{% elif loop.index == 3 %}bronze-card{% endif %}">
+                <div class="card-rank">
+                    {% if loop.index == 1 %}
+                        <i class="fas fa-medal gold-medal-icon"></i>
+                    {% elif loop.index == 2 %}
+                        <i class="fas fa-medal silver-medal-icon"></i>
+                    {% elif loop.index == 3 %}
+                        <i class="fas fa-medal bronze-medal-icon"></i>
+                    {% else %}
+                        <span class="rank-number">#{{ loop.index }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="card-avatar">
+                    <div class="avatar-circle">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+                
+                <div class="card-content">
+                    <div class="card-main">
+                        <h3 class="card-username">{{ entry.username }}</h3>
+                        <div class="card-scores">
+                            <div class="card-points">
+                                <span class="points-label">Points:</span>
+                                <span class="points-value">{{ entry.points }}</span>
+                            </div>
+                            <div class="card-score">
+                                <span class="score-value">{{ entry.score }}</span>
+                                <span class="score-separator">/</span>
+                                <span class="score-total">{{ entry.total }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-meta">
+                        <span class="difficulty-badge difficulty-{{ entry.difficulty.lower() }}">{{ entry.difficulty }}</span>
+                        <span class="card-info">
+                            <i class="fas fa-folder"></i> {{ entry.category }} 
+                            <span class="separator">•</span>
+                            <i class="fas fa-calendar"></i> {{ entry.date }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if entries|length == 0 %}
+        <div class="empty-leaderboard">
+            <i class="fas fa-inbox"></i>
+            <p>No leaderboard entries yet. Be the first to take a quiz!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

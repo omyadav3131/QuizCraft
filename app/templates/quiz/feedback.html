@@ -1,0 +1,190 @@
+<!-- HEADER_COMMENT_AUTOGEN -->
+<!-- FILE: app\templates\quiz\feedback.html -->
+<!-- PURPOSE: Feedback form page accessible before quiz -->
+
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="quiz-container">
+  <div class="result-container feedback-form-container" style="max-width: 700px; margin: 2rem auto; background: #f8f9fa; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+    <h3 style="color: #0d6efd; margin-bottom: 1.5rem; text-align: center; font-size: 1.8rem;">
+      <i class="fas fa-comment-alt"></i> Share Your Feedback
+    </h3>
+    <p style="text-align: center; color: #6c757d; margin-bottom: 1.5rem;">We'd love to hear about your experience with Quiz Master!</p>
+    
+    <form method="POST" action="{{ url_for('quiz.feedback') }}" class="feedback-form">
+      <div class="form-group">
+        <label for="name">Your Name</label>
+        <input type="text" class="form-control" id="name" name="name" 
+               value="{{ current_user.username if current_user.is_authenticated else '' }}" 
+               required>
+      </div>
+      
+      <div class="form-group">
+        <label for="rating">Rating <span style="color: #dc3545;">*</span></label>
+        <div class="rating-input" id="ratingContainer">
+          <input type="radio" name="rating" id="rating5" value="5" required>
+          <label for="rating5" class="star-label" data-rating="5"><i class="fas fa-star"></i></label>
+          
+          <input type="radio" name="rating" id="rating4" value="4" required>
+          <label for="rating4" class="star-label" data-rating="4"><i class="fas fa-star"></i></label>
+          
+          <input type="radio" name="rating" id="rating3" value="3" required>
+          <label for="rating3" class="star-label" data-rating="3"><i class="fas fa-star"></i></label>
+          
+          <input type="radio" name="rating" id="rating2" value="2" required>
+          <label for="rating2" class="star-label" data-rating="2"><i class="fas fa-star"></i></label>
+          
+          <input type="radio" name="rating" id="rating1" value="1" required>
+          <label for="rating1" class="star-label" data-rating="1"><i class="fas fa-star"></i></label>
+        </div>
+        <div style="text-align: center; margin-top: 0.5rem; color: #6c757d; font-size: 0.9rem;">
+          <span id="ratingText">Click a star to rate</span>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="feedback_text">Your Feedback</label>
+        <textarea class="form-control" id="feedback_text" name="feedback_text" 
+                  rows="4" placeholder="Tell us about your experience, suggestions, or any issues you faced..." required></textarea>
+      </div>
+      
+      <div class="form-buttons" style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-paper-plane"></i> Submit Feedback
+        </button>
+        <a href="{{ url_for('home') }}" class="btn btn-secondary">
+          <i class="fas fa-home"></i> Back to Home
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.feedback-form {
+  margin-top: 1.5rem;
+  text-align: left;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.rating-input {
+  display: flex;
+  gap: 0.25rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.rating-input input[type="radio"] {
+  display: none;
+}
+
+.rating-input .star-label {
+  font-size: 2.5rem;
+  color: #ddd;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0.25rem;
+}
+
+.rating-input .star-label:hover {
+  color: #ffc107;
+  transform: scale(1.1);
+}
+
+.rating-input input[type="radio"]:checked ~ .star-label {
+  color: #ffc107;
+}
+
+.rating-input:hover .star-label {
+  color: #ddd;
+}
+
+.rating-input .star-label:hover,
+.rating-input .star-label:hover ~ .star-label {
+  color: #ffc107;
+}
+
+.rating-input:not(:hover) input[type="radio"]:checked ~ .star-label {
+  color: #ffc107;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+textarea.form-control {
+  resize: vertical;
+}
+
+.feedback-form-container {
+  border: 2px solid #0d6efd;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+.feedback-form-container h3 {
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+</style>
+
+<script>
+// Interactive star rating
+document.addEventListener('DOMContentLoaded', function() {
+  const ratingInputs = document.querySelectorAll('.rating-input input[type="radio"]');
+  const ratingText = document.getElementById('ratingText');
+  const labels = {
+    1: 'Poor',
+    2: 'Fair',
+    3: 'Good',
+    4: 'Very Good',
+    5: 'Excellent'
+  };
+  
+  ratingInputs.forEach(input => {
+    input.addEventListener('change', function() {
+      const value = parseInt(this.value);
+      ratingText.textContent = labels[value] + ' (' + value + ' stars)';
+      ratingText.style.color = '#28a745';
+      ratingText.style.fontWeight = '600';
+    });
+  });
+  
+  // Hover effect
+  document.querySelectorAll('.star-label').forEach(label => {
+    label.addEventListener('mouseenter', function() {
+      const rating = parseInt(this.getAttribute('data-rating'));
+      ratingText.textContent = labels[rating] + ' (' + rating + ' stars)';
+      ratingText.style.color = '#ffc107';
+    });
+  });
+  
+  document.getElementById('ratingContainer').addEventListener('mouseleave', function() {
+    const checked = document.querySelector('.rating-input input[type="radio"]:checked');
+    if (checked) {
+      const value = parseInt(checked.value);
+      ratingText.textContent = labels[value] + ' (' + value + ' stars)';
+      ratingText.style.color = '#28a745';
+    } else {
+      ratingText.textContent = 'Click a star to rate';
+      ratingText.style.color = '#6c757d';
+    }
+  });
+});
+</script>
+{% endblock %}
+

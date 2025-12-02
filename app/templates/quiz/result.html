@@ -1,41 +1,329 @@
 <!-- HEADER_COMMENT_AUTOGEN -->
 <!-- FILE: app\templates\quiz\result.html -->
-<!-- PURPOSE: Brief description of this template and common edit points. -->
+<!-- PURPOSE: Result page showing a sticky summary (score) on the left and detailed answer review on the right. Feedback form removed. -->
 
 {% extends 'base.html' %}
 
 {% block content %}
 <div class="quiz-container">
-  <div class="result-container">
-    <h2><i class="fas fa-trophy"></i> Quiz Completed!</h2>
-    
-    <div class="result-score">{{ score }}/{{ total }}</div>
-    
-    <div class="result-percentage">
-      Score: {{ ((score / total * 100) if total > 0 else 0) | round(1) }}%
-    </div>
-    
-    <div class="result-message">
-      {% if (score / total * 100) >= 80 %}
-        <i class="fas fa-star icon-warning"></i> Excellent! You're a master!
-      {% elif (score / total * 100) >= 60 %}
-        <i class="fas fa-thumbs-up icon-success"></i> Good job! Keep practicing!
-      {% elif (score / total * 100) >= 40 %}
-        <i class="fas fa-lightbulb icon-warning"></i> Not bad! Try again to improve!
-      {% else %}
-        <i class="fas fa-book icon-danger"></i> Study more and try again!
-      {% endif %}
-    </div>
-    
-    <div class="result-buttons">
-      <a href="{{ url_for('quiz.select') }}" class="btn btn-primary">
-        <i class="fas fa-redo-alt"></i> Take Another Quiz
-      </a>
-      <a href="{{ url_for('home') }}" class="btn btn-secondary">
-        <i class="fas fa-home"></i> Go Home
-      </a>
-    </div>
-  </div>
-</div>
-{% endblock %}
+  <div class="layout">
+    <!-- LEFT: Summary / Score (sticky) -->
+    <aside class="summary-column" aria-label="Quiz summary">
+      <div class="summary-card">
+        <h3 style="margin:0 0 .25rem 0;"><i class="fas fa-trophy"></i> Quiz Completed!</h3>
 
+        <div class="summary-score" style="margin-top:.5rem;">
+          <div class="score-large" aria-live="polite">{{ score }}/{{ total }}</div>
+          <div class="score-percent" style="margin-top:.25rem;">
+            {{ ((score / total * 100) if total > 0 else 0) | round(1) }}%
+          </div>
+        </div>
+
+        <div class="summary-points" style="margin-top:.75rem;">
+          <i class="fas fa-star"></i> Points Earned: <strong>{{ points|default(0) }}</strong>
+        </div>
+
+        <div class="summary-meta" style="font-size:.9rem; color:#6c757d; margin-top:.5rem;">
+          {% if difficulty %}
+            {{ difficulty }} • {{ (points|default(0) / score) | round(1) if score > 0 else 0 }} pts/q
+          {% endif %}
+        </div>
+
+        <div class="summary-buttons" style="margin-top:1rem;">
+          <a href="{{ url_for('quiz.leaderboard') }}" class="btn btn-success btn-block">
+            <i class="fas fa-trophy"></i> View Leaderboard
+          </a>
+          <a href="{{ url_for('quiz.select') }}" class="btn btn-primary btn-block" style="margin-top:.5rem;">
+            <i class="fas fa-redo-alt"></i> Take Another Quiz
+          </a>
+          <a href="{{ url_for('home') }}" class="btn btn-secondary btn-block" style="margin-top:.5rem;">
+            <i class="fas fa-home"></i> Go Home
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT: Detailed Answer Review -->
+    <main class="review-column" aria-label="Detailed answer review">
+      <div class="result-container">
+        <h3 style="color: #0d6efd; margin-bottom: 1.25rem; text-align: center; font-size: 1.6rem;">
+          <i class="fas fa-clipboard-check"></i> Detailed Answer Review
+        </h3>
+
+        {% if answer_review %}
+        <div class="answer-review-container">
+          {% for review in answer_review %}
+          <div class="answer-review-card {% if review.is_correct %}correct-answer{% else %}wrong-answer{% endif %}">
+            <div class="review-question-header">
+              <div class="question-number-badge">Question {{ loop.index }}</div>
+              <div class="answer-status-badge">
+                {% if review.is_correct %}
+                  <i class="fas fa-check-circle"></i> Correct (+{{ review.points_earned }} pts)
+                {% else %}
+                  <i class="fas fa-times-circle"></i> Incorrect (0 pts)
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="review-question-text">
+              <strong>{{ review.question.text }}</strong>
+            </div>
+
+            <div class="review-options">
+              <div class="option-item {% if review.chosen_option == 1 %}{% if review.is_correct %}selected-correct{% else %}selected-wrong{% endif %}{% elif review.correct_option == 1 %}correct-option{% endif %}">
+                <span class="option-label">A.</span> {{ review.question.option1 }}
+                {% if review.chosen_option == 1 %}
+                  <span class="your-answer-tag">Your Answer</span>
+                {% endif %}
+                {% if review.correct_option == 1 and not review.is_correct %}
+                  <span class="correct-answer-tag">Correct Answer</span>
+                {% endif %}
+              </div>
+
+              <div class="option-item {% if review.chosen_option == 2 %}{% if review.is_correct %}selected-correct{% else %}selected-wrong{% endif %}{% elif review.correct_option == 2 %}correct-option{% endif %}">
+                <span class="option-label">B.</span> {{ review.question.option2 }}
+                {% if review.chosen_option == 2 %}
+                  <span class="your-answer-tag">Your Answer</span>
+                {% endif %}
+                {% if review.correct_option == 2 and not review.is_correct %}
+                  <span class="correct-answer-tag">Correct Answer</span>
+                {% endif %}
+              </div>
+
+              <div class="option-item {% if review.chosen_option == 3 %}{% if review.is_correct %}selected-correct{% else %}selected-wrong{% endif %}{% elif review.correct_option == 3 %}correct-option{% endif %}">
+                <span class="option-label">C.</span> {{ review.question.option3 }}
+                {% if review.chosen_option == 3 %}
+                  <span class="your-answer-tag">Your Answer</span>
+                {% endif %}
+                {% if review.correct_option == 3 and not review.is_correct %}
+                  <span class="correct-answer-tag">Correct Answer</span>
+                {% endif %}
+              </div>
+
+              <div class="option-item {% if review.chosen_option == 4 %}{% if review.is_correct %}selected-correct{% else %}selected-wrong{% endif %}{% elif review.correct_option == 4 %}correct-option{% endif %}">
+                <span class="option-label">D.</span> {{ review.question.option4 }}
+                {% if review.chosen_option == 4 %}
+                  <span class="your-answer-tag">Your Answer</span>
+                {% endif %}
+                {% if review.correct_option == 4 and not review.is_correct %}
+                  <span class="correct-answer-tag">Correct Answer</span>
+                {% endif %}
+              </div>
+            </div>
+
+            {% if review.explanation %}
+            <div class="review-explanation">
+              <strong><i class="fas fa-lightbulb"></i> Explanation:</strong>
+              <p>{{ review.explanation }}</p>
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+          <p style="text-align:center; color:#6c757d;">No answer review available.</p>
+        {% endif %}
+      </div>
+    </main>
+  </div> <!-- /.layout -->
+</div> <!-- /.quiz-container -->
+
+<style>
+/* Layout: two columns */
+.layout {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+  box-sizing: border-box;
+}
+
+/* LEFT summary column (fixed width + sticky) */
+.summary-column {
+  width: 320px;
+  flex: 0 0 320px;
+  position: sticky;
+  top: 90px; /* adjust if navbar height differs */
+  align-self: flex-start;
+}
+
+/* Summary card styling */
+.summary-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 6px 18px rgba(14, 30, 37, 0.06);
+  border: 1px solid rgba(13, 110, 253, 0.08);
+  text-align: center;
+}
+
+.score-large {
+  font-size: 3.2rem;
+  font-weight: 800;
+  color: #0d6efd;
+  line-height: 1;
+}
+
+.score-percent {
+  font-size: 1.05rem;
+  color: #6c757d;
+}
+
+/* Buttons full width */
+.btn-block { display: block; width: 100%; }
+
+/* RIGHT review column */
+.review-column {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Answer review styles (retained & slightly polished) */
+.answer-review-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.answer-review-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  border-left: 5px solid;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.answer-review-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+
+.answer-review-card.correct-answer {
+  border-left-color: #28a745;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fff6 100%);
+}
+
+.answer-review-card.wrong-answer {
+  border-left-color: #dc3545;
+  background: linear-gradient(180deg, #ffffff 0%, #fff6f6 100%);
+}
+
+.review-question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: .75rem;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.question-number-badge {
+  background: #0d6efd;
+  color: #fff;
+  padding: .35rem .9rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: .9rem;
+}
+
+.answer-status-badge {
+  padding: .35rem .9rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: .9rem;
+}
+
+.correct-answer .answer-status-badge { background: #28a745; color: #fff; }
+.wrong-answer .answer-status-badge   { background: #dc3545; color: #fff; }
+
+.review-question-text {
+  font-size: 1.05rem;
+  margin-bottom: .75rem;
+  color: #333;
+  line-height: 1.5;
+}
+
+.review-options {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  margin-bottom: .75rem;
+}
+
+.option-item {
+  padding: .9rem;
+  border-radius: 8px;
+  border: 2px solid #e9e9e9;
+  background: #fbfbfb;
+  position: relative;
+}
+
+.option-item.selected-correct {
+  background: #e6f8ed;
+  border-color: #28a745;
+  color: #155724;
+}
+
+.option-item.selected-wrong {
+  background: #fff0f0;
+  border-color: #dc3545;
+  color: #721c24;
+}
+
+.option-item.correct-option {
+  background: #e6f8ed;
+  border-color: #28a745;
+  color: #155724;
+}
+
+.option-label {
+  font-weight: 700;
+  margin-right: .5rem;
+  color: #0d6efd;
+}
+
+.your-answer-tag {
+  float: right;
+  background: #ffc107;
+  color: #000;
+  padding: .2rem .5rem;
+  border-radius: 12px;
+  font-size: .75rem;
+  font-weight: 600;
+}
+
+.correct-answer-tag {
+  float: right;
+  background: #28a745;
+  color: #fff;
+  padding: .2rem .5rem;
+  border-radius: 12px;
+  font-size: .75rem;
+  font-weight: 600;
+  margin-left: .5rem;
+}
+
+.review-explanation {
+  margin-top: .75rem;
+  padding: .9rem;
+  background: #eef7ff;
+  border-radius: 8px;
+  border-left: 4px solid #0d6efd;
+}
+
+.review-explanation strong { color: #0d6efd; display:block; margin-bottom:.35rem; }
+.review-explanation p { margin:0; color:#495057; line-height:1.6; }
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .layout { flex-direction: column; padding: 1rem; }
+  .summary-column { position: relative; top: 0; width: 100%; flex: none; }
+  .summary-card { margin-bottom: 1rem; }
+  .score-large { font-size: 2.4rem; }
+}
+</style>
+{% endblock %}

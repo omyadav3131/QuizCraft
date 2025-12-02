@@ -36,16 +36,39 @@ def login():
     if form.validate_on_submit():
         u = User.query.filter_by(username=form.username.data).first()
         if u and u.check_password(form.password.data):
+            # Prevent admin login from user login page
+            if u.is_admin():
+                flash('Please use Admin Login page to login as admin', 'warning')
+                return render_template('auth/login.html', form=form)
             login_user(u)
             flash('Logged in successfully', 'success')
-            # Redirect admin users to admin panel
-            if u.is_admin():
-                return redirect(url_for('admin.index'))
             # Regular users go to quiz
             next_page = request.args.get('next') or url_for('quiz.select')
             return redirect(next_page)
         flash('Invalid username or password', 'danger')
     return render_template('auth/login.html', form=form)
+
+@auth_bp.route('/admin/login', methods=['GET','POST'])
+def admin_login():
+    if current_user.is_authenticated:
+        if current_user.is_admin():
+            return redirect(url_for('admin.index'))
+        else:
+            flash('You are logged in as a regular user. Please logout first.', 'warning')
+            return redirect(url_for('home'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        u = User.query.filter_by(username=form.username.data).first()
+        if u and u.check_password(form.password.data):
+            # Only allow admin users
+            if not u.is_admin():
+                flash('Access denied. This is for admin users only.', 'danger')
+                return render_template('auth/admin_login.html', form=form)
+            login_user(u)
+            flash('Admin logged in successfully', 'success')
+            return redirect(url_for('admin.index'))
+        flash('Invalid username or password', 'danger')
+    return render_template('auth/admin_login.html', form=form)
 
 @auth_bp.route('/logout')
 @login_required

@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="mb-4">🎮 Competition Hub</h2>
+            
+            <!-- Action Cards -->
+            <div class="row mb-5">
+                <div class="col-md-6 mb-3">
+                    <a href="{{ url_for('competition.create_competition') }}" class="card-link">
+                        <div class="competition-action-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <div class="action-icon">➕</div>
+                            <h4>Create Test</h4>
+                            <p>Start a new competition test</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <a href="{{ url_for('competition.join_competition') }}" class="card-link">
+                        <div class="competition-action-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <div class="action-icon">🔗</div>
+                            <h4>Join Test</h4>
+                            <p>Join with competition code</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Recent Competitions -->
+            {% if competitions %}
+            <h3 class="mt-5 mb-3">📊 Your Competitions</h3>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead style="background-color: #0d6efd; color: white;">
+                        <tr>
+                            <th>Code</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Your Score</th>
+                            <th>Result</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for comp in competitions %}
+                        <tr>
+                            <td><code style="font-weight: bold; background: #f0f0f0; padding: 5px; border-radius: 3px;">{{ comp.code }}</code></td>
+                            <td>{{ comp.category.name }}</td>
+                            <td>
+                                <span class="badge" style="background-color: {% if comp.status == 'completed' %}#28a745{% elif comp.status == 'in_progress' %}#ffc107{% else %}#17a2b8{% endif %};">
+                                    {{ comp.status.title() }}
+                                </span>
+                            </td>
+                            <td>
+                                {% set user_attempt = comp.user_attempts | selectattr('user_id', 'equalto', current_user.id) | first %}
+                                {% if user_attempt %}
+                                    <strong>{{ "%.1f"|format(user_attempt.score) }}%</strong>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if comp.status == 'completed' %}
+                                    {% if comp.winner_id == current_user.id %}
+                                        <span class="badge bg-success">🏆 Winner!</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Lost</span>
+                                    {% endif %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('competition.competition_results', code=comp.code) }}" class="btn btn-sm btn-primary">View</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                📝 No competitions yet. Start your first competition!
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.card-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.competition-action-card {
+    color: white;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.competition-action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.action-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+</style>
+{% endblock %}

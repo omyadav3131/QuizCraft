@@ -1,0 +1,104 @@
+/* Custom CSS for QuizCraft Leaderboard */
+
+.medal-card {
+    text-align: center;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    height: 100%;
+}
+
+.medal-card:hover {
+    transform: translateY(-5px);
+}
+
+.medal-gold {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    border: 3px solid #ffd700;
+}
+
+.medal-silver {
+    background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
+    border: 3px solid #c0c0c0;
+}
+
+.medal-bronze {
+    background: linear-gradient(135deg, #cd7f32 0%, #e6a857 100%);
+    border: 3px solid #cd7f32;
+}
+
+.medal-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.medal-card h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.medal-card h5 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #000;
+}
+
+.medal-score {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.medal-percentage {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #555;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.badge {
+    padding: 0.35em 0.65em;
+    font-size: 0.875em;
+    font-weight: 600;
+    border-radius: 0.25rem;
+}
+
+.badge-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-info {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.badge-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.badge-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.badge-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+

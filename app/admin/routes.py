@@ -253,3 +253,15 @@ def bulk_add_questions():
         return redirect(url_for('admin.index'))
     
     return render_template('admin/bulk_add_questions.html', categories=cats)
+
+@admin_bp.route('/feedback')
+@login_required
+@admin_required
+def feedback():
+    from app.models import Feedback
+    try:
+        feedbacks = Feedback.query.order_by(Feedback.created_at.desc()).all()
+    except Exception as e:
+        flash(f'Error loading feedback: {str(e)}. Please run "python update_db.py" to create the feedback table.', 'danger')
+        feedbacks = []
+    return render_template('admin/feedback.html', feedbacks=feedbacks)

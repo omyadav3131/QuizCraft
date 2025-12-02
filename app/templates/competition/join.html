@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-header" style="background-color: #28a745; color: white; text-align: center;">
+                    <h4 class="mb-0">🔗 Join Competition Test</h4>
+                </div>
+                <div class="card-body p-5 text-center">
+                    <p class="text-muted mb-4">Enter the 8-character competition code shared by your friend</p>
+                    
+                    <form method="POST">
+                        <div class="mb-4">
+                            <input type="text" class="form-control form-control-lg text-center" 
+                                   id="code" name="code" placeholder="E.g., AB12CD34" 
+                                   maxlength="8" style="font-size: 24px; letter-spacing: 5px; font-weight: bold; text-transform: uppercase;" 
+                                   required autofocus>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success btn-lg flex-grow-1">Join Test</button>
+                            <a href="{{ url_for('competition.competition_menu') }}" class="btn btn-secondary btn-lg">Back</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-uppercase input
+document.getElementById('code').addEventListener('input', function() {
+    this.value = this.value.toUpperCase();
+});
+</script>
+{% endblock %}

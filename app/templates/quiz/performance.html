@@ -1,0 +1,339 @@
+<!-- HEADER_COMMENT_AUTOGEN -->
+<!-- FILE: app\templates\quiz\performance.html -->
+<!-- PURPOSE: Performance dashboard with graphs -->
+
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="quiz-container">
+  <div class="result-container" style="max-width: 1200px; margin: 2rem auto;">
+    <h2 style="text-align: center; margin-bottom: 2rem; color: #0d6efd;">
+      <i class="fas fa-chart-line"></i> Performance Dashboard
+    </h2>
+    
+    {% if total_quizzes == 0 %}
+    <div class="alert alert-info text-center">
+      <i class="fas fa-info-circle"></i> No quiz attempts yet. Take some quizzes to see your performance!
+      <br><br>
+      <a href="{{ url_for('quiz.select') }}" class="btn btn-primary">
+        <i class="fas fa-play-circle"></i> Start Your First Quiz
+      </a>
+    </div>
+    {% else %}
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="card text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+          <div class="card-body">
+            <h3><i class="fas fa-tasks"></i></h3>
+            <h4>{{ total_quizzes }}</h4>
+            <p class="mb-0">Total Quizzes</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none;">
+          <div class="card-body">
+            <h3><i class="fas fa-percentage"></i></h3>
+            <h4>{{ avg_score }}%</h4>
+            <p class="mb-0">Average Score</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border: none;">
+          <div class="card-body">
+            <h3><i class="fas fa-star"></i></h3>
+            <h4>{{ total_points }}</h4>
+            <p class="mb-0">Total Points</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; border: none;">
+          <div class="card-body">
+            <h3><i class="fas fa-trophy"></i></h3>
+            <h4>{{ (total_points / total_quizzes)|round(1) if total_quizzes > 0 else 0 }}</h4>
+            <p class="mb-0">Avg Points/Quiz</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Charts Row -->
+    <div class="row mb-4">
+      <!-- Score Over Time Chart -->
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h5><i class="fas fa-chart-area"></i> Score Trend Over Time</h5>
+          </div>
+          <div class="card-body">
+            <canvas id="scoreChart" height="250"></canvas>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Points Over Time Chart -->
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h5><i class="fas fa-chart-bar"></i> Points Earned Over Time</h5>
+          </div>
+          <div class="card-body">
+            <canvas id="pointsChart" height="250"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Category and Difficulty Performance -->
+    <div class="row mb-4">
+      <!-- Category Performance -->
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h5><i class="fas fa-folder"></i> Performance by Category</h5>
+          </div>
+          <div class="card-body">
+            <canvas id="categoryChart" height="250"></canvas>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Difficulty Performance -->
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h5><i class="fas fa-layer-group"></i> Performance by Difficulty</h5>
+          </div>
+          <div class="card-body">
+            <canvas id="difficultyChart" height="250"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Recent Attempts Table -->
+    <div class="card">
+      <div class="card-header">
+        <h5><i class="fas fa-history"></i> Recent Quiz Attempts</h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Difficulty</th>
+                <th>Score</th>
+                <th>Points</th>
+                <th>Percentage</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for attempt in attempts[-10:]|reverse %}
+              <tr>
+                <td>{{ attempt.created_at.strftime('%Y-%m-%d %H:%M') if attempt.created_at else 'N/A' }}</td>
+                <td>
+                  {% if attempt.category_id %}
+                    {% set category = attempt.category_id %}
+                    {% for cat in categories if cat.id == category %}
+                      {{ cat.name }}
+                    {% endfor %}
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="badge badge-{% if attempt.difficulty == 'Easy' %}success{% elif attempt.difficulty == 'Medium' %}warning{% else %}danger{% endif %}">
+                    {{ attempt.difficulty or 'N/A' }}
+                  </span>
+                </td>
+                <td><strong>{{ attempt.score }}/{{ attempt.total }}</strong></td>
+                <td><strong style="color: #28a745;">{{ attempt.points or 0 }}</strong></td>
+                <td>
+                  <span class="badge badge-{% if (attempt.score / attempt.total * 100) >= 80 %}success{% elif (attempt.score / attempt.total * 100) >= 60 %}warning{% else %}danger{% endif %}">
+                    {{ ((attempt.score / attempt.total * 100) if attempt.total > 0 else 0)|round(1) }}%
+                  </span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    {% endif %}
+    
+    <div class="text-center mt-4">
+      <a href="{{ url_for('quiz.select') }}" class="btn btn-primary">
+        <i class="fas fa-play-circle"></i> Take Another Quiz
+      </a>
+      <a href="{{ url_for('home') }}" class="btn btn-secondary">
+        <i class="fas fa-home"></i> Home
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<script>
+// Score Trend Chart
+const scoreCtx = document.getElementById('scoreChart');
+if (scoreCtx) {
+  const scoreData = {{ score_data|tojson }};
+  new Chart(scoreCtx, {
+    type: 'line',
+    data: {
+      labels: scoreData.map(d => d.date),
+      datasets: [{
+        label: 'Score Percentage (%)',
+        data: scoreData.map(d => d.percentage),
+        borderColor: '#0d6efd',
+        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100
+        }
+      }
+    }
+  });
+}
+
+// Points Chart
+const pointsCtx = document.getElementById('pointsChart');
+if (pointsCtx) {
+  const pointsData = {{ points_data|tojson }};
+  new Chart(pointsCtx, {
+    type: 'bar',
+    data: {
+      labels: pointsData.map(d => d.date),
+      datasets: [{
+        label: 'Points Earned',
+        data: pointsData.map(d => d.points),
+        backgroundColor: '#28a745',
+        borderColor: '#1e7e34',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
+// Category Performance Chart
+const categoryCtx = document.getElementById('categoryChart');
+if (categoryCtx) {
+  const categoryData = {{ category_data|tojson }};
+  const categories = Object.keys(categoryData);
+  const avgScores = categories.map(cat => categoryData[cat].avg_score);
+  
+  new Chart(categoryCtx, {
+    type: 'doughnut',
+    data: {
+      labels: categories,
+      datasets: [{
+        label: 'Average Score',
+        data: avgScores,
+        backgroundColor: [
+          '#0d6efd',
+          '#28a745',
+          '#ffc107',
+          '#dc3545',
+          '#6f42c1',
+          '#17a2b8'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+}
+
+// Difficulty Performance Chart
+const difficultyCtx = document.getElementById('difficultyChart');
+if (difficultyCtx) {
+  const difficultyData = {{ difficulty_data|tojson }};
+  const difficulties = Object.keys(difficultyData);
+  const avgScores = difficulties.map(diff => difficultyData[diff].avg_score);
+  
+  new Chart(difficultyCtx, {
+    type: 'bar',
+    data: {
+      labels: difficulties,
+      datasets: [{
+        label: 'Average Score',
+        data: avgScores,
+        backgroundColor: [
+          '#28a745',  // Easy - Green
+          '#ffc107',  // Medium - Yellow
+          '#dc3545'   // Hard - Red
+        ],
+        borderColor: [
+          '#1e7e34',
+          '#e0a800',
+          '#c82333'
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100
+        }
+      }
+    }
+  });
+}
+</script>
+
+<style>
+.card {
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.card-header h5 {
+  margin: 0;
+  color: #495057;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+</style>
+{% endblock %}
+

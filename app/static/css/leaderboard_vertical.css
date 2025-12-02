@@ -1,0 +1,374 @@
+/* HEADER_COMMENT_AUTOGEN */
+/* FILE: app\static\css\leaderboard_vertical.css */
+/* PURPOSE: Vertical card-style leaderboard styling */
+
+.leaderboard-vertical-container {
+    min-height: calc(100vh - 80px);
+    padding: 2rem 1rem;
+    background-color: #f4f6f9;
+}
+
+.leaderboard-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding: 1rem;
+}
+
+.leaderboard-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #0d6efd;
+    margin-bottom: 0.5rem;
+}
+
+.leaderboard-header h1 i {
+    margin-right: 0.5rem;
+}
+
+.leaderboard-subtitle {
+    font-size: 1.1rem;
+    color: #6c757d;
+    margin: 0 0 1rem 0;
+}
+
+.leaderboard-filters {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.category-filter-form {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.category-filter-form label {
+    font-weight: 600;
+    color: #495057;
+    margin: 0;
+}
+
+.category-filter-form select {
+    max-width: 300px;
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+}
+
+.leaderboard-cards {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.leaderboard-card {
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.leaderboard-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Rank styling */
+.card-rank {
+    min-width: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #6c757d;
+}
+
+.rank-number {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #6c757d;
+}
+
+.gold-medal-icon {
+    color: #ffd700;
+    font-size: 2rem;
+}
+
+.silver-medal-icon {
+    color: #c0c0c0;
+    font-size: 2rem;
+}
+
+.bronze-medal-icon {
+    color: #cd7f32;
+    font-size: 2rem;
+}
+
+/* Avatar styling */
+.card-avatar {
+    flex-shrink: 0;
+}
+
+.avatar-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    box-shadow: 0 2px 6px rgba(13, 110, 253, 0.3);
+}
+
+/* Card content */
+.card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.card-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.card-username {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #212529;
+    margin: 0;
+}
+
+.card-scores {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.card-points {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.points-label {
+    color: #6c757d;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.points-value {
+    color: #28a745;
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.card-score {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.score-value {
+    color: #0d6efd;
+    font-size: 1.3rem;
+}
+
+.score-separator {
+    color: #6c757d;
+}
+
+.score-total {
+    color: #6c757d;
+    font-size: 1rem;
+}
+
+/* Card meta */
+.card-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.difficulty-badge {
+    padding: 0.35em 0.75em;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.difficulty-easy {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.difficulty-medium {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.difficulty-hard {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.difficulty-n/a {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.card-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card-info i {
+    font-size: 0.85rem;
+}
+
+.separator {
+    margin: 0 0.5rem;
+    color: #ced4da;
+}
+
+/* Top 3 special styling */
+.gold-card {
+    background: linear-gradient(135deg, #fff9e6 0%, #ffffff 50%);
+    border-left: 4px solid #ffd700;
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+}
+
+.gold-card .avatar-circle {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    box-shadow: 0 3px 8px rgba(255, 215, 0, 0.4);
+}
+
+.silver-card {
+    background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 50%);
+    border-left: 4px solid #c0c0c0;
+    box-shadow: 0 4px 12px rgba(192, 192, 192, 0.2);
+}
+
+.silver-card .avatar-circle {
+    background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
+    box-shadow: 0 3px 8px rgba(192, 192, 192, 0.4);
+}
+
+.bronze-card {
+    background: linear-gradient(135deg, #fdf4e6 0%, #ffffff 50%);
+    border-left: 4px solid #cd7f32;
+    box-shadow: 0 4px 12px rgba(205, 127, 50, 0.2);
+}
+
+.bronze-card .avatar-circle {
+    background: linear-gradient(135deg, #cd7f32 0%, #e6a857 100%);
+    box-shadow: 0 3px 8px rgba(205, 127, 50, 0.4);
+}
+
+/* Empty state */
+.empty-leaderboard {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #6c757d;
+}
+
+.empty-leaderboard i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-leaderboard p {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .leaderboard-header h1 {
+        font-size: 2rem;
+    }
+    
+    .leaderboard-card {
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    .avatar-circle {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    .card-username {
+        font-size: 1.2rem;
+    }
+    
+    .card-score {
+        font-size: 1.1rem;
+    }
+    
+    .score-value {
+        font-size: 1.3rem;
+    }
+    
+    .card-main {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .card-meta {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .leaderboard-vertical-container {
+        padding: 1rem 0.5rem;
+    }
+    
+    .leaderboard-header {
+        margin-bottom: 1.5rem;
+    }
+    
+    .leaderboard-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .leaderboard-card {
+        flex-wrap: wrap;
+    }
+    
+    .card-rank {
+        min-width: 40px;
+    }
+}
+

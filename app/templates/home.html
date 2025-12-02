@@ -18,12 +18,29 @@
         <a class="btn btn-secondary" href="{{ url_for('auth.login') }}">
           <i class="fas fa-sign-in-alt"></i> Login
         </a>
+        <a class="btn btn-success" href="{{ url_for('quiz.leaderboard') }}">
+          <i class="fas fa-trophy"></i> View Leaderboard
+        </a>
+        <a class="btn btn-info" href="{{ url_for('auth.login') }}" style="background: #17a2b8; border-color: #17a2b8;">
+          <i class="fas fa-comment-alt"></i> Feedback
+        </a>
       {% else %}
+        {% if not current_user.is_admin() %}
         <a class="btn btn-primary" href="{{ url_for('quiz.select') }}">
           <i class="fas fa-play-circle"></i> Start Quiz
         </a>
+        {% endif %}
+        <a class="btn btn-success" href="{{ url_for('quiz.leaderboard') }}">
+          <i class="fas fa-trophy"></i> Leaderboard
+        </a>
+        <a class="btn btn-info" href="{{ url_for('quiz.feedback') }}" style="background: #17a2b8; border-color: #17a2b8;">
+          <i class="fas fa-comment-alt"></i> Feedback
+        </a>
         <a class="btn btn-secondary" href="{{ url_for('home') }}">
           <i class="fas fa-home"></i> Home
+        </a>
+        <a class="btn btn-primary" href="{{ url_for('quiz.performance_dashboard') }}" style="background: #6f42c1; border-color: #6f42c1;">
+          <i class="fas fa-chart-line"></i> Performance Dashboard
         </a>
       {% endif %}
     </div>

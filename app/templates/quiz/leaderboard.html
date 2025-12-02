@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard - QuizCraft{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Leaderboard</h2>
+
+  <div class="card mb-4">
+    <div class="card-header"><strong>Top Overall</strong></div>
+    <div class="card-body p-0">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr><th>#</th><th>User</th><th>Score</th><th>When</th></tr>
+        </thead>
+        <tbody>
+        {% for e in top_overall %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ e.username }}</td>
+            <td>{{ e.score }}{% if e.total %} / {{ e.total }}{% endif %}</td>
+            <td>{{ e.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4">No entries yet.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h4>Top by Category</h4>
+  <div class="row">
+    {% for cat_id, entries in top_by_cat.items() %}
+      <div class="col-md-6 mb-3">
+        <div class="card">
+          <div class="card-header">{{ categories_map.get(cat_id, 'Category') }}</div>
+          <ul class="list-group list-group-flush">
+            {% for e in entries %}
+              <li class="list-group-item">
+                <strong>{{ e.username }}</strong> — {{ e.score }}{% if e.total %}/{{ e.total }}{% endif %} <small class="text-muted">({{ e.created_at.strftime('%Y-%m-%d') }})</small>
+              </li>
+            {% else %}
+              <li class="list-group-item text-muted">No entries</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -8,7 +8,7 @@ TIPS: Add your notes here to help future edits.
 
 # create_db.py
 from app import create_app, db
-from app.models import User, Category, Role
+from app.models import User, Category, Role, LeaderboardEntry
 
 app = create_app()
 
