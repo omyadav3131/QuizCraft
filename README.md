@@ -26,133 +26,85 @@ A fully responsive, feature-rich Quiz Application built with Python's Flask fram
 ### User Features
 - **Authentication System**
   - User registration with email and username
-  - Secure login with password hashing (Werkzeug)
-  - Session management with Flask-Login
-  - User profile management
+  # QuizCraft — Flask Quiz Application
 
-- **Quiz System**
-  - Multiple quiz categories
-  - Three difficulty levels: Easy, Medium, Hard
-  - **Points System**: Easy questions = 2 points, Medium = 4 points, Hard = 6 points per correct answer
-  - Timed quizzes (10 minutes per quiz)
-  - **Large, readable question box** with improved padding and font size
-  - **Timer displayed outside question box** for better visibility
-  - 10 questions per quiz
-  - Multiple choice questions (4 options)
-  - Real-time score tracking
-  - Immediate result display with percentage score and total points earned
-  - **Detailed Answer Review** after quiz completion:
-    - Question-by-question breakdown
-    - Color-coded answers (Green for correct, Red for wrong)
-    - Shows your selected answer vs correct answer
-    - Points earned per question displayed
-    - Explanations for each question (if available)
-  - Performance feedback based on score
-  - Quiz attempt history saved to database
-  - **Feedback form** accessible anytime via homepage button (Name, Rating 1-5, Feedback text)
-  - **Feedback button** on homepage for easy access
+  A fully responsive quiz application built with Flask. This fork includes a two-player Competition mode, auto-refresh UX improvements, and deployment-ready files (Dockerfile, README).
 
-- **Leaderboard**
-  - Vertical card-style leaderboard (modern UI)
-  - **Points-based ranking system** (sorted by points, then score)
-  - Top 50 performers displayed
-  - Medal icons for top 3 (Gold, Silver, Bronze)
-  - **Category-wise leaderboards** with filter dropdown
-  - Color-coded difficulty badges
-  - Category and date information
-  - Points displayed prominently on each card
-  - API endpoint for programmatic access (`/api/leaderboard`)
-  - Filters by category and difficulty (API)
-  - Leaderboard button on homepage and navigation
+  ## What's changed in this fork
+  - Added `app/competition` blueprint with create/join/wait/test/results flows (2-player competitions)
+  - Auto-clean stale waiting competitions (3 minutes)
+  - Auto-refresh improvements so creators and joiners don't need manual reloads
+  - AJAX answer submission and robust scoring logic
+  - Dockerfile and deployment instructions added
 
-- **Performance Dashboard**
-  - Interactive performance graphs using Chart.js
-  - Score trend over time (line chart)
-  - Points earned over time (bar chart)
-  - Performance breakdown by category (doughnut chart)
-  - Performance breakdown by difficulty (bar chart)
-  - Statistics cards showing total quizzes, average score, total points
-  - Recent quiz attempts table
-  - Accessible via "Performance Dashboard" button on homepage
+  ## Quick Links
+  - Repository: https://github.com/omyadav3131/QuizCraft
 
-### Admin Features
-- **Dashboard**
-  - Overview of all categories and questions
-  - Total questions count
-  - Category-wise question listing
+  ## Features (high level)
+  - User authentication (Flask-Login)
+  - Quiz system with categories and difficulty levels
+  - Two-player competition mode (create → join → start → simultaneous quiz)
+  - Leaderboard and performance pages
+  - Admin panel for managing questions and categories
 
-- **Category Management**
-  - Create new categories
-  - View all categories
-  - Organized question listing by category
+  ## Tech Stack
+  - Python 3.8+
+  - Flask 1.1.2
+  - Flask-SQLAlchemy, Flask-Migrate, Flask-WTF
+  - SQLite (development), PostgreSQL (production)
+  - Docker + Gunicorn for production
 
-- **Question Management**
-  - Create new questions with 4 options
-  - Edit existing questions
-  - Delete questions
-  - Bulk add questions (CSV/TXT format)
-  - Set difficulty level (Easy/Medium/Hard)
-  - Add explanations to questions
-  - Associate questions with categories
+  ## Quickstart (local)
+  1. Create and activate a virtual environment (PowerShell):
 
-- **User Management**
-  - View all registered users
-  - Create new user accounts
-  - Edit user details
-  - Delete users
-  - Assign admin roles
-  - Manage user permissions
+  ```powershell
+  python -m venv .venv
+  .\\.venv\\Scripts\\Activate.ps1
+  pip install -r requirements.txt
+  ```
 
-- **Feedback Management**
-  - View all user feedback and ratings
-  - See feedback submissions with timestamps
-  - Rating system (1-5 stars)
-  - Feedback text display
+  2. Initialize the DB and run migrations (SQLite dev):
 
-- **Admin Restrictions**
-  - Admins cannot play quizzes (blocked at route level)
-  - Admin dashboard only shows management operations
-  - Leaderboard access for admins to view rankings
+  ```powershell
+  python create_db.py
+  flask db upgrade
+  ```
 
-## 🛠 Tech Stack
+  3. Run the app:
 
-### Backend
-- **Flask 1.1.2** - Web framework
-- **Flask-SQLAlchemy 2.4.4** - ORM for database operations
-- **Flask-Login** - User session management
-- **Flask-Migrate 2.5.3** - Database migrations
-- **Flask-WTF 0.14.3** - Form handling and CSRF protection
-- **Werkzeug** - Password hashing and security utilities
-- **SQLite** - Database (can be easily switched to PostgreSQL/MySQL)
+  ```powershell
+  python main.py
+  ```
 
-### Frontend
-- **Bootstrap 4.0** - Responsive CSS framework
-- **Font Awesome 6.0** - Icons
-- **Custom CSS** - Professional styling with gradients and animations
-- **Google Fonts (Raleway)** - Modern typography
-- **Jinja2** - Template engine
+  Open `http://127.0.0.1:5000` in your browser.
 
-### Development Tools
-- **Alembic** - Database migration tool
-- **Gunicorn** - Production WSGI server
-- **Python 3.8+** - Programming language
+  ## Docker (optional)
+  Build and run:
 
-## 📁 Project Structure
+  ```bash
+  docker build -t quizcraft:latest .
+  docker run -p 5000:5000 --env FLASK_ENV=production quizcraft:latest
+  ```
 
-```
-flask-quiz-app/
-├── app/
-│   ├── __init__.py          # Flask app factory
-│   ├── models.py            # Database models (User, Category, Question, Attempt, etc.)
-│   ├── admin/               # Admin blueprint
-│   │   ├── __init__.py
-│   │   └── routes.py        # Admin routes (CRUD operations)
-│   ├── auth/                # Authentication blueprint
-│   │   ├── __init__.py
-│   │   ├── routes.py        # Login, Register, Logout routes
-│   │   └── forms.py         # WTForms for authentication
-│   ├── quiz/                # Quiz blueprint
-│   │   ├── __init__.py
+  ## Deploy on Railway (recommended)
+  1. Push repository to GitHub (already done).
+  2. On Railway, create a new project and connect your GitHub repo.
+  3. Add environment variables:
+     - `SECRET_KEY` (string)
+     - `DATABASE_URL` (Railway Postgres if you add the Postgres plugin)
+  4. Railway will build using `requirements.txt` or `Dockerfile`.
+
+  ## Notes & Troubleshooting
+  - Competition auto-refresh uses polling (short intervals). For production, consider WebSockets for real-time updates.
+  - If using PostgreSQL, update `config.py` to use `DATABASE_URL`.
+  - Check Flask logs for errors when deploying.
+
+  ## License
+  This project is licensed under the MIT License — see `LICENSE`.
+
+  ## Author
+  Repo owner: omyadav3131
+
 │   │   └── routes.py        # Quiz routes (select, start, question, result, leaderboard)
 │   ├── static/
 │   │   ├── css/
