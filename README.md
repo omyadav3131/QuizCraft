@@ -253,7 +253,7 @@ SQLALCHEMY_DATABASE_URI = 'mysql://user:password@localhost/quizdb'
 
 1. **Login as Admin**
    - Click "Admin Login" button on homepage or navigation
-   - Use credentials: `admin` / `admin123`
+   - Use credentials:
    - Regular user login page blocks admin access
    - Access admin panel after successful login
 
@@ -409,41 +409,6 @@ SQLALCHEMY_DATABASE_URI = 'mysql://user:password@localhost/quizdb'
 - Lazy loading relationships
 - Efficient pagination for leaderboard
 
-## 📸 Screenshots
-
-*Add screenshots of your application here*
-
-## 🐛 Known Issues & Fixes
-
-### Fixed Issues (Latest Update)
-- ✅ **Session Management Bug Fixed**: Session values are now retrieved before clearing, ensuring points and difficulty display correctly
-- ✅ **Points Display Fixed**: Points now correctly calculated and displayed on result page and leaderboard
-- ✅ **Answer Review Added**: Detailed question-by-question review with color coding implemented
-- ✅ **Feedback Button Added**: Feedback button now visible on homepage
-
-### Current Status
-- All critical bugs have been resolved
-- All requested features have been implemented
-
-## ✨ Latest Features
-
-- ✅ **Separate Admin Login** - Dedicated admin login page
-
-## 🔮 Future Enhancements
-
-- [ ] Two-person competition mode with unique codes
-- [ ] Real-time synchronization for competitions (WebSockets)
-- [ ] Daily automatic leaderboard updates
-- [ ] Add quiz time customization
-- [ ] Implement question banks
-- [ ] Add quiz analytics and statistics
-- [ ] Email notifications for quiz results
-- [ ] Social sharing of scores
-- [ ] Export quiz results as PDF
-- [ ] Multiple languages support
-- [ ] Dark mode theme
-- [ ] Question images support
-- [ ] Real-time multiplayer quizzes
 
 ## 🤝 Contributing
 
@@ -465,14 +430,6 @@ Contributions are welcome! Please follow these steps:
 ## 📝 License
 
 This project is distributed under the MIT License. See `LICENSE` for more information.
-
-## 👤 Author
-
-**Boobalan Shettiyar**
-- Email: boopalanshettiyar78@gmail.com
-- GitHub: [@thepasterover](https://github.com/thepasterover)
-- Project Link: [https://github.com/thepasterover/flask-quiz-app](https://github.com/thepasterover/flask-quiz-app)
-
 ## 🙏 Acknowledgments
 
 - Flask community for excellent documentation
