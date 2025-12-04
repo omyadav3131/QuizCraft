@@ -13,6 +13,6 @@ import os
 app = create_app()
 
 if __name__ == "__main__":
-    # Bind to 0.0.0.0 so the app is reachable from other devices on the LAN.
+    # Bind to 127.0.0.1 for local-only access.
     # In production use a proper WSGI server (gunicorn) and secure configuration.
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='127.0.0.1', port=5000)
