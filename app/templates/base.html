@@ -37,13 +37,33 @@
             {%- else -%}
                 {%- if current_user.is_admin() -%}
                 <a href="{{ url_for('admin.index') }}"><i class="fas fa-cog"></i> Admin</a>
+                <a href="{{ url_for('admin.competitions_view') }}"><i class="fas fa-gamepad"></i> Competitions</a>
                 <a href="{{ url_for('quiz.leaderboard') }}"><i class="fas fa-trophy"></i> Leaderboard</a>
                 {%- else -%}
                 <a href="{{ url_for('quiz.select') }}"><i class="fas fa-play-circle"></i> Quiz</a>
                 <a href="{{ url_for('quiz.leaderboard') }}"><i class="fas fa-trophy"></i> Leaderboard</a>
+                <a href="{{ url_for('quiz.performance_dashboard') }}"><i class="fas fa-chart-line"></i> Performance</a>
                 <!-- Competition link -->
                 <a href="{{ url_for('competition.competition_menu') }}"><i class="fas fa-gamepad"></i> Competition</a>
                 {%- endif -%}
+            <!-- Profile Dropdown -->
+            <div class="dropdown" style="display: inline-block; margin: 0 10px;">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="profileDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-user"></i> {{ current_user.username }}
+                </button>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="profileDropdown">
+                    <h6 class="dropdown-header">{{ current_user.email or 'User Profile' }}</h6>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{{ url_for('auth.change_password') }}">
+                        <i class="fas fa-key"></i> Change Password
+                    </a>
+                    {%- if not current_user.is_admin() -%}
+                    <a class="dropdown-item" href="{{ url_for('quiz.feedback') }}">
+                        <i class="fas fa-comment"></i> Feedback
+                    </a>
+                    {%- endif -%}
+                </div>
+            </div>
             <a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
             {%- endif -%}
         </div>

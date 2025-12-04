@@ -10,7 +10,8 @@ TIPS: Add your notes here to help future edits.
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from app.admin import admin_bp
-from app.models import db, Question, Category, User
+from app.models import db, Question, Category, User, Competition, CompetitionAttempt
+from datetime import datetime, timedelta
 
 def admin_required(f):
     from functools import wraps
@@ -21,6 +22,66 @@ def admin_required(f):
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return wrapper
+
+@admin_bp.route('/competitions')
+@login_required
+@admin_required
+def competitions_view():
+    """Admin view of all multiplayer competitions"""
+    # Get date filter from query params
+    date_filter = request.args.get('date_filter', default='all', type=str)  # today, week, month, all
+    
+    # Calculate date range based on filter
+    today = datetime.utcnow().date()
+    if date_filter == 'today':
+        from_date = datetime.combine(today, datetime.min.time())
+        to_date = datetime.combine(today, datetime.max.time())
+    elif date_filter == 'week':
+        from_date = datetime.utcnow() - timedelta(days=7)
+        to_date = datetime.utcnow()
+    elif date_filter == 'month':
+        from_date = datetime.utcnow() - timedelta(days=30)
+        to_date = datetime.utcnow()
+    else:  # all
+        from_date = datetime.min
+        to_date = datetime.utcnow()
+    
+    # Get competitions within date range, ordered by creation date (newest first)
+    competitions = Competition.query.filter(
+        Competition.created_at >= from_date,
+        Competition.created_at <= to_date
+    ).order_by(Competition.created_at.desc()).all()
+    
+    # Prepare detailed competition data
+    comp_data = []
+    for comp in competitions:
+        # Get creator and participants
+        creator = User.query.get(comp.creator_id)
+        attempts = CompetitionAttempt.query.filter_by(competition_id=comp.id).all()
+        participants = [User.query.get(att.user_id) for att in attempts]
+        
+        # Calculate winner
+        winner_name = User.query.get(comp.winner_id).username if comp.winner_id else 'N/A'
+        
+        # Get scores
+        scores = [(User.query.get(att.user_id).username, att.correct_answers, att.total_questions) for att in attempts]
+        
+        comp_data.append({
+            'id': comp.id,
+            'code': comp.code,
+            'category': comp.category.name if comp.category else 'N/A',
+            'difficulty': comp.difficulty,
+            'creator': creator.username if creator else 'N/A',
+            'participants': ', '.join([p.username for p in participants if p]),
+            'status': comp.status,
+            'scores': scores,
+            'winner': winner_name,
+            'created_at': comp.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'started_at': comp.started_at.strftime('%Y-%m-%d %H:%M:%S') if comp.started_at else 'N/A',
+            'ended_at': comp.ended_at.strftime('%Y-%m-%d %H:%M:%S') if comp.ended_at else 'N/A'
+        })
+    
+    return render_template('admin/competitions.html', competitions=comp_data, date_filter=date_filter)
 
 @admin_bp.route('/')
 @login_required

@@ -70,6 +70,21 @@ def admin_login():
         flash('Invalid username or password', 'danger')
     return render_template('auth/admin_login.html', form=form)
 
+@auth_bp.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    from .forms import ChangePasswordForm
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        if not current_user.check_password(form.old_password.data):
+            flash('Current password is incorrect', 'danger')
+            return render_template('auth/change_password.html', form=form)
+        current_user.set_password(form.new_password.data)
+        db.session.commit()
+        flash('Password changed successfully', 'success')
+        return redirect(url_for('home'))
+    return render_template('auth/change_password.html', form=form)
+
 @auth_bp.route('/logout')
 @login_required
 def logout():

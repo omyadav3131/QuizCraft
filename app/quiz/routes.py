@@ -372,12 +372,29 @@ def api_leaderboard():
 @login_required
 def leaderboard():
     from app.models import Attempt, User, Category
+    from datetime import datetime, timedelta
     
-    # Get category filter from query params
+    # Get filter parameters from query params
     category_id = request.args.get('category', type=int)
+    date_filter = request.args.get('date_filter', default='today', type=str)  # today, week, month, all
     
     # Get all categories for filter dropdown
     categories = Category.query.order_by(Category.name).all()
+    
+    # Calculate date range based on filter
+    today = datetime.utcnow().date()
+    if date_filter == 'today':
+        from_date = datetime.combine(today, datetime.min.time())
+        to_date = datetime.combine(today, datetime.max.time())
+    elif date_filter == 'week':
+        from_date = datetime.utcnow() - timedelta(days=7)
+        to_date = datetime.utcnow()
+    elif date_filter == 'month':
+        from_date = datetime.utcnow() - timedelta(days=30)
+        to_date = datetime.utcnow()
+    else:  # all
+        from_date = datetime.min
+        to_date = datetime.utcnow()
 
     q = (
         db.session.query(
@@ -387,15 +404,15 @@ def leaderboard():
         )
         .outerjoin(User, User.id == Attempt.user_id)
         .outerjoin(Category, Category.id == Attempt.category_id)
+        .filter(Attempt.created_at >= from_date)
+        .filter(Attempt.created_at <= to_date)
     )
     
     # Filter by category if provided
     if category_id:
         q = q.filter(Attempt.category_id == category_id)
     
-    # Order by score (descending), then by date
-    # Note: After running update_db.py, this will use points. For now, ordering by score.
-    # Check if points column exists and use it, otherwise fall back to score
+    # Order by points (descending), then by score, then by date
     from sqlalchemy import inspect
     inspector = inspect(Attempt)
     has_points_column = 'points' in [col.name for col in inspector.columns]
@@ -420,7 +437,7 @@ def leaderboard():
         })
 
     return render_template("quiz/leaderboard_vertical.html", entries=entries, 
-                         categories=categories, selected_category=category_id)
+                         categories=categories, selected_category=category_id, date_filter=date_filter)
 
 @quiz_bp.route('/leaderboard/<category_name>')
 @login_required
@@ -506,30 +523,33 @@ def performance_dashboard():
     
     from datetime import datetime, timedelta
     from collections import defaultdict
+    from app.models import Competition, CompetitionAttempt
     
     # Get all attempts for current user
     attempts = Attempt.query.filter_by(user_id=current_user.id).order_by(Attempt.created_at).all()
     
+    # Get all competition attempts for current user
+    comp_attempts = CompetitionAttempt.query.filter_by(user_id=current_user.id).order_by(CompetitionAttempt.started_at).all()
+    
     # Get all categories for display
     all_categories = Category.query.all()
     
-    if not attempts:
+    if not attempts and not comp_attempts:
         return render_template('quiz/performance.html', 
                              attempts=[], 
                              score_data=[], 
                              points_data=[],
-                             category_data={},
-                             difficulty_data={},
                              total_quizzes=0,
                              avg_score=0,
                              total_points=0,
+                             comp_attempts=comp_attempts,
+                             comp_total_attempts=0,
+                             comp_avg_score=0,
                              categories=all_categories)
     
-    # Prepare data for charts
+    # Prepare data for quiz charts
     score_data = []
     points_data = []
-    category_stats = defaultdict(lambda: {'count': 0, 'total_score': 0, 'total_points': 0})
-    difficulty_stats = defaultdict(lambda: {'count': 0, 'total_score': 0, 'total_points': 0})
     
     for attempt in attempts:
         # Score over time
@@ -545,37 +565,12 @@ def performance_dashboard():
             'date': attempt.created_at.strftime('%Y-%m-%d'),
             'points': attempt.points or 0
         })
-        
-        # Category statistics
-        if attempt.category_id:
-            category = Category.query.get(attempt.category_id)
-            if category:
-                category_stats[category.name]['count'] += 1
-                category_stats[category.name]['total_score'] += attempt.score
-                category_stats[category.name]['total_points'] += (attempt.points or 0)
-        
-        # Difficulty statistics
-        if attempt.difficulty:
-            difficulty_stats[attempt.difficulty]['count'] += 1
-            difficulty_stats[attempt.difficulty]['total_score'] += attempt.score
-            difficulty_stats[attempt.difficulty]['total_points'] += (attempt.points or 0)
     
-    # Calculate averages for category and difficulty
-    category_data = {}
-    for cat_name, stats in category_stats.items():
-        category_data[cat_name] = {
-            'count': stats['count'],
-            'avg_score': round(stats['total_score'] / stats['count'], 1) if stats['count'] > 0 else 0,
-            'total_points': stats['total_points']
-        }
-    
-    difficulty_data = {}
-    for diff_name, stats in difficulty_stats.items():
-        difficulty_data[diff_name] = {
-            'count': stats['count'],
-            'avg_score': round(stats['total_score'] / stats['count'], 1) if stats['count'] > 0 else 0,
-            'total_points': stats['total_points']
-        }
+    # Calculate competition statistics
+    comp_total_attempts = len(comp_attempts)
+    comp_total_score = sum(ca.correct_answers for ca in comp_attempts) if comp_attempts else 0
+    comp_total_questions = sum(ca.total_questions for ca in comp_attempts) if comp_attempts else 0
+    comp_avg_score = round((comp_total_score / comp_total_questions * 100) if comp_total_questions > 0 else 0, 1)
     
     # Overall statistics
     total_quizzes = len(attempts)
@@ -588,9 +583,10 @@ def performance_dashboard():
                          attempts=attempts,
                          score_data=score_data,
                          points_data=points_data,
-                         category_data=category_data,
-                         difficulty_data=difficulty_data,
                          total_quizzes=total_quizzes,
                          avg_score=avg_score,
                          total_points=total_points,
+                         comp_attempts=comp_attempts,
+                         comp_total_attempts=comp_total_attempts,
+                         comp_avg_score=comp_avg_score,
                          categories=all_categories)

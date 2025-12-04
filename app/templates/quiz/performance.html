@@ -88,28 +88,56 @@
       </div>
     </div>
     
-    <!-- Category and Difficulty Performance -->
+    <!-- Category and Difficulty Performance - REPLACED WITH COMPETITION STATS -->
     <div class="row mb-4">
-      <!-- Category Performance -->
+      <!-- Competition Attempts Stats -->
       <div class="col-md-6">
         <div class="card">
           <div class="card-header">
-            <h5><i class="fas fa-folder"></i> Performance by Category</h5>
+            <h5><i class="fas fa-gamepad"></i> Competition Performance</h5>
           </div>
           <div class="card-body">
-            <canvas id="categoryChart" height="250"></canvas>
+            {% if comp_total_attempts > 0 %}
+              <p><strong>Total Competitions:</strong> {{ comp_total_attempts }}</p>
+              <p><strong>Average Score:</strong> <span style="color: #0d6efd;">{{ comp_avg_score }}%</span></p>
+              <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle"></i> Compete with other players to earn points and climb the competition leaderboard!
+              </div>
+              <a href="{{ url_for('competition.competition_menu') }}" class="btn btn-sm btn-primary mt-2">
+                <i class="fas fa-gamepad"></i> Join Competition
+              </a>
+            {% else %}
+              <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> You haven't joined any competitions yet.
+                <br><br>
+                <a href="{{ url_for('competition.competition_menu') }}" class="btn btn-sm btn-primary">
+                  <i class="fas fa-gamepad"></i> Start Competing
+                </a>
+              </div>
+            {% endif %}
           </div>
         </div>
       </div>
       
-      <!-- Difficulty Performance -->
+      <!-- Quiz Performance Summary -->
       <div class="col-md-6">
         <div class="card">
           <div class="card-header">
-            <h5><i class="fas fa-layer-group"></i> Performance by Difficulty</h5>
+            <h5><i class="fas fa-book"></i> Quiz Performance Summary</h5>
           </div>
           <div class="card-body">
-            <canvas id="difficultyChart" height="250"></canvas>
+            {% if total_quizzes > 0 %}
+              <p><strong>Total Quizzes Taken:</strong> {{ total_quizzes }}</p>
+              <p><strong>Overall Average Score:</strong> <span style="color: #28a745;">{{ avg_score }}%</span></p>
+              <p><strong>Total Points Earned:</strong> <span style="color: #ffc107; font-weight: bold;">{{ total_points }}</span></p>
+              <div class="progress mt-3">
+                <div class="progress-bar bg-success" role="progressbar" style="width: {{ avg_score }}%" aria-valuenow="{{ avg_score }}" aria-valuemin="0" aria-valuemax="100">
+                  {{ avg_score }}%
+                </div>
+              </div>
+            {% else %}
+              <p class="text-muted">No quiz attempts yet. Take a quiz to see your performance!</p>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -242,76 +270,9 @@ if (pointsCtx) {
   });
 }
 
-// Category Performance Chart
-const categoryCtx = document.getElementById('categoryChart');
-if (categoryCtx) {
-  const categoryData = {{ category_data|tojson }};
-  const categories = Object.keys(categoryData);
-  const avgScores = categories.map(cat => categoryData[cat].avg_score);
-  
-  new Chart(categoryCtx, {
-    type: 'doughnut',
-    data: {
-      labels: categories,
-      datasets: [{
-        label: 'Average Score',
-        data: avgScores,
-        backgroundColor: [
-          '#0d6efd',
-          '#28a745',
-          '#ffc107',
-          '#dc3545',
-          '#6f42c1',
-          '#17a2b8'
-        ]
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false
-    }
-  });
-}
+// Category Performance Chart - REMOVED
+// Difficulty Performance Chart - REMOVED
 
-// Difficulty Performance Chart
-const difficultyCtx = document.getElementById('difficultyChart');
-if (difficultyCtx) {
-  const difficultyData = {{ difficulty_data|tojson }};
-  const difficulties = Object.keys(difficultyData);
-  const avgScores = difficulties.map(diff => difficultyData[diff].avg_score);
-  
-  new Chart(difficultyCtx, {
-    type: 'bar',
-    data: {
-      labels: difficulties,
-      datasets: [{
-        label: 'Average Score',
-        data: avgScores,
-        backgroundColor: [
-          '#28a745',  // Easy - Green
-          '#ffc107',  // Medium - Yellow
-          '#dc3545'   // Hard - Red
-        ],
-        borderColor: [
-          '#1e7e34',
-          '#e0a800',
-          '#c82333'
-        ],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 100
-        }
-      }
-    }
-  });
-}
 </script>
 
 <style>

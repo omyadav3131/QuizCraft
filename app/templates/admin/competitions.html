@@ -1,0 +1,121 @@
+<!-- HEADER_COMMENT_AUTOGEN -->
+<!-- FILE: app\templates\admin\competitions.html -->
+<!-- PURPOSE: Admin view of all multiplayer competitions with filters -->
+
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="quiz-container">
+  <div class="result-container" style="max-width: 1200px; margin: 2rem auto;">
+    <h2 style="text-align: center; margin-bottom: 2rem; color: #0d6efd;">
+      <i class="fas fa-gamepad"></i> Multiplayer Competitions
+    </h2>
+    
+    <!-- Filters -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5><i class="fas fa-filter"></i> Filters</h5>
+      </div>
+      <div class="card-body">
+        <form method="GET" class="form-inline">
+          <div class="form-group mr-3">
+            <label for="date_filter" class="mr-2">Date Range:</label>
+            <select id="date_filter" name="date_filter" class="form-control">
+              <option value="today" {% if date_filter == 'today' %}selected{% endif %}>Today</option>
+              <option value="week" {% if date_filter == 'week' %}selected{% endif %}>Last 7 Days</option>
+              <option value="month" {% if date_filter == 'month' %}selected{% endif %}>Last 30 Days</option>
+              <option value="all" {% if date_filter == 'all' %}selected{% endif %}>All Time</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-search"></i> Filter
+          </button>
+        </form>
+      </div>
+    </div>
+    
+    {% if competitions|length == 0 %}
+    <div class="alert alert-info text-center">
+      <i class="fas fa-info-circle"></i> No competitions found for the selected date range.
+    </div>
+    {% else %}
+    
+    <!-- Competitions Table -->
+    <div class="card">
+      <div class="card-header">
+        <h5><i class="fas fa-list"></i> Competition Data ({{ competitions|length }} total)</h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover table-bordered">
+            <thead class="table-dark">
+              <tr>
+                <th>Code</th>
+                <th>Category</th>
+                <th>Difficulty</th>
+                <th>Creator</th>
+                <th>Participants</th>
+                <th>Status</th>
+                <th>Scores</th>
+                <th>Winner</th>
+                <th>Created</th>
+                <th>Started</th>
+                <th>Ended</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for comp in competitions %}
+              <tr>
+                <td>
+                  <span class="badge badge-info">{{ comp.code }}</span>
+                </td>
+                <td>{{ comp.category }}</td>
+                <td>
+                  <span class="badge badge-{% if comp.difficulty == 'Easy' %}success{% elif comp.difficulty == 'Medium' %}warning{% else %}danger{% endif %}">
+                    {{ comp.difficulty }}
+                  </span>
+                </td>
+                <td>{{ comp.creator }}</td>
+                <td>{{ comp.participants }}</td>
+                <td>
+                  <span class="badge badge-{% if comp.status == 'completed' %}success{% elif comp.status == 'in_progress' %}warning{% else %}secondary{% endif %}">
+                    {{ comp.status|upper }}
+                  </span>
+                </td>
+                <td>
+                  <small>
+                    {% for username, correct, total in comp.scores %}
+                      <strong>{{ username }}:</strong> {{ correct }}/{{ total }}<br>
+                    {% endfor %}
+                  </small>
+                </td>
+                <td>
+                  {% if comp.winner != 'N/A' %}
+                    <span class="badge badge-success">
+                      <i class="fas fa-trophy"></i> {{ comp.winner }}
+                    </span>
+                  {% else %}
+                    <span class="badge badge-secondary">N/A</span>
+                  {% endif %}
+                </td>
+                <td><small>{{ comp.created_at }}</small></td>
+                <td><small>{{ comp.started_at }}</small></td>
+                <td><small>{{ comp.ended_at }}</small></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    {% endif %}
+    
+    <div class="text-center mt-4">
+      <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Admin
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

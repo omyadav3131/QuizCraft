@@ -28,6 +28,14 @@
                         </option>
                         {% endfor %}
                     </select>
+                    
+                    <label for="date_filter" style="margin-left: 20px;">Filter by Date:</label>
+                    <select name="date_filter" id="date_filter" onchange="this.form.submit()" class="form-control" style="display: inline-block; width: auto;">
+                        <option value="today" {% if date_filter == 'today' %}selected{% endif %}>Today</option>
+                        <option value="week" {% if date_filter == 'week' %}selected{% endif %}>Last 7 Days</option>
+                        <option value="month" {% if date_filter == 'month' %}selected{% endif %}>Last 30 Days</option>
+                        <option value="all" {% if date_filter == 'all' %}selected{% endif %}>All Time</option>
+                    </select>
                 </form>
             </div>
             {% endif %}
