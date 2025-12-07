@@ -70,7 +70,11 @@ function startCompetition() {
     .then(data => {
         console.log('Start response:', data);
         if (data.success) {
-            console.log('Competition started! Redirecting to test...');
+            console.log('Competition started! Start time:', data.startTime, 'Time limit:', data.timeLimit);
+            // Store start time in sessionStorage for timer sync
+            if (data.startTime) {
+                sessionStorage.setItem(`comp_start_${competitionCode}`, data.startTime.toString());
+            }
             // Small delay to ensure database is committed
             setTimeout(() => {
                 window.location.href = '{{ url_for("competition.take_competition_test", code=competition.code) }}';
@@ -92,10 +96,28 @@ function checkIfStarted() {
     .then(res => res.text())
     .then(html => {
         // Check if the page now shows that competition is started (simple heuristic)
-        if (html.includes('competition status: in_progress')) {
+        if (html.includes('competition status: in_progress') || html.includes('in_progress')) {
             console.log('Competition started! Redirecting...');
             clearInterval(checkInterval);
-            window.location.href = '{{ url_for("competition.take_competition_test", code=competition.code) }}';
+            // Also check if we can get start time from the start endpoint
+            fetch('{{ url_for("competition.start_competition", code=competition.code) }}', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.startTime) {
+                    sessionStorage.setItem(`comp_start_${competitionCode}`, data.startTime.toString());
+                }
+                window.location.href = '{{ url_for("competition.take_competition_test", code=competition.code) }}';
+            })
+            .catch(() => {
+                // If that fails, just redirect anyway
+                window.location.href = '{{ url_for("competition.take_competition_test", code=competition.code) }}';
+            });
         } else {
             console.log('Still waiting... checking again in 1 second');
         }

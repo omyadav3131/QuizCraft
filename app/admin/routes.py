@@ -11,6 +11,13 @@ from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from app.admin import admin_bp
 from app.models import db, Question, Category, User, Competition, CompetitionAttempt
+@admin_bp.route('/profile')
+@login_required
+def admin_profile():
+    questions_count = Question.query.count()
+    competitions_count = Competition.query.count()
+    users_count = User.query.count()
+    return render_template('admin/profile.html', questions_count=questions_count, competitions_count=competitions_count, users_count=users_count)
 from datetime import datetime, timedelta
 
 def admin_required(f):
@@ -47,31 +54,42 @@ def competitions_view():
         to_date = datetime.utcnow()
     
     # Get competitions within date range, ordered by creation date (newest first)
+    # Only show completed competitions
     competitions = Competition.query.filter(
         Competition.created_at >= from_date,
-        Competition.created_at <= to_date
+        Competition.created_at <= to_date,
+        Competition.status == 'completed'
     ).order_by(Competition.created_at.desc()).all()
     
     # Prepare detailed competition data
     comp_data = []
     for comp in competitions:
-        # Get creator and participants
+        # Get creator and participants with null checks
         creator = User.query.get(comp.creator_id)
         attempts = CompetitionAttempt.query.filter_by(competition_id=comp.id).all()
-        participants = [User.query.get(att.user_id) for att in attempts]
+        participants = []
+        for att in attempts:
+            user = User.query.get(att.user_id)
+            if user:  # Only add if user exists
+                participants.append(user)
         
-        # Calculate winner
-        winner_name = User.query.get(comp.winner_id).username if comp.winner_id else 'N/A'
+        # Calculate winner with null check
+        winner = User.query.get(comp.winner_id) if comp.winner_id else None
+        winner_name = winner.username if winner else 'N/A'
         
-        # Get scores
-        scores = [(User.query.get(att.user_id).username, att.correct_answers, att.total_questions) for att in attempts]
+        # Get scores with null checks
+        scores = []
+        for att in attempts:
+            user = User.query.get(att.user_id)
+            if user:  # Only add if user exists
+                scores.append((user.username, att.correct_answers, att.total_questions))
         
         comp_data.append({
             'id': comp.id,
             'code': comp.code,
             'category': comp.category.name if comp.category else 'N/A',
             'difficulty': comp.difficulty,
-            'creator': creator.username if creator else 'N/A',
+            'creator': creator.username if creator else 'Deleted User',
             'participants': ', '.join([p.username for p in participants if p]),
             'status': comp.status,
             'scores': scores,
@@ -229,6 +247,13 @@ def edit_user(user_id):
                 return redirect(url_for('admin.edit_user', user_id=u.id))
             u.username = username
 
+        # Check email uniqueness (only if email is provided and different from current)
+        if email and email != u.email:
+            other_email = User.query.filter_by(email=email).first()
+            if other_email and other_email.id != u.id:
+                flash('Email already taken by another user', 'warning')
+                return redirect(url_for('admin.edit_user', user_id=u.id))
+        
         u.email = email
         u.role = role
         if password:
@@ -241,6 +266,37 @@ def edit_user(user_id):
     return render_template('admin/user_form.html', user=u)
 
 
+@admin_bp.route('/user/change-password/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def change_user_password(user_id):
+    """Change user password - Admin only"""
+    u = User.query.get_or_404(user_id)
+    
+    if request.method == 'POST':
+        new_password = request.form.get('new_password', '').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
+        
+        if not new_password:
+            flash('Password is required', 'warning')
+            return redirect(url_for('admin.change_user_password', user_id=user_id))
+        
+        if len(new_password) < 6:
+            flash('Password must be at least 6 characters long', 'warning')
+            return redirect(url_for('admin.change_user_password', user_id=user_id))
+        
+        if new_password != confirm_password:
+            flash('Passwords do not match', 'warning')
+            return redirect(url_for('admin.change_user_password', user_id=user_id))
+        
+        u.set_password(new_password)
+        db.session.commit()
+        flash(f'Password changed successfully for user: {u.username}', 'success')
+        return redirect(url_for('admin.users'))
+    
+    return render_template('admin/change_password.html', user=u)
+
+
 @admin_bp.route('/user/delete/<int:user_id>', methods=['POST'])
 @login_required
 @admin_required
@@ -251,6 +307,16 @@ def delete_user(user_id):
         flash('You cannot delete your own account', 'warning')
         return redirect(url_for('admin.users'))
 
+    # Delete competitions created by this user first (to avoid foreign key constraint error)
+    competitions_created = Competition.query.filter_by(creator_id=u.id).all()
+    for comp in competitions_created:
+        # Delete all attempts for this competition first
+        CompetitionAttempt.query.filter_by(competition_id=comp.id).delete()
+        db.session.delete(comp)
+    
+    # Delete competition attempts by this user
+    CompetitionAttempt.query.filter_by(user_id=u.id).delete()
+    
     db.session.delete(u)
     db.session.commit()
     flash('User deleted', 'success')

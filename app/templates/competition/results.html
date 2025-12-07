@@ -8,13 +8,13 @@
             <div class="card shadow-lg mb-5" style="border: 3px solid gold; background: linear-gradient(135deg, #fff9e6 0%, #fffef0 100%);">
                 <div class="card-body text-center p-5">
                     <h2 class="mb-3">🏆 Competition Complete!</h2>
-                    <h3 class="text-success mb-4" style="font-size: 28px;">{{ competition.winner.username }} is the Winner! 🎉</h3>
+                    <h3 class="text-success mb-4" style="font-size: 28px;">{% if competition.winner %}{{ competition.winner.username }}{% else %}N/A{% endif %} is the Winner! 🎉</h3>
                     
                     <div class="row text-center">
                         {% for attempt in attempts | sort(attribute='score', reverse=True) %}
                         <div class="col-md-6 mb-4">
                             <div class="result-card" style="background: linear-gradient(135deg, {% if attempt.user_id == competition.winner_id %}#FFD700 0%, #FFA500{% else %}#C0C0C0 0%, #808080{% endif %} 100%); padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
-                                <h4 class="text-white mb-3">{{ attempt.user.username }}</h4>
+                                <h4 class="text-white mb-3">{% if attempt.user %}{{ attempt.user.username }}{% else %}Deleted User{% endif %}</h4>
                                 {% if attempt.user_id == competition.winner_id %}
                                 <div class="mb-3" style="font-size: 48px;">🥇</div>
                                 {% endif %}
@@ -49,20 +49,20 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr style="background-color: #f8f9fa;">
-                                    <th>Player</th>
-                                    <th>Correct/Total</th>
-                                    <th>Accuracy</th>
-                                    <th>Time Taken</th>
-                                    <th>Status</th>
+                        <table class="table table-hover table-striped">
+                            <thead style="background-color: #0d6efd;">
+                                <tr>
+                                    <th style="color: white; font-weight: bold; padding: 15px; text-align: left;">Player</th>
+                                    <th style="color: white; font-weight: bold; padding: 15px; text-align: center;">Correct/Total</th>
+                                    <th style="color: white; font-weight: bold; padding: 15px; text-align: center;">Accuracy</th>
+                                    <th style="color: white; font-weight: bold; padding: 15px; text-align: center;">Time Taken</th>
+                                    <th style="color: white; font-weight: bold; padding: 15px; text-align: center;">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for attempt in attempts | sort(attribute='score', reverse=True) %}
                                 <tr>
-                                    <td><strong>{{ attempt.user.username }}</strong></td>
+                                    <td><strong>{% if attempt.user %}{{ attempt.user.username }}{% else %}Deleted User{% endif %}</strong></td>
                                     <td>{{ attempt.correct_answers }}/{{ attempt.total_questions }}</td>
                                     <td>
                                         <div class="progress" style="height: 25px;">
@@ -87,6 +87,92 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Detailed Question Review Section -->
+            {% if review_data %}
+            <div class="card shadow-lg mt-4">
+                <div class="card-header" style="background-color: #28a745; color: white;">
+                    <h5 class="mb-0">📝 Question Review</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in review_data %}
+                    <div class="mb-4 p-4" style="background: #f8f9fa; border-radius: 10px; border-left: 4px solid #0d6efd;">
+                        <h6 class="mb-3">
+                            <strong>Question {{ loop.index }}:</strong> {{ item.question.text }}
+                        </h6>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <strong>Options:</strong>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="mb-2">
+                                    <span class="badge {% if item.question.correct_option == 1 %}bg-success{% else %}bg-secondary{% endif %}">A:</span> 
+                                    {{ item.question.option1 }}
+                                    {% if item.question.correct_option == 1 %}<span class="text-success">✓ Correct</span>{% endif %}
+                                </div>
+                                <div class="mb-2">
+                                    <span class="badge {% if item.question.correct_option == 2 %}bg-success{% else %}bg-secondary{% endif %}">B:</span> 
+                                    {{ item.question.option2 }}
+                                    {% if item.question.correct_option == 2 %}<span class="text-success">✓ Correct</span>{% endif %}
+                                </div>
+                                {% if item.question.option3 %}
+                                <div class="mb-2">
+                                    <span class="badge {% if item.question.correct_option == 3 %}bg-success{% else %}bg-secondary{% endif %}">C:</span> 
+                                    {{ item.question.option3 }}
+                                    {% if item.question.correct_option == 3 %}<span class="text-success">✓ Correct</span>{% endif %}
+                                </div>
+                                {% endif %}
+                                {% if item.question.option4 %}
+                                <div class="mb-2">
+                                    <span class="badge {% if item.question.correct_option == 4 %}bg-success{% else %}bg-secondary{% endif %}">D:</span> 
+                                    {{ item.question.option4 }}
+                                    {% if item.question.correct_option == 4 %}<span class="text-success">✓ Correct</span>{% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <strong>Player Answers:</strong>
+                                <div class="mt-2">
+                                    {% for user_answer in item.user_answers %}
+                                    <div class="mb-2 p-2" style="background: white; border-radius: 5px; border-left: 3px solid {% if user_answer.is_correct %}#28a745{% else %}#dc3545{% endif %};">
+                                        <strong>{% if user_answer.user %}{{ user_answer.user.username }}{% else %}Deleted User{% endif %}:</strong>
+                                        {% if user_answer.selected_option %}
+                                            {% set option_map = {1: 'A', 2: 'B', 3: 'C', 4: 'D'} %}
+                                            <span class="badge {% if user_answer.is_correct %}bg-success{% else %}bg-danger{% endif %}">
+                                                {{ option_map[user_answer.selected_option] }}
+                                            </span>
+                                            {% if user_answer.selected_option == 1 %}{{ item.question.option1 }}{% endif %}
+                                            {% if user_answer.selected_option == 2 %}{{ item.question.option2 }}{% endif %}
+                                            {% if user_answer.selected_option == 3 %}{{ item.question.option3 }}{% endif %}
+                                            {% if user_answer.selected_option == 4 %}{{ item.question.option4 }}{% endif %}
+                                            {% if user_answer.is_correct %}
+                                                <span class="text-success ms-2">✓ Correct</span>
+                                            {% else %}
+                                                <span class="text-danger ms-2">✗ Wrong</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">No answer selected</span>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if item.question.explanation %}
+                        <div class="mt-3 p-2" style="background: #e7f3ff; border-radius: 5px;">
+                            <strong>Explanation:</strong> {{ item.question.explanation }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
             
             <!-- Competition Info -->
             <div class="card shadow-lg mt-4">

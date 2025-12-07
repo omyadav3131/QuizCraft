@@ -16,6 +16,17 @@
                         </div>
                     </div>
                     <p class="text-muted text-center"><strong>Question {{ question_index + 1 }} of {{ total_questions }}</strong></p>
+                    
+                    <!-- Timer Display -->
+                    <div class="card mt-3 mb-3" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); border: none;">
+                        <div class="card-body p-3 text-center">
+                            <p class="mb-1 text-white" style="font-size: 12px; font-weight: bold;">⏱️ TIME REMAINING</p>
+                            <h3 class="mb-0 text-white" id="timerDisplay" style="font-weight: bold; font-family: 'Courier New', monospace;">
+                                Loading...
+                            </h3>
+                        </div>
+                    </div>
+                    
                     <div class="card mt-3">
                         <div class="card-body p-3">
                             <p class="mb-1"><strong>Category:</strong> {{ competition.category.name }}</p>
@@ -36,7 +47,8 @@
                         <div class="options mb-4">
                             {% for i in range(1, 5) %}
                             <div class="option-card mb-3">
-                                <input type="radio" id="option{{ i }}" name="selected_option" value="{{ i }}" required>
+                                <input type="radio" id="option{{ i }}" name="selected_option" value="{{ i }}" 
+                                       {% if saved_answer and saved_answer == i %}checked{% endif %} required>
                                 <label for="option{{ i }}" class="w-100">
                                     <strong style="color: #0d6efd;">{{ ['A', 'B', 'C', 'D'][i-1] }}:</strong> 
                                     {{ question['option' ~ i] }}
@@ -99,6 +111,168 @@
 </style>
 
 <script>
+// Timer functionality - Synchronized with server start time
+const timerDisplay = document.getElementById('timerDisplay');
+let timerInterval;
+const competitionCode = '{{ competition.code }}';
+const timeLimitSeconds = {{ competition.time_limit }};
+const startTimestampMs = {{ start_timestamp_ms if start_timestamp_ms else 'null' }};
+
+// Calculate remaining time based on server start timestamp
+function calculateRemainingTime() {
+    if (!startTimestampMs || startTimestampMs <= 0) {
+        // Competition not started yet or invalid timestamp
+        console.log('No valid start timestamp, returning full time limit');
+        return timeLimitSeconds;
+    }
+    
+    const now = Date.now();
+    
+    // Check if we have an adjusted start time in sessionStorage (for fixing timing issues)
+    const adjustedStartKey = `comp_start_adjusted_${competitionCode}`;
+    const adjustedStart = sessionStorage.getItem(adjustedStartKey);
+    let effectiveStartTime = startTimestampMs;
+    
+    if (adjustedStart) {
+        effectiveStartTime = parseInt(adjustedStart);
+        console.log('Using adjusted start time from sessionStorage');
+    }
+    
+    // Safety check: if start time is in the future (shouldn't happen), use current time
+    if (effectiveStartTime > now) {
+        console.warn('Start timestamp is in the future! Using current time as start.', {
+            now: now,
+            effectiveStartTime: effectiveStartTime,
+            diff: effectiveStartTime - now
+        });
+        effectiveStartTime = now;
+        sessionStorage.setItem(adjustedStartKey, now.toString());
+    }
+    
+    const elapsedMs = now - effectiveStartTime;
+    const elapsedSeconds = Math.floor(elapsedMs / 1000);
+    const remaining = Math.max(0, timeLimitSeconds - elapsedSeconds);
+    
+    // If remaining is 0 or negative but we just started, set to full time
+    if (remaining <= 0 && elapsedSeconds < 2) {
+        console.log('Competition just started, resetting to full time');
+        sessionStorage.setItem(adjustedStartKey, now.toString());
+        return timeLimitSeconds;
+    }
+    
+    // Debug logging for first few seconds
+    if (elapsedSeconds < 5) {
+        console.log('Timer calculation:', {
+            now: new Date(now).toISOString(),
+            startTime: new Date(effectiveStartTime).toISOString(),
+            elapsedMs: elapsedMs,
+            elapsedSeconds: elapsedSeconds,
+            timeLimitSeconds: timeLimitSeconds,
+            remaining: remaining
+        });
+    }
+    
+    return remaining;
+}
+
+function updateTimer() {
+    const timeRemaining = calculateRemainingTime();
+    
+    // Always show a valid time, never show ERROR
+    if (timeRemaining <= 0) {
+        // Time is up - submit
+        clearInterval(timerInterval);
+        timerDisplay.textContent = '0:00';
+        // Auto-submit when time runs out
+        fetch(`/competition/submit/${competitionCode}`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => {
+            if (res.ok) {
+                window.location.href = `/competition/results/${competitionCode}`;
+            } else {
+                alert('Error submitting test');
+            }
+        });
+        return;
+    }
+    
+    const minutes = Math.floor(timeRemaining / 60);
+    const seconds = timeRemaining % 60;
+    timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    
+    // Change color when time is running low
+    const timerCard = timerDisplay.parentElement.parentElement;
+    if (timeRemaining <= 60) {
+        timerCard.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+    } else if (timeRemaining <= 300) {
+        timerCard.style.background = 'linear-gradient(135deg, #ffc107 0%, #e0a800 100%)';
+    } else {
+        timerCard.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)';
+    }
+}
+
+// Initialize timer on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const currentTime = Date.now();
+    console.log('Timer initialization:', {
+        startTimestampMs: startTimestampMs,
+        startTimeReadable: startTimestampMs ? new Date(startTimestampMs).toISOString() : 'null',
+        currentTime: currentTime,
+        currentTimeReadable: new Date(currentTime).toISOString(),
+        timeLimitSeconds: timeLimitSeconds
+    });
+    
+    if (startTimestampMs && startTimestampMs > 0) {
+        // Calculate initial remaining time
+        let initialRemaining = calculateRemainingTime();
+        
+        // Handle edge cases gracefully instead of showing errors
+        if (initialRemaining <= 0) {
+            const elapsed = (currentTime - startTimestampMs) / 1000;
+            console.warn('Timer shows 0 or negative - elapsed:', elapsed, 'seconds. Resetting to full time.');
+            // If time is negative or 0, it means competition just started
+            // Reset to full time limit
+            initialRemaining = timeLimitSeconds;
+            // Update start timestamp to current time to fix the issue
+            const newStartTime = currentTime;
+            // We can't modify the server timestamp, but we can adjust client-side
+            // Store adjusted start time in sessionStorage
+            sessionStorage.setItem(`comp_start_adjusted_${competitionCode}`, newStartTime.toString());
+        }
+        
+        // Validate timestamp is reasonable (not too far in past or future)
+        const timeDiff = Math.abs(currentTime - startTimestampMs);
+        const maxDiff = 24 * 60 * 60 * 1000; // 24 hours in ms
+        
+        if (timeDiff > maxDiff) {
+            console.warn('Start timestamp seems invalid (too far from current time), using current time', {
+                diff: timeDiff,
+                diffHours: timeDiff / (60 * 60 * 1000)
+            });
+            // Use current time as start time
+            sessionStorage.setItem(`comp_start_adjusted_${competitionCode}`, currentTime.toString());
+            initialRemaining = timeLimitSeconds;
+        }
+        
+        console.log('Initial remaining time:', initialRemaining, 'seconds (', Math.floor(initialRemaining/60), 'minutes)');
+        
+        if (initialRemaining < timeLimitSeconds) {
+            console.log('Timer started - some time has already elapsed:', timeLimitSeconds - initialRemaining, 'seconds');
+        }
+        
+        console.log('Timer initialized successfully');
+        updateTimer(); // Initial display
+        timerInterval = setInterval(updateTimer, 1000);
+    } else {
+        timerDisplay.textContent = 'Not started';
+        console.warn('Competition not started yet - no start timestamp');
+    }
+});
+
 function submitAnswer(event) {
     event.preventDefault();
     
@@ -114,9 +288,16 @@ function submitAnswer(event) {
     const totalQuestions = {{ total_questions }};
     const competitionCode = '{{ competition.code }}';
     
-    console.log(`Submitting answer: Q${questionId} = Option ${selectedValue}`);
+    console.log(`Submitting answer: Q${questionId} = Option ${selectedValue} (Question ${currentIndex + 1}/${totalQuestions})`);
     
-    // Save answer to server
+    // Disable form to prevent double submission
+    const submitButton = event.target.querySelector('button[type="submit"]');
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Saving...';
+    }
+    
+    // Save answer to server - WAIT for confirmation before navigating
     fetch('{{ url_for("competition.submit_answer", code=competition.code) }}', {
         method: 'POST',
         headers: {
@@ -129,44 +310,63 @@ function submitAnswer(event) {
         })
     })
     .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+        }
         return res.json();
     })
     .then(data => {
-        console.log('Answer saved:', data);
+        console.log('Answer saved successfully:', data);
+        console.log(`Saved answer for Q${questionId}: Option ${selectedValue}`);
         
         if (data.success) {
-            // Navigate to next question or submit
-            if (currentIndex < totalQuestions - 1) {
-                // Go to next question
-                console.log(`Moving to question ${currentIndex + 2}/${totalQuestions}`);
-                window.location.href = `/competition/take/${competitionCode}?q=${currentIndex + 1}`;
-            } else {
-                // Submit test (final question)
-                console.log('Submitting test...');
-                const form = new FormData();
-                fetch(`/competition/submit/${competitionCode}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(res => {
-                    if (res.ok) {
-                        console.log('Test submitted! Redirecting to results...');
-                        window.location.href = `/competition/results/${competitionCode}`;
-                    } else {
-                        alert('Error submitting test');
-                    }
-                });
-            }
+            // Wait a moment to ensure database commit, then navigate
+            setTimeout(() => {
+                if (currentIndex < totalQuestions - 1) {
+                    // Go to next question
+                    console.log(`Moving to question ${currentIndex + 2}/${totalQuestions}`);
+                    window.location.href = `/competition/take/${competitionCode}?q=${currentIndex + 1}`;
+                } else {
+                    // Submit test (final question)
+                    console.log('Submitting test...');
+                    clearInterval(timerInterval); // Stop timer
+                    fetch(`/competition/submit/${competitionCode}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(res => {
+                        if (res.ok) {
+                            console.log('Test submitted! Redirecting to results...');
+                            window.location.href = `/competition/results/${competitionCode}`;
+                        } else {
+                            alert('Error submitting test');
+                            if (submitButton) submitButton.disabled = false;
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error submitting test:', err);
+                        alert('Error submitting test: ' + err.message);
+                        if (submitButton) submitButton.disabled = false;
+                    });
+                }
+            }, 100); // Small delay to ensure DB commit
         } else {
-            alert('Error saving answer: ' + data.message);
+            alert('Error saving answer: ' + (data.message || 'Unknown error'));
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = currentIndex < totalQuestions - 1 ? 'Next →' : 'Submit Test ✓';
+            }
         }
     })
     .catch(err => {
-        console.error('Error:', err);
+        console.error('Error saving answer:', err);
         alert('Error: ' + err.message);
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = currentIndex < totalQuestions - 1 ? 'Next →' : 'Submit Test ✓';
+        }
     });
     
     return false;

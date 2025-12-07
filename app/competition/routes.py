@@ -1,5 +1,7 @@
 import secrets
 import string
+import time
+import json
 from datetime import datetime
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
@@ -33,11 +35,28 @@ def competition_menu():
     if stale_comps:
         db.session.commit()
 
+    # Only show competitions that are actionable or completed for the user
     user_competitions = Competition.query.filter(
-        (Competition.creator_id == current_user.id) | 
-        (Competition.user_attempts.any(CompetitionAttempt.user_id == current_user.id))
+        ((Competition.creator_id == current_user.id) | 
+         (Competition.user_attempts.any(CompetitionAttempt.user_id == current_user.id)))
     ).all()
-    return render_template('competition/competition_menu.html', competitions=user_competitions)
+    filtered_comps = []
+    for comp in user_competitions:
+        # Hide competitions that are 'waiting' or 'in_progress' and older than 3 minutes
+        if comp.status == 'completed':
+            filtered_comps.append(comp)
+        elif comp.status == 'in_progress':
+            # Only show if user has not yet submitted
+            user_attempt = next((a for a in comp.user_attempts if a.user_id == current_user.id), None)
+            if user_attempt and user_attempt.status != 'completed':
+                filtered_comps.append(comp)
+        # Optionally, show 'waiting' only if user is creator and it's not stale
+        elif comp.status == 'waiting':
+            if comp.creator_id == current_user.id:
+                # Not stale
+                if (now - comp.created_at).total_seconds() < 180:
+                    filtered_comps.append(comp)
+    return render_template('competition/competition_menu.html', competitions=filtered_comps)
 
 
 @competition_bp.route('/ping')
@@ -186,11 +205,35 @@ def start_competition(code):
     if len(attempts) < 2:
         return jsonify({'success': False, 'message': 'Need 2 players to start'}), 400
     
+    # Set started_at timestamp - this will be the same for all players
+    # IMPORTANT: Use time.time() FIRST to get exact UTC timestamp, then create datetime from it
+    # This ensures consistency when converting back to timestamp later
+    start_utc_timestamp = time.time()
+    # Create datetime from timestamp to ensure exact match
+    start_time = datetime.utcfromtimestamp(start_utc_timestamp)
     comp.status = 'in_progress'
-    comp.started_at = datetime.utcnow()
+    comp.started_at = start_time
+    
+    # Reset all attempts' started_at to the same time for consistency
+    for attempt in attempts:
+        attempt.started_at = start_time
+        attempt.answers = {}  # Reset answers
+        attempt.status = 'in_progress'
+    
     db.session.commit()
     
-    return jsonify({'success': True, 'message': 'Competition started!'})
+    # Return the start timestamp in milliseconds for client-side sync
+    # Use the SAME timestamp we used to create the datetime
+    start_timestamp_ms = int(start_utc_timestamp * 1000)
+    
+    print(f"DEBUG: Competition started - UTC timestamp: {start_utc_timestamp}, MS: {start_timestamp_ms}, Time limit: {comp.time_limit}s, Datetime: {start_time}")
+    
+    return jsonify({
+        'success': True, 
+        'message': 'Competition started!',
+        'startTime': start_timestamp_ms,
+        'timeLimit': comp.time_limit
+    })
 
 
 @competition_bp.route('/take/<code>', methods=['GET'])
@@ -215,11 +258,11 @@ def take_competition_test(code):
         flash(f'Competition status: {comp.status}. Status should be in_progress.', 'error')
         return redirect(url_for('competition.wait_for_opponent', code=code))
     
-    # Get questions for this competition
+    # Get questions for this competition - ORDER BY ID to ensure consistent ordering
     questions = Question.query.filter_by(
         category_id=comp.category_id,
         difficulty=comp.difficulty
-    ).limit(comp.num_questions).all()
+    ).order_by(Question.id).limit(comp.num_questions).all()
     
     if not questions:
         flash('No questions available for this competition', 'error')
@@ -232,13 +275,67 @@ def take_competition_test(code):
     
     question = questions[current_question_index]
     
-    print(f"DEBUG: Taking test - Q{current_question_index + 1}/{len(questions)}, User: {current_user.username}")
+    # Load previously saved answer for this question if exists
+    saved_answer = None
+    if user_attempt.answers:
+        if isinstance(user_attempt.answers, dict):
+            saved_answer = user_attempt.answers.get(str(question.id))
+        elif isinstance(user_attempt.answers, str):
+            try:
+                import json
+                answers_dict = json.loads(user_attempt.answers)
+                saved_answer = answers_dict.get(str(question.id))
+            except:
+                pass
+    
+    # Calculate remaining time based on competition start time
+    # Pass start timestamp in milliseconds for client-side synchronization
+    if comp.started_at:
+        # Get current UTC timestamp in seconds
+        current_utc_timestamp = time.time()
+        
+        # Convert started_at datetime to UTC timestamp
+        # datetime.utcfromtimestamp() creates naive UTC datetime
+        # To convert back, we calculate manually to ensure UTC (not local time)
+        epoch = datetime(1970, 1, 1)
+        # Calculate seconds since epoch for UTC datetime
+        start_utc_timestamp = (comp.started_at - epoch).total_seconds()
+        
+        # Calculate elapsed time (should be >= 0, but allow small negative for timing)
+        elapsed_seconds = current_utc_timestamp - start_utc_timestamp
+        
+        # If elapsed is negative or very small, competition just started
+        if elapsed_seconds < 0:
+            print(f"INFO: Negative elapsed time ({elapsed_seconds:.2f}s) - competition just started, setting to 0")
+            elapsed_seconds = 0
+        elif elapsed_seconds < 1:
+            # Less than 1 second elapsed, set to 0 for safety
+            elapsed_seconds = 0
+        
+        # Calculate remaining time
+        remaining_seconds = max(0, comp.time_limit - int(elapsed_seconds))
+        
+        # Use calculated UTC timestamp in milliseconds for client
+        # This MUST match the timestamp calculation used when starting competition
+        start_timestamp_ms = int(start_utc_timestamp * 1000)
+        
+        print(f"DEBUG: Timer calc - Current UTC: {current_utc_timestamp:.2f}, Start UTC: {start_utc_timestamp:.2f}, Elapsed: {elapsed_seconds:.2f}s, Remaining: {remaining_seconds}s, Start MS: {start_timestamp_ms}")
+    else:
+        start_timestamp_ms = None
+        remaining_seconds = comp.time_limit
+        print(f"DEBUG: Competition not started yet, remaining: {remaining_seconds}s")
+    
+    print(f"DEBUG: Taking test - Q{current_question_index + 1}/{len(questions)}, User: {current_user.username}, Remaining time: {remaining_seconds}s, Start timestamp: {start_timestamp_ms}")
     
     return render_template('competition/test.html', 
                          competition=comp, 
                          question=question,
                          question_index=current_question_index,
-                         total_questions=len(questions))
+                         total_questions=len(questions),
+                         questions=questions,  # Pass all questions for reference
+                         remaining_seconds=remaining_seconds,
+                         start_timestamp_ms=start_timestamp_ms,
+                         saved_answer=saved_answer)
 
 
 @competition_bp.route('/submit-answer/<code>', methods=['POST'])
@@ -272,12 +369,45 @@ def submit_answer(code):
         if not question:
             return jsonify({'success': False, 'message': 'Question not found'}), 404
         
-        # Store answer
-        if not user_attempt.answers:
-            user_attempt.answers = {}
+        # Store answer - ensure answers dict exists and properly append
+        # IMPORTANT: SQLAlchemy JSON columns need explicit dict assignment for updates
         
-        user_attempt.answers[str(question_id)] = selected_option
+        # Get current answers or initialize empty dict
+        current_answers = {}
+        if user_attempt.answers:
+            if isinstance(user_attempt.answers, dict):
+                current_answers = dict(user_attempt.answers)  # Create a copy
+            elif isinstance(user_attempt.answers, str):
+                try:
+                    current_answers = json.loads(user_attempt.answers)
+                except:
+                    current_answers = {}
+            else:
+                current_answers = {}
+        
+        # Add/update the answer
+        current_answers[str(question_id)] = selected_option
+        
+        # IMPORTANT: Assign the entire dict back to trigger SQLAlchemy change detection
+        user_attempt.answers = current_answers
+        
+        # Force commit to ensure answer is saved before response
         db.session.commit()
+        
+        # Refresh to get latest state and verify
+        db.session.refresh(user_attempt)
+        
+        # Verify the answer was saved
+        saved_answers = user_attempt.answers if isinstance(user_attempt.answers, dict) else {}
+        if isinstance(user_attempt.answers, str):
+            try:
+                saved_answers = json.loads(user_attempt.answers)
+            except:
+                saved_answers = {}
+        
+        print(f"DEBUG: Saved answer for user {current_user.username}, Q{question_id} = Option {selected_option}")
+        print(f"DEBUG: Total saved answers: {len(saved_answers)}, All answers: {saved_answers}")
+        print(f"DEBUG: Verification - Q{question_id} in saved: {str(question_id) in saved_answers}, Value: {saved_answers.get(str(question_id))}")
         
         # Check if correct
         is_correct = selected_option == question.correct_option
@@ -315,20 +445,44 @@ def submit_competition_test(code):
             print(f"DEBUG: User {current_user.username} already completed")
             return redirect(url_for('competition.competition_results', code=code))
         
-        # Get questions and calculate score
+        # Get questions and calculate score - ORDER BY ID to ensure consistent ordering
         questions = Question.query.filter_by(
             category_id=comp.category_id,
             difficulty=comp.difficulty
-        ).limit(comp.num_questions).all()
+        ).order_by(Question.id).limit(comp.num_questions).all()
         
         if not questions:
             flash('No questions found for scoring', 'error')
             return redirect(url_for('competition.competition_menu')), 404
         
         correct_count = 0
+        
+        # IMPORTANT: Properly load answers from JSON column
+        answers_dict = {}
+        if user_attempt.answers:
+            if isinstance(user_attempt.answers, dict):
+                answers_dict = user_attempt.answers
+            elif isinstance(user_attempt.answers, str):
+                try:
+                    answers_dict = json.loads(user_attempt.answers)
+                except:
+                    answers_dict = {}
+        
+        print(f"DEBUG: Calculating score for {current_user.username}")
+        print(f"DEBUG: Total questions: {len(questions)}")
+        print(f"DEBUG: Answers type: {type(user_attempt.answers)}")
+        print(f"DEBUG: Answers dict: {answers_dict}")
+        print(f"DEBUG: Answers dict length: {len(answers_dict)}")
+        
         for question in questions:
-            selected = user_attempt.answers.get(str(question.id)) if user_attempt.answers else None
-            if selected and selected == question.correct_option:
+            selected = answers_dict.get(str(question.id))
+            # Also try integer key in case it was stored as int
+            if selected is None:
+                selected = answers_dict.get(question.id)
+            
+            print(f"DEBUG: Q{question.id} - Selected: {selected}, Correct: {question.correct_option}, Match: {selected == question.correct_option if selected else False}")
+            
+            if selected is not None and selected == question.correct_option:
                 correct_count += 1
         
         # Update attempt with final scores
@@ -372,6 +526,51 @@ def competition_results(code):
     
     attempts = CompetitionAttempt.query.filter_by(competition_id=comp.id).all()
     
+    # Get questions for this competition - ORDER BY ID to ensure consistent ordering
+    questions = Question.query.filter_by(
+        category_id=comp.category_id,
+        difficulty=comp.difficulty
+    ).order_by(Question.id).limit(comp.num_questions).all()
+    
+    # Prepare detailed review data: for each question, show what each user answered
+    import json
+    review_data = []
+    for question in questions:
+        question_review = {
+            'question': question,
+            'user_answers': []
+        }
+        
+        for attempt in attempts:
+            # Properly load answers from JSON column
+            attempt_answers = {}
+            if attempt.answers:
+                if isinstance(attempt.answers, dict):
+                    attempt_answers = attempt.answers
+                elif isinstance(attempt.answers, str):
+                    try:
+                        attempt_answers = json.loads(attempt.answers)
+                    except:
+                        attempt_answers = {}
+            
+            user_answer = attempt_answers.get(str(question.id))
+            # Also try integer key
+            if user_answer is None:
+                user_answer = attempt_answers.get(question.id)
+            
+            is_correct = (user_answer == question.correct_option) if user_answer is not None else False
+            
+            # Only add if user exists (handle deleted users)
+            if attempt.user:
+                question_review['user_answers'].append({
+                    'user': attempt.user,
+                    'selected_option': user_answer,
+                    'is_correct': is_correct
+                })
+        
+        review_data.append(question_review)
+    
     return render_template('competition/results.html', 
                          competition=comp, 
-                         attempts=attempts)
+                         attempts=attempts,
+                         review_data=review_data)
