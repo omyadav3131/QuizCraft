@@ -497,3 +497,28 @@
         font-size: 2rem;
     }
 }
+/* Competition table header – matches blue theme */
+.competition-header th {
+    background: linear-gradient(90deg, #0066ff, #00c6ff); /* blue → cyan */
+    color: #ffffff !important;
+    font-weight: 600;
+    border: none !important;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    font-size: 14px;
+    text-align: left;
+}
+
+/* Rounded corners on first/last header cells */
+.competition-header th:first-child {
+    border-top-left-radius: 8px;
+}
+
+.competition-header th:last-child {
+    border-top-right-radius: 8px;
+}
+
+/* Optional: remove top border line from table so header blends with card */
+.competition-header {
+    border-top: none !important;
+}

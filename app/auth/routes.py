@@ -11,6 +11,10 @@ from flask_login import login_user, logout_user, login_required, current_user
 from . import auth_bp
 from .forms import RegisterForm, LoginForm
 from app.models import User, db
+@auth_bp.route('/profile')
+@login_required
+def profile():
+    return render_template('auth/profile.html')
 
 @auth_bp.route('/register', methods=['GET','POST'])
 def register():

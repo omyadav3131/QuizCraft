@@ -32,7 +32,7 @@
             <h3 class="mt-5 mb-3">📊 Your Competitions</h3>
             <div class="table-responsive">
                 <table class="table table-hover">
-                    <thead style="background-color: #0d6efd; color: white;">
+                    <thead style="background-color: #f6f8fc; color: rgb(0, 0, 0);">
                         <tr>
                             <th>Code</th>
                             <th>Category</th>
@@ -44,6 +44,8 @@
                     </thead>
                     <tbody>
                         {% for comp in competitions %}
+                        {% set user_attempt = comp.user_attempts | selectattr('user_id', 'equalto', current_user.id) | first %}
+                        {% if comp.status == 'completed' %}
                         <tr>
                             <td><code style="font-weight: bold; background: #f0f0f0; padding: 5px; border-radius: 3px;">{{ comp.code }}</code></td>
                             <td>{{ comp.category.name }}</td>
@@ -53,7 +55,6 @@
                                 </span>
                             </td>
                             <td>
-                                {% set user_attempt = comp.user_attempts | selectattr('user_id', 'equalto', current_user.id) | first %}
                                 {% if user_attempt %}
                                     <strong>{{ "%.1f"|format(user_attempt.score) }}%</strong>
                                 {% else %}
@@ -75,6 +76,7 @@
                                 <a href="{{ url_for('competition.competition_results', code=comp.code) }}" class="btn btn-sm btn-primary">View</a>
                             </td>
                         </tr>
+                        {% endif %}
                         {% endfor %}
                     </tbody>
                 </table>
