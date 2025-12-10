@@ -70,6 +70,11 @@
                             {% endif %}
                         </div>
                     </form>
+                    <form id="finalSubmitForm"
+                          method="POST"
+                          action="{{ url_for('competition.submit_competition_test', code=competition.code) }}">
+                    </form>
+
                 </div>
             </div>
         </div>
@@ -180,25 +185,20 @@ function updateTimer() {
     
     // Always show a valid time, never show ERROR
     if (timeRemaining <= 0) {
-        // Time is up - submit
-        clearInterval(timerInterval);
-        timerDisplay.textContent = '0:00';
-        // Auto-submit when time runs out
-        fetch(`/competition/submit/${competitionCode}`, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(res => {
-            if (res.ok) {
-                window.location.href = `/competition/results/${competitionCode}`;
-            } else {
-                alert('Error submitting test');
-            }
-        });
-        return;
+    // Time is up - submit
+    clearInterval(timerInterval);
+    timerDisplay.textContent = '0:00';
+
+    const finalForm = document.getElementById('finalSubmitForm');
+    if (finalForm) {
+        finalForm.submit(); // normal POST → backend redirect → results page
+    } else {
+        // fallback
+        window.location.href = `/competition/submit/${competitionCode}`;
     }
+    return;
+}
+
     
     const minutes = Math.floor(timeRemaining / 60);
     const seconds = timeRemaining % 60;
@@ -326,31 +326,20 @@ function submitAnswer(event) {
                     // Go to next question
                     console.log(`Moving to question ${currentIndex + 2}/${totalQuestions}`);
                     window.location.href = `/competition/take/${competitionCode}?q=${currentIndex + 1}`;
-                } else {
-                    // Submit test (final question)
-                    console.log('Submitting test...');
+                                } else {
+                    // Submit test (final question) via normal form
+                    console.log('Submitting test via form submit...');
                     clearInterval(timerInterval); // Stop timer
-                    fetch(`/competition/submit/${competitionCode}`, {
-                        method: 'POST',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(res => {
-                        if (res.ok) {
-                            console.log('Test submitted! Redirecting to results...');
-                            window.location.href = `/competition/results/${competitionCode}`;
-                        } else {
-                            alert('Error submitting test');
-                            if (submitButton) submitButton.disabled = false;
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Error submitting test:', err);
-                        alert('Error submitting test: ' + err.message);
-                        if (submitButton) submitButton.disabled = false;
-                    });
+
+                    const finalForm = document.getElementById('finalSubmitForm');
+                    if (finalForm) {
+                        finalForm.submit();
+                    } else {
+                        // fallback – at least try normal navigation
+                        window.location.href = `/competition/submit/${competitionCode}`;
+                    }
                 }
+
             }, 100); // Small delay to ensure DB commit
         } else {
             alert('Error saving answer: ' + (data.message || 'Unknown error'));
