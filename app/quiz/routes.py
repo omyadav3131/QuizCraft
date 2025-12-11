@@ -7,10 +7,10 @@ TIPS: Add your notes here to help future edits.
 """
 
 # app/quiz/routes.py
-from flask import render_template, request, redirect, url_for, session, flash, jsonify
+from flask import render_template, request, redirect, url_for, session, flash, jsonify, abort
 from flask_login import login_required, current_user
 from . import quiz_bp
-from app.models import Category, Question, Attempt, User, db
+from app.models import Category, Question, Attempt, User, Role, db
 
 @quiz_bp.route('/select')
 @login_required
@@ -516,37 +516,57 @@ def feedback():
 @quiz_bp.route('/performance')
 @login_required
 def performance_dashboard():
-    # Prevent admin from accessing performance dashboard
-    if current_user.is_admin():
-        flash('Admin users cannot access performance dashboard.', 'warning')
-        return redirect(url_for('admin.index'))
-    
     from datetime import datetime, timedelta
-    from collections import defaultdict
     from app.models import Competition, CompetitionAttempt
-    
-    # Get all attempts for current user
-    attempts = Attempt.query.filter_by(user_id=current_user.id).order_by(Attempt.created_at).all()
-    
-    # Get all competition attempts for current user
-    comp_attempts = CompetitionAttempt.query.filter_by(user_id=current_user.id).order_by(CompetitionAttempt.started_at).all()
+
+    requested_user_id = request.args.get('user_id', type=int)
+
+    if current_user.is_admin():
+        if not requested_user_id:
+            flash('कृपया किसी उपयोगकर्ता को चुनें ताकि उसका परफॉर्मेंस देखा जा सके।', 'warning')
+            return redirect(url_for('admin.user_progress'))
+
+        target_user = User.query.filter(
+            User.id == requested_user_id,
+            User.role == Role.USER
+        ).first()
+
+        if not target_user:
+            flash('यह उपयोगकर्ता उपलब्ध नहीं है या उसे देखा नहीं जा सकता।', 'warning')
+            return redirect(url_for('admin.user_progress'))
+    else:
+        if requested_user_id and requested_user_id != current_user.id:
+            abort(403)
+        target_user = current_user
+
+    # Get all attempts for selected user
+    attempts = Attempt.query.filter_by(user_id=target_user.id).order_by(Attempt.created_at).all()
+
+    # Get all competition attempts for selected user
+    comp_attempts = (
+        CompetitionAttempt.query.filter_by(user_id=target_user.id)
+        .order_by(CompetitionAttempt.started_at)
+        .all()
+    )
     
     # Get all categories for display
     all_categories = Category.query.all()
-    
+
     if not attempts and not comp_attempts:
-        return render_template('quiz/performance.html', 
-                             attempts=[], 
-                             score_data=[], 
-                             points_data=[],
-                             total_quizzes=0,
-                             avg_score=0,
-                             total_points=0,
-                             comp_attempts=comp_attempts,
-                             comp_total_attempts=0,
-                             comp_avg_score=0,
-                             categories=all_categories)
-    
+        return render_template(
+            'quiz/performance.html',
+            attempts=[],
+            score_data=[],
+            points_data=[],
+            total_quizzes=0,
+            avg_score=0,
+            total_points=0,
+            comp_attempts=comp_attempts,
+            comp_total_attempts=0,
+            comp_avg_score=0,
+            categories=all_categories
+        )
+
     # Prepare data for quiz charts
     score_data = []
     points_data = []
