@@ -10,7 +10,11 @@ TIPS: Add your notes here to help future edits.
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from app.admin import admin_bp
-from app.models import db, Question, Category, User, Competition, CompetitionAttempt
+from app.models import db, Question, Category, User, Competition, CompetitionAttempt, Attempt, AttemptAnswer, LeaderboardEntry, Role
+
+from sqlalchemy import func, case, and_, or_
+from datetime import datetime, timedelta
+
 @admin_bp.route('/profile')
 @login_required
 def admin_profile():
@@ -18,6 +22,7 @@ def admin_profile():
     competitions_count = Competition.query.count()
     users_count = User.query.count()
     return render_template('admin/profile.html', questions_count=questions_count, competitions_count=competitions_count, users_count=users_count)
+
 from datetime import datetime, timedelta
 
 def admin_required(f):
@@ -199,7 +204,6 @@ def users():
     all_users = User.query.order_by(User.id.desc()).all()
     return render_template('admin/users.html', users=all_users)
 
-
 @admin_bp.route('/user/new', methods=['GET','POST'])
 @login_required
 @admin_required
@@ -376,9 +380,6 @@ def bulk_add_questions():
         
         if added_count == 0 and not errors:
             flash('No questions were added. Please fill at least one complete question.', 'warning')
-        
-        return redirect(url_for('admin.index'))
-    
     return render_template('admin/bulk_add_questions.html', categories=cats)
 
 @admin_bp.route('/feedback')
@@ -392,3 +393,214 @@ def feedback():
         flash(f'Error loading feedback: {str(e)}. Please run "python update_db.py" to create the feedback table.', 'danger')
         feedbacks = []
     return render_template('admin/feedback.html', feedbacks=feedbacks)
+
+@admin_bp.route('/user-progress')
+@login_required
+@admin_required
+def user_progress():
+    """Display platform-wide user analytics with quick competition snapshot."""
+
+    one_week_ago = datetime.utcnow() - timedelta(days=7)
+
+    total_users = User.query.filter(User.role == Role.USER).count()
+
+    active_this_week = (
+        db.session.query(func.count(func.distinct(Attempt.user_id)))
+        .join(User, User.id == Attempt.user_id)
+        .filter(Attempt.created_at >= one_week_ago, User.role == Role.USER)
+        .scalar() or 0
+    )
+
+    total_attempts = (
+        db.session.query(func.count(Attempt.id))
+        .join(User, User.id == Attempt.user_id)
+        .filter(User.role == Role.USER)
+        .scalar() or 0
+    )
+
+    average_score_query = (
+        db.session.query(
+            func.avg((Attempt.score * 100.0) / func.nullif(Attempt.total, 0))
+        )
+        .join(User, User.id == Attempt.user_id)
+        .filter(
+            Attempt.total.isnot(None),
+            Attempt.total > 0,
+            User.role == Role.USER
+        )
+        .scalar()
+    )
+
+    average_score = round(average_score_query or 0, 2)
+
+    competitions_tracked = Competition.query.count()
+    participants_count = (
+        db.session.query(func.count(func.distinct(CompetitionAttempt.user_id)))
+        .join(User, User.id == CompetitionAttempt.user_id)
+        .filter(User.role == Role.USER)
+        .scalar() or 0
+    )
+
+    user_rows = (
+        db.session.query(
+            User.id,
+            User.username,
+            func.count(Attempt.id).label('attempts'),
+            func.coalesce(
+                func.avg((Attempt.score * 100.0) / func.nullif(Attempt.total, 0)),
+                0
+            ).label('avg_score'),
+            func.max(Attempt.created_at).label('last_activity'),
+        )
+        .outerjoin(Attempt, Attempt.user_id == User.id)
+        .filter(User.role == Role.USER)
+        .group_by(User.id, User.username)
+        .order_by(User.username.asc())
+    ).all()
+
+    users = [
+        {
+            'id': row.id,
+            'username': row.username,
+            'attempts': row.attempts,
+            'avg_score': round(row.avg_score or 0, 2),
+            'last_activity': row.last_activity,
+        }
+        for row in user_rows
+    ]
+
+    competition_rows = (
+        db.session.query(
+            Competition.id,
+            Competition.code,
+            Category.name.label('category_name'),
+            Competition.difficulty,
+            Competition.started_at,
+            Competition.created_at,
+            func.count(func.distinct(CompetitionAttempt.user_id)).label('participants'),
+            func.coalesce(func.avg(CompetitionAttempt.score), 0).label('avg_score'),
+        )
+        .outerjoin(Category, Competition.category_id == Category.id)
+        .outerjoin(CompetitionAttempt, CompetitionAttempt.competition_id == Competition.id)
+        .outerjoin(User, User.id == CompetitionAttempt.user_id)
+        .group_by(
+            Competition.id,
+            Competition.code,
+            Category.name,
+            Competition.difficulty,
+            Competition.started_at,
+            Competition.created_at,
+        )
+        .filter((User.id == None) | (User.role == Role.USER))
+        .order_by(Competition.created_at.desc())
+        .limit(20)
+    ).all()
+
+    competitions = [
+        {
+            'id': row.id,
+            'code': row.code,
+            'category': row.category_name or 'N/A',
+            'difficulty': row.difficulty,
+            'participants': row.participants,
+            'avg_score': round(row.avg_score or 0, 2),
+            'started_at': row.started_at or row.created_at,
+        }
+        for row in competition_rows
+    ]
+
+    return render_template(
+        'admin/user_progress.html',
+        total_users=total_users,
+        active_this_week=active_this_week,
+        total_attempts=total_attempts,
+        average_score=average_score,
+        competitions_tracked=competitions_tracked,
+        participants_count=participants_count,
+        users=users,
+        competitions=competitions,
+    )
+
+
+@admin_bp.route('/user/<int:user_id>/progress')
+@login_required
+@admin_required
+def user_progress_detail(user_id):
+    """Drill-down analytics for a single user's activity."""
+
+    user = User.query.get_or_404(user_id)
+
+    attempt_records = (
+        db.session.query(
+            Attempt.id,
+            Attempt.created_at,
+            Attempt.score,
+            Attempt.total,
+            Attempt.points,
+            Attempt.difficulty,
+            Category.name.label('category_name'),
+        )
+        .outerjoin(Category, Attempt.category_id == Category.id)
+        .filter(Attempt.user_id == user.id)
+        .order_by(Attempt.created_at.desc())
+        .all()
+    )
+
+    total_attempts = len(attempt_records)
+
+    avg_score_query = (
+        db.session.query(
+            func.avg((Attempt.score * 100.0) / func.nullif(Attempt.total, 0))
+        )
+        .filter(Attempt.user_id == user.id, Attempt.total.isnot(None), Attempt.total > 0)
+        .scalar()
+    )
+    avg_score = round(avg_score_query or 0, 2)
+
+    attempts = []
+    for record in attempt_records:
+        if record.total:
+            score_pct = round((record.score * 100.0) / record.total, 2)
+        else:
+            score_pct = 0.0
+        attempts.append(
+            {
+                'id': record.id,
+                'created_at': record.created_at,
+                'category_name': record.category_name or 'General',
+                'difficulty': record.difficulty or 'N/A',
+                'score': record.score or 0,
+                'total': record.total or 0,
+                'score_pct': score_pct,
+                'points': record.points or 0,
+            }
+        )
+
+    timeseries = [
+        {
+            'date': attempt['created_at'].strftime('%Y-%m-%d'),
+            'score': attempt['score_pct'],
+            'label': attempt['category_name'],
+        }
+        for attempt in sorted(attempts, key=lambda item: item['created_at'])
+    ]
+
+    return render_template(
+        'admin/user_progress_detail.html',
+        user=user,
+        attempts=attempts,
+        timeseries=timeseries,
+        total_attempts=total_attempts,
+        avg_score=avg_score,
+    )
+
+
+@admin_bp.route('/user/<int:user_id>/performance')
+@login_required
+@admin_required
+def admin_user_performance(user_id):
+    """Allow admins to open the standard user performance dashboard for any user."""
+
+    user = User.query.get_or_404(user_id)
+    performance_url = url_for('quiz.performance_dashboard', user_id=user.id)
+    return redirect(performance_url)

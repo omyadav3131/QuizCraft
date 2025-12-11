@@ -38,6 +38,7 @@
                 {%- if current_user.is_admin() -%}
                 <a href="{{ url_for('admin.index') }}"><i class="fas fa-cog"></i> Admin</a>
                 <a href="{{ url_for('admin.competitions_view') }}"><i class="fas fa-gamepad"></i> Competitions</a>
+                <a href="{{ url_for('admin.user_progress') }}"><i class="fas fa-chart-bar"></i> User Progress</a>
                 <a href="{{ url_for('admin.feedback') }}"><i class="fas fa-comment-alt"></i> Feedback</a>
                 <a href="{{ url_for('quiz.leaderboard') }}"><i class="fas fa-trophy"></i> Leaderboard</a>
                 {%- else -%}
