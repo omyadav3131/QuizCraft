@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}User Progress{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+    <div>
+      <h2 class="mb-1">User Progress</h2>
+      <p class="text-muted mb-0">Platform-wide snapshot covering quiz engagement and competition activity.</p>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <small class="text-uppercase text-muted">Total Users</small>
+          <h3 class="fw-bold mb-0">{{ total_users }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <small class="text-uppercase text-muted">Active This Week</small>
+          <h3 class="fw-bold mb-0">{{ active_this_week }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <small class="text-uppercase text-muted">Total Attempts</small>
+          <h3 class="fw-bold mb-0">{{ total_attempts }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <small class="text-uppercase text-muted">Average Score</small>
+          <h3 class="fw-bold mb-0">{{ average_score }}%</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <small class="text-uppercase text-muted">Competitions Created</small>
+          <h3 class="fw-bold mb-0">{{ competitions_tracked }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <small class="text-uppercase text-muted">Competition Participants</small>
+          <h3 class="fw-bold mb-0">{{ participants_count }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">User Engagement</h5>
+        <small class="text-muted">Regular users only</small>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">User</th>
+              <th scope="col" class="text-center">Attempts</th>
+              <th scope="col" class="text-center">Avg. Score</th>
+              <th scope="col">Last Activity</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr>
+              <td>
+                <a href="{{ url_for('admin.admin_user_performance', user_id=user.id) }}" target="_blank" rel="noopener">
+                  {{ user.username }}
+                </a>
+              </td>
+              <td class="text-center">{{ user.attempts }}</td>
+              <td class="text-center">{{ user.avg_score }}%</td>
+              <td>
+                {% if user.last_activity %}
+                  {{ user.last_activity.strftime('%d %b %Y %H:%M') }}
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4" class="text-center text-muted py-4">No user activity recorded yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Recent Competitions</h5>
+        <small class="text-muted">Last 20 entries</small>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-striped align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">Code</th>
+              <th scope="col">Category</th>
+              <th scope="col">Difficulty</th>
+              <th scope="col" class="text-center">Participants</th>
+              <th scope="col" class="text-center">Avg. Score</th>
+              <th scope="col">Started</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for competition in competitions %}
+            <tr>
+              <td><code>{{ competition.code }}</code></td>
+              <td>{{ competition.category }}</td>
+              <td>{{ competition.difficulty or '—' }}</td>
+              <td class="text-center">{{ competition.participants }}</td>
+              <td class="text-center">{{ competition.avg_score }}%</td>
+              <td>
+                {% if competition.started_at %}
+                  {{ competition.started_at.strftime('%d %b %Y %H:%M') }}
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6" class="text-center text-muted py-4">No competitions tracked yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
