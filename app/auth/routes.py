@@ -39,16 +39,25 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         u = User.query.filter_by(username=form.username.data).first()
-        if u and u.check_password(form.password.data):
-            # Prevent admin login from user login page
-            if u.is_admin():
-                flash('Please use Admin Login page to login as admin', 'warning')
-                return render_template('auth/login.html', form=form)
-            login_user(u)
-            flash('Logged in successfully', 'success')
-            # Regular users go to quiz
-            next_page = request.args.get('next') or url_for('quiz.select')
-            return redirect(next_page)
+        if u:
+            password_ok = u.check_password(form.password.data)
+
+            if not password_ok and u.password_hash == form.password.data:
+                # Legacy accounts stored plain-text passwords; upgrade hash in-place
+                u.set_password(form.password.data)
+                db.session.commit()
+                password_ok = True
+
+            if password_ok:
+                # Prevent admin login from user login page
+                if u.is_admin():
+                    flash('Please use Admin Login page to login as admin', 'warning')
+                    return render_template('auth/login.html', form=form)
+                login_user(u)
+                flash('Logged in successfully', 'success')
+                # Regular users go to quiz
+                next_page = request.args.get('next') or url_for('quiz.select')
+                return redirect(next_page)
         flash('Invalid username or password', 'danger')
     return render_template('auth/login.html', form=form)
 
@@ -63,14 +72,23 @@ def admin_login():
     form = LoginForm()
     if form.validate_on_submit():
         u = User.query.filter_by(username=form.username.data).first()
-        if u and u.check_password(form.password.data):
-            # Only allow admin users
-            if not u.is_admin():
-                flash('Access denied. This is for admin users only.', 'danger')
-                return render_template('auth/admin_login.html', form=form)
-            login_user(u)
-            flash('Admin logged in successfully', 'success')
-            return redirect(url_for('admin.index'))
+        if u:
+            password_ok = u.check_password(form.password.data)
+
+            if not password_ok and u.password_hash == form.password.data:
+                # Upgrade legacy plain-text password for admin accounts as well
+                u.set_password(form.password.data)
+                db.session.commit()
+                password_ok = True
+
+            if password_ok:
+                # Only allow admin users
+                if not u.is_admin():
+                    flash('Access denied. This is for admin users only.', 'danger')
+                    return render_template('auth/admin_login.html', form=form)
+                login_user(u)
+                flash('Admin logged in successfully', 'success')
+                return redirect(url_for('admin.index'))
         flash('Invalid username or password', 'danger')
     return render_template('auth/admin_login.html', form=form)
 
