@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}User Progress{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+  <div class="admin-wrapper">
+    <section class="dashboard-intro">
+      <div>
+        <h1 class="page-title">User Progress Overview</h1>
+        <p class="page-subtitle">Track learner engagement, performance trends, and competition health in real time.</p>
+      </div>
+    </section>
+
+    <section class="analytics-grid">
+      <article class="analytics-card gradient-blue">
+        <span class="metric-label">Total Users</span>
+        <span class="metric-value">{{ total_users }}</span>
+        <span class="metric-footnote">Active role: learners</span>
+      </article>
+      <article class="analytics-card gradient-cyan">
+        <span class="metric-label">Active This Week</span>
+        <span class="metric-value">{{ active_this_week }}</span>
+        <span class="metric-footnote">Unique users in last 7 days</span>
+      </article>
+      <article class="analytics-card gradient-violet">
+        <span class="metric-label">Total Attempts</span>
+        <span class="metric-value">{{ total_attempts }}</span>
+        <span class="metric-footnote">Across all quizzes</span>
+      </article>
+      <article class="analytics-card gradient-amber">
+        <span class="metric-label">Average Score</span>
+        <span class="metric-value">{{ average_score }}%</span>
+        <span class="metric-footnote">Weighted by attempt total</span>
+      </article>
+      <article class="analytics-card gradient-mint">
+        <span class="metric-label">Competitions Created</span>
+        <span class="metric-value">{{ competitions_tracked }}</span>
+        <span class="metric-footnote">All time</span>
+      </article>
+      <article class="analytics-card gradient-rose">
+        <span class="metric-label">Competition Participants</span>
+        <span class="metric-value">{{ participants_count }}</span>
+        <span class="metric-footnote">Unique learners competing</span>
+      </article>
+    </section>
+
+    <section class="panel-card mb-4">
+      <header class="panel-header">
+        <div>
+          <h2 class="panel-title">User Engagement</h2>
+          <p class="panel-subtitle">Regular user accounts with quiz history</p>
+        </div>
+        <span class="badge badge-soft">Regular users only</span>
+      </header>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 analytics-table">
+          <thead>
+            <tr>
+              <th scope="col">User</th>
+              <th scope="col" class="text-center">Attempts</th>
+              <th scope="col" class="text-center">Avg. Score</th>
+              <th scope="col">Last Activity</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr>
+              <td>
+                <a class="user-link" href="{{ url_for('admin.admin_user_performance', user_id=user.id) }}" target="_blank" rel="noopener">
+                  {{ user.username }}
+                </a>
+              </td>
+              <td class="text-center">{{ user.attempts }}</td>
+              <td class="text-center">{{ user.avg_score }}%</td>
+              <td>
+                {% if user.last_activity %}
+                  {{ user.last_activity.strftime('%d %b %Y %H:%M') }}
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4" class="text-center text-muted py-4">No user activity recorded yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel-card">
+      <header class="panel-header">
+        <div>
+          <h2 class="panel-title">Recent Competitions</h2>
+          <p class="panel-subtitle">20 most recent events with learner participation.</p>
+        </div>
+        <span class="badge badge-soft">Live snapshot</span>
+      </header>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0 analytics-table competition-table">
+          <thead>
+            <tr>
+              <th scope="col">Code</th>
+              <th scope="col">Category</th>
+              <th scope="col">Difficulty</th>
+              <th scope="col" class="text-center">Participants</th>
+              <th scope="col" class="text-center">Avg. Score</th>
+              <th scope="col">Started</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for competition in competitions %}
+            <tr>
+              <td><span class="code-chip">{{ competition.code }}</span></td>
+              <td>{{ competition.category }}</td>
+              <td>{{ competition.difficulty or '—' }}</td>
+              <td class="text-center">{{ competition.participants }}</td>
+              <td class="text-center">{{ competition.avg_score }}%</td>
+              <td>
+                {% if competition.started_at %}
+                  {{ competition.started_at.strftime('%d %b %Y %H:%M') }}
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6" class="text-center text-muted py-4">No competitions tracked yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+<style>
+.dashboard-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.page-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.page-subtitle {
+  color: #6c7a8c;
+  max-width: 38rem;
+  margin-bottom: 0;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.analytics-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  padding: 1.75rem;
+  color: #fff;
+  box-shadow: 0 15px 45px rgba(15, 23, 42, 0.16);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.analytics-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.12);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.analytics-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.22);
+}
+
+.analytics-card:hover::after {
+  opacity: 1;
+}
+
+.metric-label {
+  display: block;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+  margin-bottom: 0.75rem;
+}
+
+.metric-value {
+  display: block;
+  font-size: 2.4rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.metric-footnote {
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+.gradient-blue { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+.gradient-cyan { background: linear-gradient(135deg, #0891b2, #06b6d4); }
+.gradient-violet { background: linear-gradient(135deg, #7c3aed, #a855f7); }
+.gradient-amber { background: linear-gradient(135deg, #f59e0b, #f97316); }
+.gradient-mint { background: linear-gradient(135deg, #10b981, #34d399); }
+.gradient-rose { background: linear-gradient(135deg, #ec4899, #f97316); }
+
+.panel-card {
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.1);
+  padding: 1.75rem;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.panel-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.panel-subtitle {
+  color: #6c7a8c;
+  margin-bottom: 0;
+}
+
+.badge-soft {
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  align-self: center;
+}
+
+.analytics-table thead {
+  background: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.analytics-table thead th {
+  border-top: none;
+  border-bottom: none;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+}
+
+.analytics-table tbody tr {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.analytics-table tbody tr:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.user-link {
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.user-link:hover {
+  text-decoration: underline;
+}
+
+.code-chip {
+  display: inline-block;
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+}
+
+.competition-table thead {
+  background: linear-gradient(90deg, rgba(37,99,235,0.15), rgba(59,130,246,0.25));
+}
+
+.competition-table tbody td {
+  border-color: rgba(226, 232, 240, 0.6);
+}
+
+@media (max-width: 992px) {
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .badge-soft {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .page-title {
+    font-size: 1.8rem;
+  }
+
+  .analytics-card {
+    padding: 1.5rem;
+  }
+
+  .metric-value {
+    font-size: 2rem;
+  }
+}
+</style>
+{% endblock %}

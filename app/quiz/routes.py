@@ -12,6 +12,29 @@ from flask_login import login_required, current_user
 from . import quiz_bp
 from app.models import Category, Question, Attempt, User, Role, db
 
+def _calculate_quiz_score(answer_map):
+    """Recompute quiz score from stored answers using canonical Question data."""
+    if not answer_map:
+        return 0
+
+    # Fetch all relevant questions in a single query to keep lookups efficient.
+    question_ids = [int(q_id) for q_id in answer_map.keys()]
+    questions = Question.query.filter(Question.id.in_(question_ids)).all()
+    question_lookup = {str(question.id): question for question in questions}
+
+    score = 0
+    for q_id_str, chosen_option in answer_map.items():
+        question = question_lookup.get(q_id_str)
+        try:
+            chosen_value = int(chosen_option) if chosen_option is not None else None
+        except (TypeError, ValueError):
+            chosen_value = None
+
+        if question and chosen_value == question.correct_option:
+            score += 1
+
+    return score
+
 @quiz_bp.route('/select')
 @login_required
 def select():
@@ -63,6 +86,7 @@ def start_quiz(category_id, difficulty):
     session['current_question_index'] = 0
     session['quiz_score'] = 0
     session['quiz_answers'] = {}
+
     # Set quiz start time and end time (10 minutes = 600 seconds)
     session['quiz_start_time'] = datetime.utcnow().isoformat()
     session['quiz_end_time'] = (datetime.utcnow() + timedelta(minutes=10)).isoformat()
@@ -75,6 +99,19 @@ def question(q_id):
         flash('Please select a category first', 'warning')
         return redirect(url_for('quiz.select'))
     
+    quiz_questions = session['quiz_questions']
+    q_id_str = str(q_id)
+    if q_id_str not in quiz_questions:
+        flash('Invalid question', 'danger')
+        return redirect(url_for('quiz.select'))
+
+    current_index = quiz_questions.index(q_id_str)
+    session['current_question_index'] = current_index
+
+    answers = dict(session.get('quiz_answers', {}))
+    session['quiz_answers'] = answers
+    session['quiz_score'] = _calculate_quiz_score(answers)
+
     # Check if time is up
     if 'quiz_end_time' in session:
         from datetime import datetime
@@ -82,47 +119,60 @@ def question(q_id):
         if datetime.utcnow() >= end_time:
             flash('Time is up! Quiz will be submitted automatically.', 'warning')
             return redirect(url_for('quiz.result'))
-    
+
     q = Question.query.get_or_404(q_id)
-    # Convert q_id to string for session comparison
-    q_id_str = str(q_id)
-    if q_id_str not in session['quiz_questions']:
-        flash('Invalid question', 'danger')
-        return redirect(url_for('quiz.select'))
-    
+
     if request.method == 'POST':
-        chosen_option = int(request.form.get('option', 0))
-        # Store answer with string key
-        session['quiz_answers'][q_id_str] = chosen_option
-        
-        # Check if correct
-        if chosen_option == q.correct_option:
-            session['quiz_score'] = session.get('quiz_score', 0) + 1
-        
-        # Move to next question
-        current_idx = session['current_question_index'] + 1
-        session['current_question_index'] = current_idx
-        
-        if current_idx < len(session['quiz_questions']):
-            next_q_id = int(session['quiz_questions'][current_idx])  # Convert back to int for URL
-            return redirect(url_for('quiz.question', q_id=next_q_id))
-        else:
-            # Quiz completed
+        action = request.form.get('action', 'next')
+        selected_option_raw = request.form.get('option')
+
+        if selected_option_raw:
+            try:
+                answers[q_id_str] = int(selected_option_raw)
+            except (TypeError, ValueError):
+                flash('Invalid option selected.', 'danger')
+                return redirect(url_for('quiz.question', q_id=q_id))
+            session['quiz_answers'] = answers
+            session['quiz_score'] = _calculate_quiz_score(answers)
+
+        if action in ('next', 'submit') and q_id_str not in answers:
+            flash('Please select an option before proceeding.', 'warning')
+            return redirect(url_for('quiz.question', q_id=q_id))
+
+        if action == 'previous':
+            target_index = max(0, current_index - 1)
+            session['current_question_index'] = target_index
+            target_q_id = int(quiz_questions[target_index])
+            return redirect(url_for('quiz.question', q_id=target_q_id))
+
+        if current_index >= len(quiz_questions) - 1 or action == 'submit':
             return redirect(url_for('quiz.result'))
-    
+
+        target_index = current_index + 1
+        session['current_question_index'] = target_index
+        target_q_id = int(quiz_questions[target_index])
+        return redirect(url_for('quiz.question', q_id=target_q_id))
+
     # GET request - show question
-    # Calculate time remaining
-    time_remaining = 600  # default 10 minutes
+    from datetime import datetime
+    time_remaining = 600
     if 'quiz_end_time' in session:
-        from datetime import datetime
         end_time = datetime.fromisoformat(session['quiz_end_time'])
         remaining = (end_time - datetime.utcnow()).total_seconds()
         time_remaining = max(0, int(remaining))
-    
-    return render_template('quiz/question.html', question=q, 
-                         question_num=session['current_question_index'] + 1,
-                         total=len(session['quiz_questions']),
-                         time_remaining=time_remaining)
+
+    selected_option = answers.get(q_id_str)
+
+    return render_template(
+        'quiz/question.html',
+        question=q,
+        question_num=current_index + 1,
+        total=len(quiz_questions),
+        time_remaining=time_remaining,
+        selected_option=selected_option,
+        has_previous=current_index > 0,
+        is_last_question=current_index == len(quiz_questions) - 1
+    )
 
 @quiz_bp.route('/result')
 @login_required
@@ -132,12 +182,15 @@ def result():
         return redirect(url_for('quiz.select'))
     
     # Get all session values BEFORE clearing
-    score = session.get('quiz_score', 0)
-    total = len(session.get('quiz_questions', []))
-    category_id = session.get('quiz_category_id')
-    difficulty = session.get('quiz_difficulty', None)
     quiz_questions = session.get('quiz_questions', [])
     quiz_answers = session.get('quiz_answers', {})
+    score = _calculate_quiz_score(quiz_answers)
+    total = len(quiz_questions)
+    category_id = session.get('quiz_category_id')
+    difficulty = session.get('quiz_difficulty', None)
+
+    # Persist the recomputed score for downstream reads (e.g., template flashes)
+    session['quiz_score'] = score
     
     # Calculate points based on difficulty: Easy=2, Medium=4, Hard=6
     points_per_question = 0

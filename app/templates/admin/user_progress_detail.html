@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }} — Progress{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h2 class="mb-1">{{ user.username }} — Performance Summary</h2>
+      <p class="text-muted mb-0">Detailed view of attempts and score trends for the selected user.</p>
+    </div>
+    <div class="card shadow-sm border-0">
+      <div class="card-body py-3 px-4 text-center text-md-left">
+        <div class="small text-muted text-uppercase">Attempts</div>
+        <div class="h4 mb-0">{{ total_attempts }}</div>
+      </div>
+    </div>
+    <div class="card shadow-sm border-0">
+      <div class="card-body py-3 px-4 text-center text-md-left">
+        <div class="small text-muted text-uppercase">Average Score</div>
+        <div class="h4 mb-0">{{ avg_score }}%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <h5 class="mb-3">Score Trend</h5>
+      <canvas id="scoreChart" height="120"></canvas>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+      <h5 class="mb-3">Attempt History</h5>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col">Category</th>
+              <th scope="col">Difficulty</th>
+              <th scope="col" class="text-center">Score %</th>
+              <th scope="col" class="text-center">Score</th>
+              <th scope="col" class="text-center">Points</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for attempt in attempts %}
+            <tr>
+              <td>{{ attempt.created_at.strftime('%d %b %Y %H:%M') }}</td>
+              <td>{{ attempt.category_name }}</td>
+              <td>{{ attempt.difficulty }}</td>
+              <td class="text-center">{{ attempt.score_pct }}%</td>
+              <td class="text-center">{{ attempt.score }} / {{ attempt.total }}</td>
+              <td class="text-center">{{ attempt.points }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6" class="text-center text-muted py-4">No attempts recorded yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="timeseries-data">
+  {{ timeseries | tojson }}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  (function () {
+    var times = [];
+    try {
+      times = JSON.parse(document.getElementById('timeseries-data').textContent || '[]');
+    } catch (err) {
+      console.error('Failed to parse timeseries data', err);
+    }
+
+    var labels = times.map(function (item) { return item.date; });
+    var dataPoints = times.map(function (item) { return item.score; });
+
+    var ctx = document.getElementById('scoreChart');
+    if (!ctx) {
+      return;
+    }
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Score %',
+          data: dataPoints,
+          fill: false,
+          borderColor: '#3a6ff2',
+          backgroundColor: '#3a6ff2',
+          tension: 0.25,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true }
+        },
+        scales: {
+          y: {
+            suggestedMin: 0,
+            suggestedMax: 100,
+            ticks: {
+              callback: function (value) { return value + '%'; }
+            }
+          }
+        }
+      }
+    });
+  })();
+</script>
+{% endblock %}
