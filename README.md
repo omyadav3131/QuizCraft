@@ -111,6 +111,7 @@ A fully responsive, feature-rich Quiz Application built with Python's Flask fram
 
   ## Author
   Repo owner: omyadav3131
+  <br>
 
 │   │   └── routes.py        # Quiz routes (select, start, question, result, leaderboard)
 │   ├── static/
