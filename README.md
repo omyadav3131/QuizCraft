@@ -1,194 +1,246 @@
-QuizCraft – Flask Quiz & Competition Platform
+# QuizCraft – Online Quiz & Competition Platform
 
+![Python](https://img.shields.io/badge/Python-3.10-blue)
+![Flask](https://img.shields.io/badge/Flask-Web_Framework-green)
+![SQLAlchemy](https://img.shields.io/badge/ORM-SQLAlchemy-orange)
+![Bootstrap](https://img.shields.io/badge/UI-Bootstrap-purple)
+![SQLite](https://img.shields.io/badge/Database-SQLite-lightgrey)
+![License](https://img.shields.io/badge/License-MIT-blue)
+![Status](https://img.shields.io/badge/Project-Completed-brightgreen)
 
+QuizCraft is a full-stack web application built using the **Flask framework** that allows users to take quizzes based on category and difficulty level, track their performance, and compete with other users through multiplayer quiz competitions.
 
+The platform includes automated scoring, leaderboards, performance analytics, and a role-based admin panel for managing questions, categories, and users.
 
+---
 
+## Project Overview
 
+QuizCraft provides an interactive environment for knowledge testing and learning.
+Users can participate in quizzes, view their progress through analytics dashboards, and compete in multiplayer competitions.
 
+Administrators can manage quiz content through a dedicated admin interface.
 
-QuizCraft is a feature-rich quiz platform built using the Flask web framework.
-The application allows users to take quizzes based on category and difficulty level, track their performance, and participate in competitions with other users. It also includes an admin panel for managing questions, categories, and users.
+Core capabilities include:
 
-Key Features
-User Features
+* Category-based quiz system
+* Difficulty level selection
+* Automated score calculation
+* Performance tracking
+* Multiplayer quiz competitions
+* Leaderboard ranking system
+* Admin management dashboard
 
-User registration and authentication system
+---
 
-Category and difficulty-based quiz selection
+## Key Features
 
-Automated quiz evaluation and scoring
+### User Features
 
-Performance dashboard with statistics
+* User registration and login authentication
+* Category and difficulty-based quiz selection
+* Timed quizzes with automated scoring
+* Detailed result analysis with correct answers
+* Performance dashboard showing statistics and trends
+* Leaderboard displaying top users
 
-Leaderboard ranking system
+### Competition Mode
 
-Detailed result analysis with explanations
+* Two-player quiz competitions
+* Create or join competitions using a unique code
+* Simultaneous quiz attempts for both players
+* Automatic winner calculation after completion
 
-Feedback submission system
+### Admin Panel
 
-Competition Mode
+* Manage quiz categories
+* Add, edit, and delete questions
+* Bulk question upload functionality
+* Manage users and roles
+* Monitor leaderboard and feedback data
 
-Two-player quiz competition
+---
 
-Create or join competitions using a unique code
+## Tech Stack
 
-Simultaneous quiz attempts for both players
+### Backend
 
-Automatic winner calculation
+* Python
+* Flask
+* Flask-SQLAlchemy
+* Flask-Login
+* Flask-WTF
+* Flask-Migrate
 
-Admin Panel
+### Database
 
-Manage quiz categories
+* SQLite (development)
+* PostgreSQL (production compatible)
 
-Add, edit, or delete questions
+### Frontend
 
-Bulk question upload
+* HTML
+* CSS
+* Bootstrap
+* Jinja2 Templates
 
-Manage users and roles
+### Tools
 
-View feedback and leaderboard statistics
+* Git
+* GitHub
+* Docker (optional deployment support)
 
-Tech Stack
+---
 
-Backend
+## System Architecture
 
-Python
+```
+User (Browser)
+      |
+      v
+Frontend (HTML, CSS, Bootstrap)
+      |
+      v
+Flask Application (Routes & Controllers)
+      |
+      v
+Quiz Logic & Competition Engine
+      |
+      v
+SQLAlchemy ORM
+      |
+      v
+Database (SQLite / PostgreSQL)
+```
 
-Flask
+---
 
-Flask-SQLAlchemy
+## Project Structure
 
-Flask-Migrate
-
-Flask-WTF
-
-Flask-Login
-
-Database
-
-SQLite (development)
-
-PostgreSQL (production)
-
-Frontend
-
-HTML
-
-CSS
-
-Bootstrap
-
-Font Awesome
-
-Tools
-
-Git
-
-GitHub
-
-Project Structure
-quizcraft/
+```
+QuizCraft
 │
-├── app/
-│   ├── auth/           # Authentication routes
-│   ├── admin/          # Admin dashboard
-│   ├── quiz/           # Quiz system routes
-│   ├── competition/    # Competition mode
-│   ├── static/         # CSS, images
-│   └── templates/      # HTML templates
+├── app
+│   ├── auth              # Authentication system
+│   ├── admin             # Admin dashboard
+│   ├── quiz              # Quiz functionality
+│   ├── competition       # Multiplayer quiz competitions
+│   ├── models.py         # Database models
+│   └── routes.py         # Application routes
 │
-├── migrations/         # Database migration files
-├── config.py           # Application configuration
-├── create_db.py        # Database initialization
-├── main.py             # Application entry point
-├── requirements.txt    # Python dependencies
-└── README.md
-Installation
-Prerequisites
+├── migrations            # Database migrations
+├── static                # CSS, JS, images
+├── templates             # HTML templates
+│
+├── config.py             # Configuration settings
+├── create_db.py          # Database initialization
+├── main.py               # Application entry point
+├── requirements.txt      # Python dependencies
+│
+├── README.md
+└── LICENSE
+```
 
-Python 3.8 or higher
+---
 
-pip
+## Installation
 
-Git
+### Clone the repository
 
-Clone the Repository
+```
 git clone https://github.com/omyadav3131/QuizCraft.git
 cd QuizCraft
-Create Virtual Environment
+```
 
-Windows
+### Create virtual environment
 
+Windows:
+
+```
 python -m venv venv
 venv\Scripts\activate
+```
 
-Linux / Mac
+Linux / Mac:
 
+```
 python3 -m venv venv
 source venv/bin/activate
-Install Dependencies
+```
+
+### Install dependencies
+
+```
 pip install -r requirements.txt
-Initialize Database
+```
+
+### Initialize the database
+
+```
 python create_db.py
-flask db upgrade
-Run the Application
+```
+
+### Run the application
+
+```
 python main.py
+```
 
 Open the application in your browser:
 
+```
 http://127.0.0.1:5000
-Core Database Models
+```
 
-The application uses relational database models to manage quiz data.
+---
+
+## Database Models
+
+The application uses relational models to manage quiz and competition data.
 
 Main entities include:
 
-User – Stores user accounts and roles
+* **User** – stores user accounts and roles
+* **Category** – quiz categories
+* **Question** – questions with multiple options and correct answer
+* **Attempt** – records quiz attempts
+* **AttemptAnswer** – stores answers selected by users
+* **Competition** – multiplayer quiz competitions
+* **CompetitionAttempt** – attempts made within competitions
+* **LeaderboardEntry** – ranking data for users
+* **Feedback** – user feedback and ratings
 
-Category – Quiz categories
+---
 
-Question – Quiz questions with difficulty levels
+## Security Features
 
-Attempt – Records quiz attempts
+* Password hashing using Werkzeug
+* CSRF protection using Flask-WTF
+* Session management with Flask-Login
+* Role-based access control for admin features
 
-AttemptAnswer – Stores answers for each question
+---
 
-Competition – Two-player quiz competitions
+## Future Improvements
 
-LeaderboardEntry – Stores ranking information
+Potential improvements for the platform:
 
-Feedback – Stores user feedback and ratings
+* Real-time competitions using WebSockets
+* Advanced analytics dashboards
+* REST API support for mobile applications
+* Cloud deployment and scalability improvements
 
-Security Features
+---
 
-Password hashing using Werkzeug
-
-CSRF protection with Flask-WTF
-
-Session management with Flask-Login
-
-Role-based access control for admin features
-
-Future Improvements
-
-Real-time competition using WebSockets
-
-Advanced analytics dashboards
-
-REST API for mobile applications
-
-Cloud deployment and scalability improvements
-
-License
-
-This project is licensed under the MIT License.
-
-Author
+## Author
 
 Om Yadav
 
-GitHub Repository:
-https://github.com/omyadav3131/QuizCraft
+GitHub
+https://github.com/omyadav3131
 
-⭐ If you find this project useful, consider giving it a star.
+---
+
+## License
+
+This project is licensed under the MIT License.
