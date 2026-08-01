@@ -17,8 +17,8 @@ ENV FLASK_APP=main.py
 ENV FLASK_RUN_HOST=0.0.0.0
 ENV PYTHONUNBUFFERED=1
 
-# Expose port
+# Expose port (Koyeb overrides this, kept for local fallback)
 EXPOSE 5000
 
-# Run using gunicorn for production
-CMD ["gunicorn", "main:app", "-b", "0.0.0.0:5000", "--workers", "3"]
+# Run using gunicorn for production (Uses shell form to evaluate PORT env var)
+CMD gunicorn main:app -b 0.0.0.0:${PORT:-5000} --workers 3
