@@ -14,6 +14,12 @@ The platform includes automated scoring, leaderboards, performance analytics, an
 
 ---
 
+## 🚀 Live Demo
+
+**Play QuizCraft Live:** [https://quizcraft-qt15.onrender.com](https://quizcraft-qt15.onrender.com)
+
+---
+
 ## Project Overview
 
 QuizCraft provides an interactive environment for knowledge testing and learning.
