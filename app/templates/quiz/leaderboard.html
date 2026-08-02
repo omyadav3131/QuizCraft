@@ -2,10 +2,14 @@
 {% block title %}Leaderboard - QuizCraft{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <h2>Leaderboard</h2>
+<div class="quiz-container" style="display: block; padding-top: 2rem;">
+  <style>
+    .card { max-width: 100% !important; }
+  </style>
+  <div class="result-container" style="max-width: 1700px; width: 96%; margin: 0 auto; background: transparent; padding: 0; box-shadow: none; text-align: left;">
+  <h2 style="color: #0d6efd; margin-bottom: 2rem; text-align: center;"><i class="fas fa-trophy"></i> Leaderboard</h2>
 
-  <div class="card mb-4">
+  <div class="card mb-4" style="border-radius: 12px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
     <div class="card-header"><strong>Top Overall</strong></div>
     <div class="card-body p-0">
       <table class="table table-sm mb-0">
@@ -47,5 +51,6 @@
       </div>
     {% endfor %}
   </div>
+</div>
 </div>
 {% endblock %}

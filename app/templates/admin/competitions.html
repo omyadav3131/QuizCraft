@@ -5,30 +5,30 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="quiz-container">
-  <div class="result-container" style="max-width: 1200px; margin: 2rem auto;">
-    <h2 style="text-align: center; margin-bottom: 2rem; color: #0d6efd;">
+<div class="quiz-container" style="display: block; padding-top: 2rem;">
+  <div class="result-container" style="max-width: 1700px; width: 96%; margin: 0 auto;">
+    <h2 style="text-align: center; margin-bottom: 2rem; color: #0d6efd; font-weight: 700;">
       <i class="fas fa-gamepad"></i> Multiplayer Competitions
     </h2>
     
     <!-- Filters -->
-    <div class="card mb-4">
-      <div class="card-header">
-        <h5><i class="fas fa-filter"></i> Filters</h5>
+    <div class="card mb-4" style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: none;">
+      <div class="card-header" style="background-color: white; border-bottom: 1px solid #f1f5f9; padding: 20px 30px;">
+        <h5 style="margin: 0; color: #1e293b; font-weight: 700;"><i class="fas fa-filter" style="color: #3b82f6;"></i> Filters</h5>
       </div>
-      <div class="card-body">
-        <form method="GET" class="form-inline">
-          <div class="form-group mr-3">
-            <label for="date_filter" class="mr-2">Date Range:</label>
-            <select id="date_filter" name="date_filter" class="form-control">
+      <div class="card-body" style="padding: 20px 30px;">
+        <form method="GET" class="d-flex flex-wrap align-items-end" style="gap: 15px;">
+          <div class="form-group mb-0">
+            <label for="date_filter" style="font-weight: 600; color: #475569; display: block; margin-bottom: 8px;">Date Range:</label>
+            <select id="date_filter" name="date_filter" class="form-control" style="min-width: 250px; padding: 10px 15px; border-radius: 8px; border: 1px solid #cbd5e1;">
               <option value="today" {% if date_filter == 'today' %}selected{% endif %}>Today</option>
               <option value="week" {% if date_filter == 'week' %}selected{% endif %}>Last 7 Days</option>
               <option value="month" {% if date_filter == 'month' %}selected{% endif %}>Last 30 Days</option>
               <option value="all" {% if date_filter == 'all' %}selected{% endif %}>All Time</option>
             </select>
           </div>
-          <button type="submit" class="btn btn-primary">
-            <i class="fas fa-search"></i> Filter
+          <button type="submit" class="btn btn-primary" style="padding: 10px 24px; border-radius: 8px; font-weight: 600; height: 46px;">
+            <i class="fas fa-search"></i> Search
           </button>
         </form>
       </div>
@@ -41,67 +41,67 @@
     {% else %}
     
     <!-- Competitions Table -->
-    <div class="card">
-      <div class="card-header">
-        <h5><i class="fas fa-list"></i> Competition Data ({{ competitions|length }} total)</h5>
+    <div class="card" style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: none; overflow: hidden; margin-bottom: 2rem;">
+      <div class="card-header" style="background-color: white; border-bottom: 1px solid #f1f5f9; padding: 20px 30px;">
+        <h5 style="margin: 0; color: #1e293b; font-weight: 700;"><i class="fas fa-list" style="color: #3b82f6;"></i> Competition Data ({{ competitions|length }} total)</h5>
       </div>
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table table-hover table-bordered">
-            <thead class="competition-header">
+      <div class="card-body" style="padding: 0;">
+        <div class="table-responsive" style="max-height: 700px; overflow-y: auto;">
+          <table class="table table-hover table-striped mb-0 admin-table" style="width: 100%; border-collapse: collapse;">
+            <thead style="position: sticky; top: 0; z-index: 1;">
               <tr>
-                  <th>Code</th>
-                  <th>Category</th>
-                  <th>Difficulty</th>
-                  <th>Creator</th>
-                  <th>Participants</th>
-                  <th>Status</th>
-                  <th>Scores</th>
-                  <th>Winner</th>
-                  <th>Created</th>
-                  <th>Started</th>
-                  <th>Ended</th>
+                  <th style="background: #f8fafc; color: #334155; font-weight: 600; padding: 16px 20px; border-bottom: 2px solid #e2e8f0; border-top: none;">Code</th>
+                  <th style="background: #f8fafc; color: #334155; font-weight: 600; padding: 16px 20px; border-bottom: 2px solid #e2e8f0; border-top: none;">Category</th>
+                  <th style="background: #f8fafc; color: #334155; font-weight: 600; padding: 16px 20px; border-bottom: 2px solid #e2e8f0; border-top: none;">Difficulty</th>
+                  <th style="background: #f8fafc; color: #334155; font-weight: 600; padding: 16px 20px; border-bottom: 2px solid #e2e8f0; border-top: none;">Creator</th>
+                  <th style="background: #f8fafc; color: #334155; font-weight: 600; padding: 16px 20px; border-bottom: 2px solid #e2e8f0; border-top: none;">Participants</th>
+                  <th style="background: #f8fafc; color: #334155; font-weight: 600; padding: 16px 20px; border-bottom: 2px solid #e2e8f0; border-top: none;">Status</th>
+                  <th style="background: #f8fafc; color: #334155; font-weight: 600; padding: 16px 20px; border-bottom: 2px solid #e2e8f0; border-top: none;">Scores</th>
+                  <th style="background: #f8fafc; color: #334155; font-weight: 600; padding: 16px 20px; border-bottom: 2px solid #e2e8f0; border-top: none;">Winner</th>
+                  <th style="background: #f8fafc; color: #334155; font-weight: 600; padding: 16px 20px; border-bottom: 2px solid #e2e8f0; border-top: none;">Created</th>
+                  <th style="background: #f8fafc; color: #334155; font-weight: 600; padding: 16px 20px; border-bottom: 2px solid #e2e8f0; border-top: none;">Started</th>
+                  <th style="background: #f8fafc; color: #334155; font-weight: 600; padding: 16px 20px; border-bottom: 2px solid #e2e8f0; border-top: none;">Ended</th>
               </tr>
           </thead>
           
             <tbody>
               {% for comp in competitions %}
-              <tr>
-                <td>
-                  <span class="badge badge-info">{{ comp.code }}</span>
+              <tr class="align-middle" style="transition: all 0.2s ease-in-out;">
+                <td style="padding: 16px 20px; vertical-align: middle;">
+                  <span class="badge badge-info" style="font-size: 14px; padding: 6px 10px; border-radius: 6px;">{{ comp.code }}</span>
                 </td>
-                <td>{{ comp.category }}</td>
-                <td>
-                  <span class="badge badge-{% if comp.difficulty == 'Easy' %}success{% elif comp.difficulty == 'Medium' %}warning{% else %}danger{% endif %}">
+                <td style="padding: 16px 20px; vertical-align: middle; font-weight: 500;">{{ comp.category }}</td>
+                <td style="padding: 16px 20px; vertical-align: middle;">
+                  <span class="badge badge-{% if comp.difficulty == 'Easy' %}success{% elif comp.difficulty == 'Medium' %}warning{% else %}danger{% endif %}" style="padding: 6px 10px; border-radius: 6px;">
                     {{ comp.difficulty }}
                   </span>
                 </td>
-                <td>{{ comp.creator }}</td>
-                <td>{{ comp.participants }}</td>
-                <td>
-                  <span class="badge badge-{% if comp.status == 'completed' %}success{% elif comp.status == 'in_progress' %}warning{% else %}secondary{% endif %}">
+                <td style="padding: 16px 20px; vertical-align: middle;">{{ comp.creator }}</td>
+                <td style="padding: 16px 20px; vertical-align: middle;">{{ comp.participants }}</td>
+                <td style="padding: 16px 20px; vertical-align: middle;">
+                  <span class="badge badge-{% if comp.status == 'completed' %}success{% elif comp.status == 'in_progress' %}warning{% else %}secondary{% endif %}" style="padding: 6px 10px; border-radius: 6px;">
                     {{ comp.status|upper }}
                   </span>
                 </td>
-                <td>
-                  <small>
+                <td style="padding: 16px 20px; vertical-align: middle; line-height: 1.6;">
+                  <small style="font-size: 14px; color: #475569;">
                     {% for username, correct, total in comp.scores %}
                       <strong>{{ username }}:</strong> {{ correct }}/{{ total }}<br>
                     {% endfor %}
                   </small>
                 </td>
-                <td>
+                <td style="padding: 16px 20px; vertical-align: middle;">
                   {% if comp.winner != 'N/A' %}
-                    <span class="badge badge-success">
+                    <span class="badge badge-success" style="padding: 6px 10px; border-radius: 6px;">
                       <i class="fas fa-trophy"></i> {{ comp.winner }}
                     </span>
                   {% else %}
-                    <span class="badge badge-secondary">N/A</span>
+                    <span class="badge badge-secondary" style="padding: 6px 10px; border-radius: 6px;">N/A</span>
                   {% endif %}
                 </td>
-                <td><small>{{ comp.created_at }}</small></td>
-                <td><small>{{ comp.started_at }}</small></td>
-                <td><small>{{ comp.ended_at }}</small></td>
+                <td style="padding: 16px 20px; vertical-align: middle;"><small style="color: #64748b;">{{ comp.created_at }}</small></td>
+                <td style="padding: 16px 20px; vertical-align: middle;"><small style="color: #64748b;">{{ comp.started_at }}</small></td>
+                <td style="padding: 16px 20px; vertical-align: middle;"><small style="color: #64748b;">{{ comp.ended_at }}</small></td>
               </tr>
               {% endfor %}
             </tbody>
@@ -109,6 +109,12 @@
         </div>
       </div>
     </div>
+    
+    <style>
+      .admin-table tbody tr:hover {
+        background-color: #f1f5f9 !important;
+      }
+    </style>
     
     {% endif %}
     

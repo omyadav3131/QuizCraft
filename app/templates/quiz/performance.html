@@ -5,8 +5,12 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="quiz-container">
-  <div class="result-container" style="max-width: 1200px; margin: 2rem auto;">
+<div class="quiz-container" style="display: block; padding-top: 2rem;">
+  <style>
+    /* Override global card max-width limit so dashboard cards can fill their columns */
+    .card { max-width: 100% !important; }
+  </style>
+  <div class="result-container" style="max-width: 1700px; width: 96%; margin: 0 auto; background: transparent; padding: 0; box-shadow: none;">
     <h2 style="text-align: center; margin-bottom: 2rem; color: #0d6efd;">
       <i class="fas fa-chart-line"></i> Performance Dashboard
     </h2>
@@ -144,28 +148,28 @@
     </div>
     
     <!-- Recent Attempts Table -->
-    <div class="card">
-      <div class="card-header">
-        <h5><i class="fas fa-history"></i> Recent Quiz Attempts</h5>
+    <div class="card" style="border-radius: 16px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; width: 100%; margin-bottom: 2rem;">
+      <div class="card-header" style="background-color: white; border-bottom: 1px solid #f1f5f9; padding: 20px 30px;">
+        <h5 style="margin: 0; color: #1e293b; font-weight: 700;"><i class="fas fa-history" style="color: #3b82f6;"></i> Recent Quiz Attempts</h5>
       </div>
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <thead>
+      <div class="card-body" style="padding: 30px; background: white;">
+        <div class="table-responsive" style="max-height: 500px; overflow-y: auto; border-radius: 8px;">
+          <table class="table table-striped table-hover attempts-table" style="width: 100%; margin-bottom: 0; border-collapse: separate; border-spacing: 0;">
+            <thead style="position: sticky; top: 0; z-index: 1;">
               <tr>
-                <th>Date</th>
-                <th>Category</th>
-                <th>Difficulty</th>
-                <th>Score</th>
-                <th>Points</th>
-                <th>Percentage</th>
+                <th class="text-center" style="background: #f8fafc; color: #334155; font-weight: 600; padding: 16px; border-bottom: 2px solid #e2e8f0; border-top: none;">Date</th>
+                <th class="text-center" style="background: #f8fafc; color: #334155; font-weight: 600; padding: 16px; border-bottom: 2px solid #e2e8f0; border-top: none;">Category</th>
+                <th class="text-center" style="background: #f8fafc; color: #334155; font-weight: 600; padding: 16px; border-bottom: 2px solid #e2e8f0; border-top: none;">Difficulty</th>
+                <th class="text-center" style="background: #f8fafc; color: #334155; font-weight: 600; padding: 16px; border-bottom: 2px solid #e2e8f0; border-top: none;">Score</th>
+                <th class="text-center" style="background: #f8fafc; color: #334155; font-weight: 600; padding: 16px; border-bottom: 2px solid #e2e8f0; border-top: none;">Points</th>
+                <th class="text-center" style="background: #f8fafc; color: #334155; font-weight: 600; padding: 16px; border-bottom: 2px solid #e2e8f0; border-top: none;">Percentage</th>
               </tr>
             </thead>
             <tbody>
               {% for attempt in attempts[-10:]|reverse %}
-              <tr>
-                <td>{{ attempt.created_at.strftime('%Y-%m-%d %H:%M') if attempt.created_at else 'N/A' }}</td>
-                <td>
+              <tr class="align-middle text-center">
+                <td style="padding: 16px; vertical-align: middle;">{{ attempt.created_at.strftime('%Y-%m-%d %H:%M') if attempt.created_at else 'N/A' }}</td>
+                <td style="padding: 16px; vertical-align: middle;">
                   {% if attempt.category_id %}
                     {% set category = attempt.category_id %}
                     {% for cat in categories if cat.id == category %}
@@ -175,15 +179,15 @@
                     N/A
                   {% endif %}
                 </td>
-                <td>
-                  <span class="badge badge-{% if attempt.difficulty == 'Easy' %}success{% elif attempt.difficulty == 'Medium' %}warning{% else %}danger{% endif %}">
+                <td style="padding: 16px; vertical-align: middle;">
+                  <span class="badge badge-{% if attempt.difficulty == 'Easy' %}success{% elif attempt.difficulty == 'Medium' %}warning{% else %}danger{% endif %} py-2 px-3">
                     {{ attempt.difficulty or 'N/A' }}
                   </span>
                 </td>
-                <td><strong>{{ attempt.score }}/{{ attempt.total }}</strong></td>
-                <td><strong style="color: #28a745;">{{ attempt.points or 0 }}</strong></td>
-                <td>
-                  <span class="badge badge-{% if (attempt.score / attempt.total * 100) >= 80 %}success{% elif (attempt.score / attempt.total * 100) >= 60 %}warning{% else %}danger{% endif %}">
+                <td style="padding: 16px; vertical-align: middle;"><strong>{{ attempt.score }}/{{ attempt.total }}</strong></td>
+                <td style="padding: 16px; vertical-align: middle;"><strong style="color: #28a745;">{{ attempt.points or 0 }}</strong></td>
+                <td style="padding: 16px; vertical-align: middle;">
+                  <span class="badge badge-{% if (attempt.score / attempt.total * 100) >= 80 %}success{% elif (attempt.score / attempt.total * 100) >= 60 %}warning{% else %}danger{% endif %} py-2 px-3">
                     {{ ((attempt.score / attempt.total * 100) if attempt.total > 0 else 0)|round(1) }}%
                   </span>
                 </td>
@@ -276,6 +280,17 @@ if (pointsCtx) {
 </script>
 
 <style>
+.attempts-table tbody tr {
+  transition: all 0.2s ease-in-out;
+}
+.attempts-table tbody tr:hover {
+  background-color: #f1f5f9 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  position: relative;
+  z-index: 2;
+}
+
 .card {
   margin-bottom: 1.5rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);

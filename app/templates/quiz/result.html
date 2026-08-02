@@ -5,7 +5,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="quiz-container">
+<div class="quiz-container" style="display: block; padding-top: 2rem;">
   <div class="layout">
     <!-- LEFT: Summary / Score (sticky) -->
     <aside class="summary-column" aria-label="Quiz summary">
@@ -45,7 +45,7 @@
 
     <!-- RIGHT: Detailed Answer Review -->
     <main class="review-column" aria-label="Detailed answer review">
-      <div class="result-container">
+      <div class="result-container" style="max-width: 100%; text-align: left; background: transparent; box-shadow: none; padding: 0;">
         <h3 style="color: #0d6efd; margin-bottom: 1.25rem; text-align: center; font-size: 1.6rem;">
           <i class="fas fa-clipboard-check"></i> Detailed Answer Review
         </h3>
@@ -111,12 +111,20 @@
               </div>
             </div>
 
-            {% if review.explanation %}
             <div class="review-explanation">
               <strong><i class="fas fa-lightbulb"></i> Explanation:</strong>
-              <p>{{ review.explanation }}</p>
+              {% if review.explanation %}
+                <p>{{ review.explanation }}</p>
+              {% else %}
+                <p>The correct answer is <strong>
+                  {% if review.correct_option == 1 %}{{ review.question.option1 }}
+                  {% elif review.correct_option == 2 %}{{ review.question.option2 }}
+                  {% elif review.correct_option == 3 %}{{ review.question.option3 }}
+                  {% elif review.correct_option == 4 %}{{ review.question.option4 }}
+                  {% endif %}
+                </strong>.</p>
+              {% endif %}
             </div>
-            {% endif %}
           </div>
           {% endfor %}
         </div>
@@ -132,19 +140,19 @@
 /* Layout: two columns */
 .layout {
   display: flex;
-  gap: 2rem;
+  gap: 2.5rem;
   align-items: flex-start;
-  width: 100%;
-  max-width: 1200px;
+  width: 95%;
+  max-width: 1500px;
   margin: 0 auto;
-  padding: 1.5rem 1rem;
+  padding: 2rem 1rem;
   box-sizing: border-box;
 }
 
 /* LEFT summary column (fixed width + sticky) */
 .summary-column {
-  width: 320px;
-  flex: 0 0 320px;
+  width: 340px;
+  flex: 0 0 340px;
   position: sticky;
   top: 90px; /* adjust if navbar height differs */
   align-self: flex-start;
@@ -172,8 +180,20 @@
   color: #6c757d;
 }
 
-/* Buttons full width */
+/* Buttons full width, large, rounded, animated */
 .btn-block { display: block; width: 100%; }
+.summary-buttons .btn {
+  padding: 14px 20px;
+  border-radius: 50px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  margin-bottom: 0.75rem;
+}
+.summary-buttons .btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
 
 /* RIGHT review column */
 .review-column {
@@ -190,26 +210,25 @@
 
 .answer-review-card {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 1.25rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  border-left: 5px solid;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  border: 1px solid #e9ecef;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-bottom: 1.5rem;
 }
 
 .answer-review-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
 }
 
 .answer-review-card.correct-answer {
-  border-left-color: #28a745;
-  background: linear-gradient(180deg, #ffffff 0%, #f7fff6 100%);
+  border: 2px solid #28a745;
 }
 
 .answer-review-card.wrong-answer {
-  border-left-color: #dc3545;
-  background: linear-gradient(180deg, #ffffff 0%, #fff6f6 100%);
+  border: 2px solid #dc3545;
 }
 
 .review-question-header {
@@ -227,7 +246,7 @@
   padding: .35rem .9rem;
   border-radius: 20px;
   font-weight: 600;
-  font-size: .9rem;
+  font-size: 20px;
 }
 
 .answer-status-badge {
@@ -241,25 +260,26 @@
 .wrong-answer .answer-status-badge   { background: #dc3545; color: #fff; }
 
 .review-question-text {
-  font-size: 1.05rem;
-  margin-bottom: .75rem;
+  font-size: 18px;
+  margin-bottom: 1rem;
   color: #333;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .review-options {
   display: flex;
   flex-direction: column;
-  gap: .6rem;
-  margin-bottom: .75rem;
+  gap: .75rem;
+  margin-bottom: 1rem;
 }
 
 .option-item {
-  padding: .9rem;
+  padding: 1rem;
   border-radius: 8px;
   border: 2px solid #e9e9e9;
   background: #fbfbfb;
   position: relative;
+  font-size: 16px;
 }
 
 .option-item.selected-correct {
@@ -308,15 +328,15 @@
 }
 
 .review-explanation {
-  margin-top: .75rem;
-  padding: .9rem;
-  background: #eef7ff;
+  margin-top: 1rem;
+  padding: 1.25rem;
+  background: #e0f2fe;
   border-radius: 8px;
-  border-left: 4px solid #0d6efd;
+  border-left: 4px solid #0284c7;
 }
 
-.review-explanation strong { color: #0d6efd; display:block; margin-bottom:.35rem; }
-.review-explanation p { margin:0; color:#495057; line-height:1.6; }
+.review-explanation strong { color: #0369a1; display:block; margin-bottom:.5rem; font-size: 16px; }
+.review-explanation p { margin:0; color:#0c4a6e; line-height:1.6; font-size: 16px; }
 
 /* Responsive adjustments */
 @media (max-width: 900px) {

@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container mt-5">
+<div class="quiz-container" style="display: block; padding-top: 2rem;">
+  <style>
+    .card { max-width: 100% !important; }
+  </style>
+  <div class="result-container" style="max-width: 1700px; width: 96%; margin: 0 auto; background: transparent; padding: 0; box-shadow: none; text-align: left;">
     <div class="row">
         <div class="col-md-12">
             <h2 class="mb-4">🎮 Competition Hub</h2>
@@ -88,6 +92,7 @@
             {% endif %}
         </div>
     </div>
+</div>
 </div>
 
 <style>

@@ -32,7 +32,9 @@
             <i class="fas fa-bars"></i>
         </button>
         <div class="nav-links">
+            {%- if not current_user.is_authenticated or not current_user.is_admin() -%}
             <a href="{{ url_for('home') }}"><i class="fas fa-home"></i> Home</a>
+            {%- endif -%}
             {%- if not current_user.is_authenticated -%}
             <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> Login</a>
             <a href="{{ url_for('auth.register') }}"><i class="fas fa-user-plus"></i> Register</a>

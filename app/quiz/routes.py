@@ -213,49 +213,83 @@ def result():
         # Convert category_id back to int if it's a string
         cat_id = int(category_id) if isinstance(category_id, str) else category_id
 
-        # create and save Attempt
-        attempt = Attempt(
+        # Check for recent duplicate attempt (within 10 seconds)
+        from datetime import datetime, timedelta
+        recent_attempt = Attempt.query.filter_by(
             user_id=current_user.id,
-            score=score,
-            total=total,
-            points=total_points,
             category_id=cat_id,
-            difficulty=difficulty
-        )
-        db.session.add(attempt)
-        db.session.flush()  # Get attempt.id before commit
-        
-        # Save individual answers to AttemptAnswer table for review
-        from app.models import AttemptAnswer
-        answer_review_data = []
-        
-        for q_id_str in quiz_questions:
-            q_id = int(q_id_str)
-            question = Question.query.get(q_id)
-            if question:
-                chosen_option = quiz_answers.get(q_id_str, 0)
-                is_correct = (chosen_option == question.correct_option)
-                
-                # Save to database
-                attempt_answer = AttemptAnswer(
-                    attempt_id=attempt.id,
-                    question_id=q_id,
-                    chosen_option=chosen_option,
-                    correct=is_correct
+            total=total,
+            score=score
+        ).filter(Attempt.created_at >= datetime.utcnow() - timedelta(seconds=10)).first()
+
+        if not recent_attempt:
+            # create and save Attempt
+            attempt = Attempt(
+                user_id=current_user.id,
+                score=score,
+                total=total,
+                points=total_points,
+                category_id=cat_id,
+                difficulty=difficulty
+            )
+            db.session.add(attempt)
+            db.session.flush()  # Get attempt.id before commit
+            
+            # Save individual answers to AttemptAnswer table for review
+            from app.models import AttemptAnswer
+            answer_review_data = []
+            
+            for q_id_str in quiz_questions:
+                q_id = int(q_id_str)
+                question = Question.query.get(q_id)
+                if question:
+                    chosen_option = quiz_answers.get(q_id_str, 0)
+                    is_correct = (chosen_option == question.correct_option)
+                    
+                    # Save to database
+                    attempt_answer = AttemptAnswer(
+                        attempt_id=attempt.id,
+                        question_id=q_id,
+                        chosen_option=chosen_option,
+                        correct=is_correct
+                    )
+                    db.session.add(attempt_answer)
+                    
+                    # Prepare data for review display
+                    answer_review_data.append({
+                        'question': question,
+                        'chosen_option': chosen_option,
+                        'correct_option': question.correct_option,
+                        'is_correct': is_correct,
+                        'points_earned': points_per_question if is_correct else 0,
+                        'explanation': question.explanation
+                    })
+            
+            db.session.commit()
+
+            # Save LeaderboardEntry
+            try:
+                # username fallback for guests
+                username = current_user.username if current_user.is_authenticated else "Guest"
+
+                from app.models import LeaderboardEntry  # local import to avoid circular issues
+
+                lb = LeaderboardEntry(
+                    user_id = current_user.id if current_user.is_authenticated else None,
+                    username = username,
+                    score = score,
+                    total = total,
+                    points = total_points,
+                    category_id = cat_id,
+                    difficulty = difficulty
                 )
-                db.session.add(attempt_answer)
-                
-                # Prepare data for review display
-                answer_review_data.append({
-                    'question': question,
-                    'chosen_option': chosen_option,
-                    'correct_option': question.correct_option,
-                    'is_correct': is_correct,
-                    'points_earned': points_per_question if is_correct else 0,
-                    'explanation': question.explanation
-                })
-        
-        db.session.commit()
+                db.session.add(lb)
+                db.session.commit()
+            except Exception as e:
+                # don't break the user flow if leaderboard insert fails; log if you have logger
+                db.session.rollback()
+                print("Leaderboard insert error:", e)
+
     else:
         # If no category_id, still prepare answer review data from session
         for q_id_str in quiz_questions:
@@ -274,31 +308,6 @@ def result():
                     'explanation': question.explanation
                 })
 
-    # Save LeaderboardEntry if category_id exists
-    if category_id:
-        # --- NEW: also save a LeaderboardEntry ---
-        try:
-            # username fallback for guests
-            username = current_user.username if current_user.is_authenticated else "Guest"
-
-            from app.models import LeaderboardEntry  # local import to avoid circular issues
-
-            lb = LeaderboardEntry(
-                user_id = current_user.id if current_user.is_authenticated else None,
-                username = username,
-                score = score,
-                total = total,
-                points = total_points,
-                category_id = cat_id,
-                difficulty = difficulty
-            )
-            db.session.add(lb)
-            db.session.commit()
-        except Exception as e:
-            # don't break the user flow if leaderboard insert fails; log if you have logger
-            db.session.rollback()
-            # optional: flash('Could not save leaderboard entry', 'warning')
-            print("Leaderboard insert error:", e)
 
     
     # Clear quiz session AFTER saving everything

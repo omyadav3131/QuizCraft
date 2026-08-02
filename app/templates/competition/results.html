@@ -1,8 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
+<div class="quiz-container" style="display: block; padding-top: 2rem;">
+  <div class="result-container" style="max-width: 1700px; width: 96%; margin: 0 auto; text-align: left; background: transparent; padding: 0; box-shadow: none;">
             <!-- Winner Section -->
             {% if competition.status == 'completed' and competition.winner %}
             <div class="card shadow-lg mb-5" style="border: 3px solid gold; background: linear-gradient(135deg, #fff9e6 0%, #fffef0 100%);">
@@ -203,7 +202,6 @@
             </div>
         </div>
     </div>
-</div>
 
 <style>
 .result-card {
