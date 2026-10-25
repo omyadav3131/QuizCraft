@@ -35,6 +35,10 @@ def create_app(config_class=Config):
 
     migrate = Migrate(app, db)
 
+    # Apply ProxyFix for Render reverse proxy (ensures https scheme and real client IP)
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
 
     # Register blueprints
     from app.auth import auth_bp

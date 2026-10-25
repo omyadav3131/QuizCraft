@@ -16,8 +16,14 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, 'quiz.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    PREFERRED_URL_SCHEME = os.environ.get('PREFERRED_URL_SCHEME', 'https')
 
-    # ── Flask-Mail (SMTP) ──────────────────────────────
+    # ── Brevo REST API (HTTPS for Render Free Tier) ────
+    BREVO_API_KEY = os.environ.get('BREVO_API_KEY')
+    MAIL_SENDER_EMAIL = os.environ.get('MAIL_SENDER_EMAIL') or \
+        os.environ.get('MAIL_USERNAME') or 'noreply@quizcraft.com'
+
+    # ── Flask-Mail (SMTP fallback) ─────────────────────
     # Set these as environment variables on Render
     MAIL_SERVER   = os.environ.get('MAIL_SERVER')   or 'smtp.gmail.com'
     MAIL_PORT     = int(os.environ.get('MAIL_PORT')  or 587)
@@ -25,4 +31,4 @@ class Config:
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')  # your Gmail address
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')  # Gmail App Password
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or \
-        os.environ.get('MAIL_USERNAME') or 'noreply@quizcraft.com'
+        MAIL_SENDER_EMAIL

@@ -11,9 +11,9 @@ from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Length, Email, EqualTo
 
 class RegisterForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired(), Length(3,80)])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired(), Length(6,128)])
+    username = StringField('Username', validators=[DataRequired(), Length(3, 150)])
+    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=255)])
+    password = PasswordField('Password', validators=[DataRequired(), Length(6, 128)])
     password2 = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Register')
 
@@ -29,7 +29,7 @@ class ChangePasswordForm(FlaskForm):
     submit = SubmitField('Change Password')
 
 class ForgotPasswordForm(FlaskForm):
-    email = StringField('Email Address', validators=[DataRequired(), Email()])
+    email = StringField('Email Address', validators=[DataRequired(), Email(), Length(max=255)])
     submit = SubmitField('Send Reset Link')
 
 class ResetPasswordForm(FlaskForm):

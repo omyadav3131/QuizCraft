@@ -614,6 +614,12 @@ python main.py
 ### October 26, 2026
 | # | Change | File(s) Modified |
 |---|---|---|
+| 23 | **Brevo REST API Mailer** — Replaced blocked Render SMTP with Brevo HTTPS REST API | `config.py`, `app/auth/routes.py`, `requirements.txt` |
+| 24 | **Disposable Email Blocklist** — Blocked disposable/temporary domains at registration | `app/auth/routes.py` |
+| 25 | **User Model Verification Fields** — Added `is_verified`, `verified_at`, `google_id`, made `password_hash` nullable | `app/models.py` |
+| 26 | **Email Verification & Resend Routes** — Added `/auth/verify-email/<token>` and `/auth/resend-verification` | `app/auth/routes.py`, `app/templates/auth/resend_verification.html` |
+| 27 | **Unverified Login Guard** — Blocks unverified users on login with spam folder notice and resend link | `app/auth/routes.py`, `app/templates/auth/login.html` |
+| 28 | **Supabase Phase 1 Migration** — Safe PostgreSQL migration script created with omyadav verification | `phase1_email_verification_supabase.sql` |
 | 17 | **Admin Forgot Password** — Added 'Forgot Password?' link on Admin Login page | `app/templates/auth/admin_login.html` |
 | 18 | **Admin Password Reset Redirection** — Redirects admin users directly to Admin Login after reset | `app/auth/routes.py` |
 | 19 | **Unified Auth Navigation** — Added quick switch between User Login & Admin Login | `app/templates/auth/forgot_password.html`, `app/templates/auth/reset_password.html` |

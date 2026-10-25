@@ -18,15 +18,20 @@ class Role:
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=True)
-    password_hash = db.Column(db.String(128), nullable=False)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=True)
+    password_hash = db.Column(db.String(255), nullable=True)
     role = db.Column(db.String(20), default=Role.USER)
+    is_verified = db.Column(db.Boolean, default=False, nullable=False)
+    verified_at = db.Column(db.DateTime, nullable=True)
+    google_id = db.Column(db.String(255), unique=True, nullable=True)
     attempts = db.relationship('Attempt', backref='user', lazy=True)
 
     def set_password(self, pw):
         self.password_hash = generate_password_hash(pw)
     def check_password(self, pw):
+        if not self.password_hash:
+            return False
         return check_password_hash(self.password_hash, pw)
     def is_admin(self):
         return self.role == Role.ADMIN
