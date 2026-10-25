@@ -1,4 +1,7 @@
-import secrets
+﻿import secrets
+import logging
+
+logger = logging.getLogger(__name__)
 import string
 import time
 import json
@@ -111,7 +114,7 @@ def create_competition():
         db.session.add(creator_attempt)
         db.session.commit()
         
-        flash(f'✅ Competition created! Share code: <strong>{code}</strong>', 'success')
+        flash(f'âœ… Competition created! Share code: <strong>{code}</strong>', 'success')
         return redirect(url_for('competition.wait_for_opponent', code=code))
     
     categories = Category.query.all()
@@ -127,7 +130,7 @@ def join_competition():
         
         comp = Competition.query.filter_by(code=code).first()
         if not comp:
-            flash('❌ Invalid competition code', 'error')
+            flash('âŒ Invalid competition code', 'error')
             return redirect(url_for('competition.join_competition'))
         
         # Check if user already joined
@@ -142,12 +145,12 @@ def join_competition():
         # Check if full (2 players max)
         attempt_count = CompetitionAttempt.query.filter_by(competition_id=comp.id).count()
         if attempt_count >= 2:
-            flash('❌ Competition is full (max 2 players)', 'error')
+            flash('âŒ Competition is full (max 2 players)', 'error')
             return redirect(url_for('competition.join_competition'))
         
         # Check if creator is trying to join themselves
         if comp.creator_id == current_user.id:
-            flash('❌ Creator cannot join their own competition', 'error')
+            flash('âŒ Creator cannot join their own competition', 'error')
             return redirect(url_for('competition.join_competition'))
         
         # Add attempt for this user
@@ -159,7 +162,7 @@ def join_competition():
         db.session.add(attempt)
         db.session.commit()
         
-        flash(f'✅ Joined competition! Code: {code}', 'success')
+        flash(f'âœ… Joined competition! Code: {code}', 'success')
         return redirect(url_for('competition.wait_for_opponent', code=code))
     
     return render_template('competition/join.html')
@@ -180,9 +183,9 @@ def wait_for_opponent(code):
     attempts = CompetitionAttempt.query.filter_by(competition_id=comp.id).all()
     opponent_ready = len(attempts) >= 2
     
-    print(f"DEBUG: Code={code}, Creator={is_creator}, Attempts={len(attempts)}, Ready={opponent_ready}")
+    logger.debug(f"Code={code}, Creator={is_creator}, Attempts={len(attempts)}, Ready={opponent_ready}")
     for att in attempts:
-        print(f"  - User: {att.user.username}, ID: {att.user_id}")
+        logger.debug(f"  - User: {att.user.username}, ID: {att.user_id}")
     
     return render_template('competition/wait.html', 
                          competition=comp, 
@@ -226,7 +229,7 @@ def start_competition(code):
     # Use the SAME timestamp we used to create the datetime
     start_timestamp_ms = int(start_utc_timestamp * 1000)
     
-    print(f"DEBUG: Competition started - UTC timestamp: {start_utc_timestamp}, MS: {start_timestamp_ms}, Time limit: {comp.time_limit}s, Datetime: {start_time}")
+    logger.debug(f"Competition started - UTC timestamp: {start_utc_timestamp}, MS: {start_timestamp_ms}, Time limit: {comp.time_limit}s, Datetime: {start_time}")
     
     return jsonify({
         'success': True, 
@@ -306,7 +309,7 @@ def take_competition_test(code):
         
         # If elapsed is negative or very small, competition just started
         if elapsed_seconds < 0:
-            print(f"INFO: Negative elapsed time ({elapsed_seconds:.2f}s) - competition just started, setting to 0")
+            logger.info(f"Negative elapsed time ({elapsed_seconds:.2f}s) - competition just started, setting to 0")
             elapsed_seconds = 0
         elif elapsed_seconds < 1:
             # Less than 1 second elapsed, set to 0 for safety
@@ -319,13 +322,13 @@ def take_competition_test(code):
         # This MUST match the timestamp calculation used when starting competition
         start_timestamp_ms = int(start_utc_timestamp * 1000)
         
-        print(f"DEBUG: Timer calc - Current UTC: {current_utc_timestamp:.2f}, Start UTC: {start_utc_timestamp:.2f}, Elapsed: {elapsed_seconds:.2f}s, Remaining: {remaining_seconds}s, Start MS: {start_timestamp_ms}")
+        logger.debug(f"Timer calc - Current UTC: {current_utc_timestamp:.2f}, Start UTC: {start_utc_timestamp:.2f}, Elapsed: {elapsed_seconds:.2f}s, Remaining: {remaining_seconds}s, Start MS: {start_timestamp_ms}")
     else:
         start_timestamp_ms = None
         remaining_seconds = comp.time_limit
-        print(f"DEBUG: Competition not started yet, remaining: {remaining_seconds}s")
+        logger.debug(f"Competition not started yet, remaining: {remaining_seconds}s")
     
-    print(f"DEBUG: Taking test - Q{current_question_index + 1}/{len(questions)}, User: {current_user.username}, Remaining time: {remaining_seconds}s, Start timestamp: {start_timestamp_ms}")
+    logger.debug(f"Taking test - Q{current_question_index + 1}/{len(questions)}, User: {current_user.username}, Remaining time: {remaining_seconds}s, Start timestamp: {start_timestamp_ms}")
     
     return render_template('competition/test.html', 
                          competition=comp, 
@@ -405,9 +408,9 @@ def submit_answer(code):
             except:
                 saved_answers = {}
         
-        print(f"DEBUG: Saved answer for user {current_user.username}, Q{question_id} = Option {selected_option}")
-        print(f"DEBUG: Total saved answers: {len(saved_answers)}, All answers: {saved_answers}")
-        print(f"DEBUG: Verification - Q{question_id} in saved: {str(question_id) in saved_answers}, Value: {saved_answers.get(str(question_id))}")
+        logger.debug(f"Saved answer for user {current_user.username}, Q{question_id} = Option {selected_option}")
+        logger.debug(f"Total saved answers: {len(saved_answers)}, All answers: {saved_answers}")
+        logger.debug(f"Verification - Q{question_id} in saved: {str(question_id) in saved_answers}, Value: {saved_answers.get(str(question_id))}")
         
         # Check if correct
         is_correct = selected_option == question.correct_option
@@ -442,7 +445,7 @@ def submit_competition_test(code):
         
         # Skip if already completed
         if user_attempt.status == 'completed':
-            print(f"DEBUG: User {current_user.username} already completed")
+            logger.debug(f"User {current_user.username} already completed")
             return redirect(url_for('competition.competition_results', code=code))
         
         # Get questions and calculate score - ORDER BY ID to ensure consistent ordering
@@ -468,11 +471,11 @@ def submit_competition_test(code):
                 except:
                     answers_dict = {}
         
-        print(f"DEBUG: Calculating score for {current_user.username}")
-        print(f"DEBUG: Total questions: {len(questions)}")
-        print(f"DEBUG: Answers type: {type(user_attempt.answers)}")
-        print(f"DEBUG: Answers dict: {answers_dict}")
-        print(f"DEBUG: Answers dict length: {len(answers_dict)}")
+        logger.debug(f"Calculating score for {current_user.username}")
+        logger.debug(f"Total questions: {len(questions)}")
+        logger.debug(f"Answers type: {type(user_attempt.answers)}")
+        logger.debug(f"Answers dict: {answers_dict}")
+        logger.debug(f"Answers dict length: {len(answers_dict)}")
         
         for question in questions:
             selected = answers_dict.get(str(question.id))
@@ -480,7 +483,7 @@ def submit_competition_test(code):
             if selected is None:
                 selected = answers_dict.get(question.id)
             
-            print(f"DEBUG: Q{question.id} - Selected: {selected}, Correct: {question.correct_option}, Match: {selected == question.correct_option if selected else False}")
+            logger.debug(f"Q{question.id} - Selected: {selected}, Correct: {question.correct_option}, Match: {selected == question.correct_option if selected else False}")
             
             if selected is not None and selected == question.correct_option:
                 correct_count += 1
@@ -493,9 +496,9 @@ def submit_competition_test(code):
         user_attempt.time_taken = int((user_attempt.completed_at - user_attempt.started_at).total_seconds())
         
         db.session.commit()
-        print(f"DEBUG: {current_user.username} completed with score {user_attempt.score}%")
+        logger.debug(f"{current_user.username} completed with score {user_attempt.score}%")
         
-        # Check if both completed → determine winner
+        # Check if both completed â†’ determine winner
         all_attempts = CompetitionAttempt.query.filter_by(competition_id=comp.id).all()
         completed_attempts = [att for att in all_attempts if att.status == 'completed']
         
@@ -506,11 +509,11 @@ def submit_competition_test(code):
             comp.status = 'completed'
             comp.ended_at = datetime.utcnow()
             db.session.commit()
-            print(f"DEBUG: Competition completed. Winner: {winner.user.username} with score {winner.score}%")
+            logger.debug(f"Competition completed. Winner: {winner.user.username} with score {winner.score}%")
         
         return redirect(url_for('competition.competition_results', code=code))
     except Exception as e:
-        print(f"ERROR in submit_competition_test: {e}")
+        logger.error(f"in submit_competition_test: {e}")
         flash(f'Error submitting test: {str(e)}', 'error')
         return redirect(url_for('competition.competition_menu')), 500
 
@@ -574,3 +577,4 @@ def competition_results(code):
                          competition=comp, 
                          attempts=attempts,
                          review_data=review_data)
+

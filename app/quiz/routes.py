@@ -7,10 +7,13 @@ TIPS: Add your notes here to help future edits.
 """
 
 # app/quiz/routes.py
+import logging
 from flask import render_template, request, redirect, url_for, session, flash, jsonify, abort
 from flask_login import login_required, current_user
 from . import quiz_bp
 from app.models import Category, Question, Attempt, User, Role, db
+
+logger = logging.getLogger(__name__)
 
 def _calculate_quiz_score(answer_map):
     """Recompute quiz score from stored answers using canonical Question data."""
@@ -74,6 +77,10 @@ def start_quiz(category_id, difficulty):
     if not questions:
         flash(f'No {difficulty} questions available in this category', 'warning')
         return redirect(url_for('quiz.start', category_id=category_id))
+    
+    # Shuffle questions randomly so each quiz session is different
+    import random
+    random.shuffle(questions)
     
     # Limit to 10 questions
     questions = questions[:10]
@@ -286,9 +293,9 @@ def result():
                 db.session.add(lb)
                 db.session.commit()
             except Exception as e:
-                # don't break the user flow if leaderboard insert fails; log if you have logger
+                # don't break the user flow if leaderboard insert fails
                 db.session.rollback()
-                print("Leaderboard insert error:", e)
+                logger.error("Leaderboard insert error: %s", e)
 
     else:
         # If no category_id, still prepare answer review data from session
@@ -435,10 +442,11 @@ def api_leaderboard():
 def leaderboard():
     from app.models import Attempt, User, Category
     from datetime import datetime, timedelta
+    from sqlalchemy import func
     
     # Get filter parameters from query params
     category_id = request.args.get('category', type=int)
-    date_filter = request.args.get('date_filter', default='today', type=str)  # today, week, month, all
+    date_filter = request.args.get('date_filter', default='all', type=str)  # today, week, month, all
     
     # Get all categories for filter dropdown
     categories = Category.query.order_by(Category.name).all()
@@ -458,36 +466,52 @@ def leaderboard():
         from_date = datetime.min
         to_date = datetime.utcnow()
 
+    # Subquery: get max points per user per category (best attempt only)
+    best_subq = (
+        db.session.query(
+            Attempt.user_id,
+            Attempt.category_id,
+            func.max(Attempt.points).label('max_points')
+        )
+        .filter(Attempt.created_at >= from_date)
+        .filter(Attempt.created_at <= to_date)
+        .group_by(Attempt.user_id, Attempt.category_id)
+    )
+    if category_id:
+        best_subq = best_subq.filter(Attempt.category_id == category_id)
+    best_subq = best_subq.subquery()
+
+    # Main query: join back to get full attempt details for each best score
     q = (
         db.session.query(
             Attempt,
             User.username,
             Category.name.label("category_name")
         )
+        .join(best_subq, (Attempt.user_id == best_subq.c.user_id) &
+                         (Attempt.category_id == best_subq.c.category_id) &
+                         (Attempt.points == best_subq.c.max_points))
         .outerjoin(User, User.id == Attempt.user_id)
         .outerjoin(Category, Category.id == Attempt.category_id)
         .filter(Attempt.created_at >= from_date)
         .filter(Attempt.created_at <= to_date)
+        .order_by(Attempt.points.desc(), Attempt.score.desc())
+        .limit(50)
     )
-    
-    # Filter by category if provided
+
     if category_id:
         q = q.filter(Attempt.category_id == category_id)
-    
-    # Order by points (descending), then by score, then by date
-    from sqlalchemy import inspect
-    inspector = inspect(Attempt)
-    has_points_column = 'points' in [col.name for col in inspector.columns]
-    
-    if has_points_column:
-        q = q.order_by(Attempt.points.desc(), Attempt.score.desc(), Attempt.created_at.desc()).limit(50)
-    else:
-        q = q.order_by(Attempt.score.desc(), Attempt.created_at.desc()).limit(50)
 
     rows = q.all()
 
+    # Deduplicate: if same user appears twice (tie), keep only first
+    seen = set()
     entries = []
     for attempt, username, category_name in rows:
+        key = (attempt.user_id, attempt.category_id)
+        if key in seen:
+            continue
+        seen.add(key)
         entries.append({
             "username": username or "Guest",
             "score": attempt.score,
@@ -498,7 +522,7 @@ def leaderboard():
             "date": attempt.created_at.strftime("%Y-%m-%d"),
         })
 
-    return render_template("quiz/leaderboard_vertical.html", entries=entries, 
+    return render_template("quiz/leaderboard_vertical.html", entries=entries,
                          categories=categories, selected_category=category_id, date_filter=date_filter)
 
 @quiz_bp.route('/leaderboard/<category_name>')

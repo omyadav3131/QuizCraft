@@ -12,10 +12,15 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from config import Config
 from flask_migrate import Migrate
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_mail import Mail
 
 
 db = SQLAlchemy()
 login_manager = LoginManager()
+limiter = Limiter(key_func=get_remote_address, default_limits=[])
+mail = Mail()
 login_manager.login_view = 'auth.login'
 login_manager.login_message_category = 'warning'
 
@@ -25,6 +30,8 @@ def create_app(config_class=Config):
 
     db.init_app(app)
     login_manager.init_app(app)
+    limiter.init_app(app)
+    mail.init_app(app)
 
     migrate = Migrate(app, db)
 
@@ -45,5 +52,18 @@ def create_app(config_class=Config):
     @app.route('/')
     def home():
         return render_template('home.html')
+
+    # ── Custom error handlers ──────────────────────
+    @app.errorhandler(404)
+    def not_found(e):
+        return render_template('404.html'), 404
+
+    @app.errorhandler(403)
+    def forbidden(e):
+        return render_template('403.html'), 403
+
+    @app.errorhandler(500)
+    def server_error(e):
+        return render_template('500.html'), 500
 
     return app
