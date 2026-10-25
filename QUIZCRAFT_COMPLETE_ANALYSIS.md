@@ -614,14 +614,12 @@ python main.py
 ### October 26, 2026
 | # | Change | File(s) Modified |
 |---|---|---|
-| 17 | **Admin Forgot Password** — Added 'Forgot Password?' link on Admin Login page | pp/templates/auth/admin_login.html |
-| 18 | **Admin Password Reset Redirection** — Redirects admin users directly to Admin Login after reset | pp/auth/routes.py |
-| 19 | **Unified Auth Navigation** — Added quick switch between User Login & Admin Login | pp/templates/auth/forgot_password.html, 
-eset_password.html |
+| 17 | **Admin Forgot Password** — Added 'Forgot Password?' link on Admin Login page | `app/templates/auth/admin_login.html` |
+| 18 | **Admin Password Reset Redirection** — Redirects admin users directly to Admin Login after reset | `app/auth/routes.py` |
+| 19 | **Unified Auth Navigation** — Added quick switch between User Login & Admin Login | `app/templates/auth/forgot_password.html`, `app/templates/auth/reset_password.html` |
 | 20 | **Supabase Production DB Update** — 20 Computer questions (Medium+Hard) inserted directly into Supabase (Total 300) | Supabase PostgreSQL |
 | 21 | **Admin Email Sanitized** — Removed trailing 'None' artifact from admin email in Supabase & local DB | Supabase & SQLite |
-| 22 | **Docker Python 3.10 Build Fix** — Pinned SQLAlchemy==2.0.38 and wrapt==1.17.2, removed BOM | 
-equirements.txt |
+| 22 | **Docker Python 3.10 Build Fix** — Pinned SQLAlchemy==2.0.38 and wrapt==1.17.2, removed BOM | `requirements.txt` |
 
 ### October 25, 2026 — Part 2
 | # | Change | File(s) Modified |
@@ -646,4 +644,4 @@ equirements.txt |
 
 ---
 
-*Last Updated: October 25, 2026 | Auto-maintained by Antigravity IDE*
+*Last Updated: October 26, 2026 | Auto-maintained by Antigravity IDE*
