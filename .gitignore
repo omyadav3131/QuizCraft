@@ -146,3 +146,4 @@ quiz.db
 *.db
 *.sqlite
 check_sequences.py
+test_env310/
