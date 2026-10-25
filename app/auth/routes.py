@@ -204,6 +204,8 @@ def reset_password(token):
         user.set_password(form.new_password.data)
         db.session.commit()
         flash('Password reset successfully! Please login with your new password.', 'success')
+        if user.is_admin():
+            return redirect(url_for('auth.admin_login'))
         return redirect(url_for('auth.login'))
     return render_template('auth/reset_password.html', form=form, token=token)
 
