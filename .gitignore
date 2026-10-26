@@ -104,46 +104,48 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
+# Environments & Secrets
+.env*
+.venv*
+env*/
+venv*/
+ENV*/
+test_env*/
 env.bak/
 venv.bak/
 
-# Spyder project settings
+# IDE & Editor files
+.vs/
+*.vsidx
+*.wsuo
+.vscode/
+.idea/
 .spyderproject
 .spyproject
-
-# Rope project settings
 .ropeproject
+.developer_preferences.md
+assets/
 
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
+# AI / Assistant temp files
 .aider*
 
-# Local reference files
+# Databases & SQLite
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.sqlite3-journal
+app.db
+quiz.db
+
+# Backup, dump and schema files
+*.bak
+*.dump
+*.sql.bak
+dump_*.sql
+schema.txt
+check_postgres.py
+check_sequences.py
 QuizCraft.zip
 all_over_information.txt
-venv311/
-quiz.db
-*.db
-*.sqlite
-check_sequences.py
-test_env310/

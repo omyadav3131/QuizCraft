@@ -37,12 +37,14 @@ with app.app_context():
     # Create admin user
     admin = User.query.filter_by(username="admin").first()
     if not admin:
+        import os
+        admin_pass = os.environ.get("ADMIN_INITIAL_PASSWORD", "admin123")
         admin = User(username="admin", email="admin@quiz.com")
-        admin.set_password("admin123")
+        admin.set_password(admin_pass)
         admin.role = Role.ADMIN
         db.session.add(admin)
 
     db.session.commit()
 
     print("Database created successfully!")
-    print("Admin login → username: admin | password: admin123")
+    print("Admin user verified/initialized.")

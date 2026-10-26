@@ -548,7 +548,7 @@ gunicorn==20.0.4               # WSGI server
 
 4. **Default Admin:**
    - Username: `admin`
-   - Password: `admin123`
+   - Password: Set via `ADMIN_INITIAL_PASSWORD` environment variable
 
 ### Docker Deployment
 
