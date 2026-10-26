@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 800px;">
+    <div class="card shadow-sm border-0" style="border-radius: 12px; background: #ffffff;">
+        <div class="card-body p-4 p-md-5">
+            <div class="text-center mb-4">
+                <div style="width: 56px; height: 56px; line-height: 56px; border-radius: 50%; background: #eef2ff; color: #4f46e5; font-size: 24px; margin: 0 auto 12px;">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h1 style="font-size: 2rem; font-weight: 700; color: #1e293b;">Privacy Policy</h1>
+                <p class="text-muted" style="font-size: 0.95rem;">Last updated: October 2026</p>
+            </div>
+
+            <div class="content-section mb-4">
+                <h5 style="color: #4f46e5; font-weight: 600;"><i class="fas fa-database mr-2"></i> Information We Collect</h5>
+                <p style="color: #475569; font-size: 0.95rem; line-height: 1.7;">
+                    QuizCraft collects only minimal information necessary to deliver a personalized quiz experience:
+                </p>
+                <ul style="color: #475569; font-size: 0.95rem; line-height: 1.7;">
+                    <li><strong>Account Details:</strong> Your chosen username and email address to manage your account and authentication.</li>
+                    <li><strong>Quiz Activity:</strong> Your quiz answers, scores, completion times, and leaderboard achievements.</li>
+                </ul>
+            </div>
+
+            <div class="content-section mb-4">
+                <h5 style="color: #4f46e5; font-weight: 600;"><i class="fab fa-google mr-2"></i> Google Sign-In</h5>
+                <p style="color: #475569; font-size: 0.95rem; line-height: 1.7;">
+                    When you sign in using Google, QuizCraft only requests access to your basic profile information: your <strong>name</strong> and <strong>verified email address</strong>. We do not access your contacts, Google Drive, or any other personal Google data.
+                </p>
+            </div>
+
+            <div class="content-section mb-4">
+                <h5 style="color: #4f46e5; font-weight: 600;"><i class="fas fa-lock mr-2"></i> We Do Not Sell Your Data</h5>
+                <p style="color: #475569; font-size: 0.95rem; line-height: 1.7;">
+                    Your privacy is respected. <strong>We do not sell, rent, or trade your personal information</strong> with third-party advertisers or data brokers under any circumstances.
+                </p>
+            </div>
+
+            <div class="content-section">
+                <h5 style="color: #4f46e5; font-weight: 600;"><i class="fas fa-envelope mr-2"></i> Contact Us</h5>
+                <p style="color: #475569; font-size: 0.95rem; line-height: 1.7;">
+                    If you have questions about this Privacy Policy or wish to request data deletion, contact us directly at:
+                    <br>
+                    <a href="mailto:omyadav313131@gmail.com" style="color: #4f46e5; font-weight: 600;">omyadav313131@gmail.com</a>
+                </p>
+            </div>
+
+            <hr class="my-4">
+            <div class="text-center">
+                <a href="{{ url_for('home') }}" class="btn btn-outline-primary btn-sm px-4" style="border-radius: 6px; font-weight: 600;">
+                    <i class="fas fa-arrow-left mr-1"></i> Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

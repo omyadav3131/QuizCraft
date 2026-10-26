@@ -23,6 +23,10 @@ class Config:
     MAIL_SENDER_EMAIL = os.environ.get('MAIL_SENDER_EMAIL') or \
         os.environ.get('MAIL_USERNAME') or 'noreply@quizcraft.com'
 
+    # ── Google OAuth 2.0 (OpenID Connect) ──────────────
+    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+    GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
+
     # ── Flask-Mail (SMTP fallback) ─────────────────────
     # Set these as environment variables on Render
     MAIL_SERVER   = os.environ.get('MAIL_SERVER')   or 'smtp.gmail.com'

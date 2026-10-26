@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 800px;">
+    <div class="card shadow-sm border-0" style="border-radius: 12px; background: #ffffff;">
+        <div class="card-body p-4 p-md-5">
+            <div class="text-center mb-4">
+                <div style="width: 56px; height: 56px; line-height: 56px; border-radius: 50%; background: #eef2ff; color: #4f46e5; font-size: 24px; margin: 0 auto 12px;">
+                    <i class="fas fa-file-contract"></i>
+                </div>
+                <h1 style="font-size: 2rem; font-weight: 700; color: #1e293b;">Terms of Service</h1>
+                <p class="text-muted" style="font-size: 0.95rem;">Last updated: October 2026</p>
+            </div>
+
+            <div class="content-section mb-4">
+                <h5 style="color: #4f46e5; font-weight: 600;"><i class="fas fa-check-circle mr-2"></i> Acceptance of Terms</h5>
+                <p style="color: #475569; font-size: 0.95rem; line-height: 1.7;">
+                    By creating an account or playing quizzes on QuizCraft, you agree to these simple Terms of Service. If you do not agree, please do not use the platform.
+                </p>
+            </div>
+
+            <div class="content-section mb-4">
+                <h5 style="color: #4f46e5; font-weight: 600;"><i class="fas fa-gamepad mr-2"></i> Fair Play & Platform Use</h5>
+                <p style="color: #475569; font-size: 0.95rem; line-height: 1.7;">
+                    QuizCraft is designed for learning, testing knowledge, and friendly multiplayer competition. Users agree to:
+                </p>
+                <ul style="color: #475569; font-size: 0.95rem; line-height: 1.7;">
+                    <li>Participate honestly without cheating, bots, or automated scripts.</li>
+                    <li>Treat fellow competitors respectfully in multiplayer battles.</li>
+                    <li>Maintain only one primary account and avoid impersonating others.</li>
+                </ul>
+            </div>
+
+            <div class="content-section mb-4">
+                <h5 style="color: #4f46e5; font-weight: 600;"><i class="fas fa-shield-alt mr-2"></i> Account Responsibility</h5>
+                <p style="color: #475569; font-size: 0.95rem; line-height: 1.7;">
+                    You are responsible for keeping your login credentials confidential. We reserve the right to suspend or remove accounts that violate fair play or abuse platform resources.
+                </p>
+            </div>
+
+            <div class="content-section mb-4">
+                <h5 style="color: #4f46e5; font-weight: 600;"><i class="fas fa-info-circle mr-2"></i> Disclaimer</h5>
+                <p style="color: #475569; font-size: 0.95rem; line-height: 1.7;">
+                    QuizCraft is provided "as is" for educational and entertainment purposes. While we strive for accuracy, questions and platform features are updated continuously.
+                </p>
+            </div>
+
+            <div class="content-section">
+                <h5 style="color: #4f46e5; font-weight: 600;"><i class="fas fa-envelope mr-2"></i> Inquiries</h5>
+                <p style="color: #475569; font-size: 0.95rem; line-height: 1.7;">
+                    For questions regarding these terms, contact us at:
+                    <br>
+                    <a href="mailto:omyadav313131@gmail.com" style="color: #4f46e5; font-weight: 600;">omyadav313131@gmail.com</a>
+                </p>
+            </div>
+
+            <hr class="my-4">
+            <div class="text-center">
+                <a href="{{ url_for('home') }}" class="btn btn-outline-primary btn-sm px-4" style="border-radius: 6px; font-weight: 600;">
+                    <i class="fas fa-arrow-left mr-1"></i> Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

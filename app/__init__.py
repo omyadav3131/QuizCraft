@@ -51,11 +51,19 @@ def create_app(config_class=Config):
     app.register_blueprint(quiz_bp, url_prefix='/quiz')
     app.register_blueprint(competition_bp, url_prefix='/competition')
 
-    # home route
+    # Public routes
     from flask import render_template
     @app.route('/')
     def home():
         return render_template('home.html')
+
+    @app.route('/privacy')
+    def privacy():
+        return render_template('privacy.html')
+
+    @app.route('/terms')
+    def terms():
+        return render_template('terms.html')
 
     # ── Custom error handlers ──────────────────────
     @app.errorhandler(404)

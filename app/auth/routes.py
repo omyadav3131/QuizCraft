@@ -6,19 +6,22 @@ PURPOSE: Authentication routes — login, register, logout, forgot/reset passwor
 TIPS: Rate limiting applied on login/register. Forgot password uses itsdangerous tokens.
 """
 
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, session, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from . import auth_bp
 from .forms import RegisterForm, LoginForm, ForgotPasswordForm, ResetPasswordForm
 from app.models import User, db
 from app import limiter, mail
 import logging
+import secrets
+import hmac
+import urllib.parse
+import re
 
 import os
 import requests
 from datetime import datetime
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
-from flask import current_app
 
 logger = logging.getLogger(__name__)
 
@@ -309,6 +312,207 @@ def resend_verification():
 
 
 # ──────────────────────────────────────────────
+# Google OAuth 2.0 (OpenID Connect)
+# ──────────────────────────────────────────────
+GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
+
+
+@auth_bp.route('/google')
+@limiter.limit("10 per minute")
+def google_login():
+    """Initiate Google OAuth 2.0 flow with CSRF state protection."""
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+
+    client_id = current_app.config.get('GOOGLE_CLIENT_ID')
+    client_secret = current_app.config.get('GOOGLE_CLIENT_SECRET')
+    if not client_id or not client_secret:
+        flash('Google Sign-In is not configured. Please contact the administrator.', 'warning')
+        return redirect(url_for('auth.login'))
+
+    # Generate cryptographically secure random state to prevent CSRF
+    state = secrets.token_urlsafe(32)
+    session['google_oauth_state'] = state
+
+    redirect_uri = url_for('auth.google_callback', _external=True)
+    params = {
+        'client_id': client_id,
+        'redirect_uri': redirect_uri,
+        'response_type': 'code',
+        'scope': 'openid email profile',
+        'state': state,
+        'access_type': 'online',
+        'prompt': 'select_account'
+    }
+    auth_url = f"{GOOGLE_AUTH_URL}?{urllib.parse.urlencode(params)}"
+    return redirect(auth_url)
+
+
+@auth_bp.route('/google/callback')
+@limiter.limit("10 per minute")
+def google_callback():
+    """Handle Google OAuth 2.0 callback, verify state, exchange token, and login user."""
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+
+    # 1. Handle error response from Google (e.g., user cancelled consent)
+    error = request.args.get('error')
+    if error:
+        session.pop('google_oauth_state', None)
+        logger.warning("Google OAuth error from provider: %s", error)
+        flash('Google Sign-In was cancelled or denied.', 'warning')
+        return redirect(url_for('auth.login'))
+
+    # 2. Verify state token against session (CSRF protection)
+    state = request.args.get('state')
+    stored_state = session.pop('google_oauth_state', None)
+    if not state or not stored_state or not hmac.compare_digest(state, stored_state):
+        logger.warning("Google OAuth state mismatch or missing session state")
+        flash('Invalid or expired authentication session. Please try again.', 'danger')
+        return redirect(url_for('auth.login'))
+
+    # 3. Verify authorization code is present
+    code = request.args.get('code')
+    if not code:
+        logger.warning("Google OAuth callback missing authorization code")
+        flash('Authorization code missing from Google. Please try again.', 'danger')
+        return redirect(url_for('auth.login'))
+
+    client_id = current_app.config.get('GOOGLE_CLIENT_ID')
+    client_secret = current_app.config.get('GOOGLE_CLIENT_SECRET')
+    if not client_id or not client_secret:
+        flash('Google Sign-In configuration error.', 'danger')
+        return redirect(url_for('auth.login'))
+
+    # 4. Exchange authorization code for access token via HTTPS POST
+    redirect_uri = url_for('auth.google_callback', _external=True)
+    token_payload = {
+        'code': code,
+        'client_id': client_id,
+        'client_secret': client_secret,
+        'redirect_uri': redirect_uri,
+        'grant_type': 'authorization_code'
+    }
+
+    try:
+        token_resp = requests.post(GOOGLE_TOKEN_URL, data=token_payload, timeout=10)
+        if token_resp.status_code != 200:
+            logger.error("Failed to exchange Google OAuth code (HTTP %d)", token_resp.status_code)
+            flash('Failed to authenticate with Google. Please try again.', 'danger')
+            return redirect(url_for('auth.login'))
+
+        token_data = token_resp.json()
+        access_token = token_data.get('access_token')
+        if not access_token:
+            logger.error("No access_token returned by Google")
+            flash('Failed to obtain authentication token from Google.', 'danger')
+            return redirect(url_for('auth.login'))
+
+        # 5. Fetch verified user profile from OpenID Connect userinfo endpoint
+        headers = {'Authorization': f'Bearer {access_token}'}
+        userinfo_resp = requests.get(GOOGLE_USERINFO_URL, headers=headers, timeout=10)
+        if userinfo_resp.status_code != 200:
+            logger.error("Failed to fetch Google userinfo (HTTP %d)", userinfo_resp.status_code)
+            flash('Failed to retrieve profile information from Google.', 'danger')
+            return redirect(url_for('auth.login'))
+
+        userinfo = userinfo_resp.json()
+    except Exception as e:
+        logger.error("Google OAuth network or request exception: %s", e)
+        flash('Unable to connect to Google. Please check your internet connection and try again.', 'danger')
+        return redirect(url_for('auth.login'))
+
+    # 6. Verify email_verified is true
+    email_verified = userinfo.get('email_verified') in (True, 'true', 'True')
+    if not email_verified:
+        flash('Your Google email address is not verified by Google. Please verify your Google account first.', 'danger')
+        return redirect(url_for('auth.login'))
+
+    google_sub = str(userinfo.get('sub', '')).strip()
+    google_email = str(userinfo.get('email', '')).strip().lower()
+    google_name = str(userinfo.get('name') or userinfo.get('given_name') or '').strip()
+
+    if not google_sub or not google_email:
+        flash('Incomplete profile data received from Google.', 'danger')
+        return redirect(url_for('auth.login'))
+
+    # 7. Check if user exists by google_id
+    user = User.query.filter_by(google_id=google_sub).first()
+
+    # 8. If not found by google_id, check by verified email (Account Linking)
+    if not user:
+        user = User.query.filter_by(email=google_email).first()
+        if user:
+            # Block admin accounts from signing in via Google
+            if user.is_admin() or user.role == 'admin':
+                logger.warning("Admin account %s blocked from Google Sign-In", user.username)
+                flash('Admin accounts cannot sign in via Google. Please use the Admin Login page.', 'danger')
+                return redirect(url_for('auth.admin_login'))
+
+            # Link Google ID to existing account and ensure verified
+            user.google_id = google_sub
+            user.is_verified = True
+            if not user.verified_at:
+                user.verified_at = datetime.utcnow()
+            db.session.commit()
+            logger.info("Linked Google account to existing user: %s", user.username)
+            login_user(user)
+            flash('Successfully signed in and linked your Google account!', 'success')
+            next_page = request.args.get('next') or url_for('quiz.select')
+            return redirect(next_page)
+
+    # If user was found by google_id
+    if user:
+        # Block admin accounts from signing in via Google
+        if user.is_admin() or user.role == 'admin':
+            logger.warning("Admin account %s with google_id blocked from Google Sign-In", user.username)
+            flash('Admin accounts cannot sign in via Google. Please use the Admin Login page.', 'danger')
+            return redirect(url_for('auth.admin_login'))
+
+        user.is_verified = True
+        if not user.verified_at:
+            user.verified_at = datetime.utcnow()
+        db.session.commit()
+        login_user(user)
+        flash('Successfully signed in with Google!', 'success')
+        next_page = request.args.get('next') or url_for('quiz.select')
+        return redirect(next_page)
+
+    # 9. Create new user account for first-time Google sign-in
+    # Derive unique username from Google display name or email prefix (max 150 chars)
+    base_name = re.sub(r'[^a-zA-Z0-9_]', '', google_name)
+    if not base_name:
+        base_name = re.sub(r'[^a-zA-Z0-9_]', '', google_email.split('@')[0])
+    if not base_name:
+        base_name = 'user'
+
+    base_username = base_name[:140]
+    username_candidate = base_username
+    counter = 1
+    while User.query.filter_by(username=username_candidate).first():
+        username_candidate = f"{base_username[:135]}_{counter}"
+        counter += 1
+
+    new_user = User(
+        username=username_candidate,
+        email=google_email,
+        password_hash=None,
+        role='user',
+        is_verified=True,
+        verified_at=datetime.utcnow(),
+        google_id=google_sub
+    )
+    db.session.add(new_user)
+    db.session.commit()
+    logger.info("Created new user via Google Sign-In: %s", username_candidate)
+    login_user(new_user)
+    flash('Welcome to QuizCraft! Your account has been created via Google.', 'success')
+    return redirect(url_for('quiz.select'))
+
+
+# ──────────────────────────────────────────────
 # Login (User)
 # ──────────────────────────────────────────────
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -320,6 +524,11 @@ def login():
     if form.validate_on_submit():
         u = User.query.filter_by(username=form.username.data).first()
         if u:
+            # Check if this is a Google-only account without password
+            if not u.password_hash and u.google_id:
+                flash('This account signs in with Google. Please use the "Continue with Google" button.', 'info')
+                return render_template('auth/login.html', form=form)
+
             password_ok = u.check_password(form.password.data)
 
             if not password_ok and u.password_hash == form.password.data:
@@ -394,8 +603,12 @@ def forgot_password():
     form = ForgotPasswordForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data.strip().lower()).first()
-        # Always show success message (don't reveal if email exists)
+        # Always show success message (don't reveal if email exists), unless Google-only user
         if user:
+            if not user.password_hash and user.google_id:
+                flash('This account signs in with Google and does not use a password. Please use the "Continue with Google" button to log in.', 'info')
+                return redirect(url_for('auth.login'))
+
             sent = send_reset_email(user)
             if not sent:
                 flash('Could not send email. Please check mail configuration.', 'danger')
@@ -446,6 +659,10 @@ def reset_password(token):
 @auth_bp.route('/change-password', methods=['GET', 'POST'])
 @login_required
 def change_password():
+    if not current_user.password_hash and current_user.google_id:
+        flash('Your account signs in with Google and does not use a password. You can continue signing in with Google.', 'info')
+        return redirect(url_for('home'))
+
     from .forms import ChangePasswordForm
     form = ChangePasswordForm()
     if form.validate_on_submit():

@@ -572,7 +572,7 @@ Admin can view any user's performance by passing user_id param.
 |---|---|
 | Admin Login URL | /auth/admin/login |
 | Username | omyadav |
-| Password | Admin@123 (recently reset) |
+| Password | Managed securely in database (never stored in documentation) |
 
 ---
 
@@ -604,6 +604,11 @@ python main.py
 - **Environment Variables needed:**
   - `DATABASE_URL` — PostgreSQL connection string
   - `SECRET_KEY` — Flask secret key
+  - `BREVO_API_KEY` — Brevo v3 HTTPS REST API key for transactional emails
+  - `MAIL_SENDER_EMAIL` — Verified sender email on Brevo
+  - `GOOGLE_CLIENT_ID` — Google Cloud OAuth 2.0 Web Client ID
+  - `GOOGLE_CLIENT_SECRET` — Google Cloud OAuth 2.0 Web Client Secret
+  - `PREFERRED_URL_SCHEME` — `https` (handled automatically via ProxyFix)
 
 ---
 
@@ -611,7 +616,19 @@ python main.py
 
 ## Changelog
 
-### October 26, 2026
+### October 26, 2026 — Part 2 (Phase 2: Google OAuth 2.0)
+| # | Change | File(s) Modified |
+|---|---|---|
+| 31 | **Google OAuth 2.0 Flow** — Lightweight OpenID Connect flow using `requests` (no heavy dependencies) | `config.py`, `app/auth/routes.py` |
+| 32 | **OAuth CSRF State Protection** — Cryptographic random state stored in session and validated via `hmac.compare_digest` | `app/auth/routes.py` |
+| 33 | **Account Linking & Duplicate Prevention** — Verified Google email automatically links `google_id` to existing account | `app/auth/routes.py` |
+| 34 | **Admin Login Isolation** — Admin accounts blocked from Google OAuth sign-in to protect administrative integrity | `app/auth/routes.py` |
+| 35 | **Google-Only Account Handling** — Friendly guidance on forgot password & change password for Google users | `app/auth/routes.py` |
+| 36 | **Continue with Google Buttons** — Added official Google G SVG buttons to login and registration views | `app/templates/auth/login.html`, `app/templates/auth/register.html` |
+| 37 | **Rate Limiting on OAuth** — 10 requests/minute on `/auth/google` and `/auth/google/callback` | `app/auth/routes.py` |
+| 38 | **Security Sanitization** — Removed plain-text admin credentials from project documentation | `QUIZCRAFT_COMPLETE_ANALYSIS.md` |
+
+### October 26, 2026 — Part 1 (Phase 1: Email Verification)
 | # | Change | File(s) Modified |
 |---|---|---|
 | 23 | **Brevo REST API Mailer** — Replaced blocked Render SMTP with Brevo HTTPS REST API | `config.py`, `app/auth/routes.py`, `requirements.txt` |
@@ -620,6 +637,8 @@ python main.py
 | 26 | **Email Verification & Resend Routes** — Added `/auth/verify-email/<token>` and `/auth/resend-verification` | `app/auth/routes.py`, `app/templates/auth/resend_verification.html` |
 | 27 | **Unverified Login Guard** — Blocks unverified users on login with spam folder notice and resend link | `app/auth/routes.py`, `app/templates/auth/login.html` |
 | 28 | **Supabase Phase 1 Migration** — Safe PostgreSQL migration script created with omyadav verification | `phase1_email_verification_supabase.sql` |
+| 29 | **Column Size Upgrades** — Expanded `password_hash` (255), `email` (255), `username` (150), `google_id` (255) | `app/models.py`, `app/auth/forms.py`, `phase1_email_verification_supabase.sql` |
+| 30 | **Stacked Resend Rate Limiting** — 3 requests/min per IP and 1 request/min per (IP + email) | `app/auth/routes.py` |
 | 17 | **Admin Forgot Password** — Added 'Forgot Password?' link on Admin Login page | `app/templates/auth/admin_login.html` |
 | 18 | **Admin Password Reset Redirection** — Redirects admin users directly to Admin Login after reset | `app/auth/routes.py` |
 | 19 | **Unified Auth Navigation** — Added quick switch between User Login & Admin Login | `app/templates/auth/forgot_password.html`, `app/templates/auth/reset_password.html` |
