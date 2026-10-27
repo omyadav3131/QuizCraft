@@ -150,3 +150,139 @@ class CompetitionAttempt(db.Model):
     # Relationships
     user = db.relationship('User', backref='competition_attempts', lazy=True)
     competition = db.relationship('Competition', backref='user_attempts', lazy=True)
+
+
+# ══════════════════════════════════════════════════════════════════
+# Placement Mock Test Models (TCS NQT Style & Anti-Cheat Engine)
+# ══════════════════════════════════════════════════════════════════
+
+class MockTest(db.Model):
+    """Placement mock test model (e.g. TCS NQT, Infosys, Wipro)."""
+    __tablename__ = 'mock_test'
+
+    id = db.Column(db.Integer, primary_key=True)
+    company_name = db.Column(db.String(100), nullable=False, index=True)
+    title = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    duration_minutes = db.Column(db.Integer, default=60, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    allow_multiple_attempts = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    sections = db.relationship(
+        'MockSection',
+        backref='test',
+        lazy=True,
+        cascade='all, delete-orphan',
+        order_by='MockSection.order'
+    )
+    attempts = db.relationship(
+        'MockAttempt',
+        backref='test',
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
+
+    def total_questions_count(self):
+        return sum(len(s.questions) for s in self.sections)
+
+    def total_marks(self):
+        return sum(sum(q.marks for q in s.questions) for s in self.sections)
+
+
+class MockSection(db.Model):
+    """Section of a mock test (e.g. Numerical Ability, Verbal Ability, Reasoning Ability)."""
+    __tablename__ = 'mock_section'
+
+    id = db.Column(db.Integer, primary_key=True)
+    test_id = db.Column(db.Integer, db.ForeignKey('mock_test.id'), nullable=False, index=True)
+    name = db.Column(db.String(100), nullable=False)
+    order = db.Column(db.Integer, default=1, nullable=False)
+    num_questions = db.Column(db.Integer, default=10, nullable=False)
+    section_minutes = db.Column(db.Integer, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    questions = db.relationship(
+        'MockQuestion',
+        backref='section',
+        lazy=True,
+        cascade='all, delete-orphan',
+        order_by='MockQuestion.id'
+    )
+
+
+class MockQuestion(db.Model):
+    """Question belonging to a specific mock section."""
+    __tablename__ = 'mock_question'
+
+    id = db.Column(db.Integer, primary_key=True)
+    section_id = db.Column(db.Integer, db.ForeignKey('mock_section.id'), nullable=False, index=True)
+    text = db.Column(db.Text, nullable=False)
+    option1 = db.Column(db.Text, nullable=True)
+    option2 = db.Column(db.Text, nullable=True)
+    option3 = db.Column(db.Text, nullable=True)
+    option4 = db.Column(db.Text, nullable=True)
+    correct_option = db.Column(db.Integer, nullable=False)  # 1..4
+    explanation = db.Column(db.Text, nullable=True)
+    marks = db.Column(db.Integer, default=1, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class MockAttempt(db.Model):
+    """Single student attempt on a mock test with server-side deadline & tracking."""
+    __tablename__ = 'mock_attempt'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    test_id = db.Column(db.Integer, db.ForeignKey('mock_test.id'), nullable=False, index=True)
+    started_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    server_deadline = db.Column(db.DateTime, nullable=False)
+    submitted_at = db.Column(db.DateTime, nullable=True)
+    status = db.Column(db.String(30), default='in_progress', nullable=False)  # 'in_progress', 'completed', 'timed_out', 'disqualified'
+    score = db.Column(db.Integer, default=0, nullable=False)
+    total_marks = db.Column(db.Integer, default=0, nullable=False)
+    violation_count = db.Column(db.Integer, default=0, nullable=False)
+    question_order = db.Column(db.JSON, nullable=True)  # Stores student's randomized question sequence & option mapping
+
+    # Relationships
+    user = db.relationship('User', backref=db.backref('mock_attempts', lazy=True))
+    answers = db.relationship(
+        'MockAnswer',
+        backref='attempt',
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
+
+
+class MockAnswer(db.Model):
+    """Student's answer to a single question in a mock attempt."""
+    __tablename__ = 'mock_answer'
+
+    id = db.Column(db.Integer, primary_key=True)
+    attempt_id = db.Column(db.Integer, db.ForeignKey('mock_attempt.id'), nullable=False, index=True)
+    question_id = db.Column(db.Integer, db.ForeignKey('mock_question.id'), nullable=False, index=True)
+    chosen_option = db.Column(db.Integer, nullable=True)  # 1..4 in canonical question order, or None
+    marked_for_review = db.Column(db.Boolean, default=False, nullable=False)
+    time_spent = db.Column(db.Integer, default=0, nullable=False)  # seconds
+    is_correct = db.Column(db.Boolean, nullable=True)
+
+    # Relationships
+    question = db.relationship('MockQuestion', lazy=True)
+
+
+class MockViolation(db.Model):
+    """Anti-cheat discipline logs for student mock attempts."""
+    __tablename__ = 'mock_violation'
+
+    id = db.Column(db.Integer, primary_key=True)
+    attempt_id = db.Column(db.Integer, db.ForeignKey('mock_attempt.id'), nullable=False, index=True)
+    violation_type = db.Column(db.String(50), nullable=False)  # 'tab_switch', 'window_blur', 'fullscreen_exit'
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    attempt = db.relationship(
+        'MockAttempt',
+        backref=db.backref('violations', lazy=True, cascade='all, delete-orphan', order_by='MockViolation.timestamp')
+    )
+
