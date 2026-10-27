@@ -178,6 +178,30 @@ Fields: `id, code (8-char unique), creator_id, category_id, difficulty, num_ques
 ### 9. CompetitionAttempt Model
 Fields: `id, competition_id, user_id, score (%), correct_answers, total_questions, time_taken, status (in_progress/completed), started_at, completed_at, answers (JSON)`
 
+### 10. MockTest Model (Placement Mocks)
+Fields: `id, company_name, title, description, duration_minutes, is_active, allow_multiple_attempts, created_at`
+Relationships: `sections` (cascade delete), `attempts`
+
+### 11. MockSection Model
+Fields: `id, test_id, name, order, num_questions, section_minutes, created_at`
+Relationships: `test`, `questions` (cascade delete)
+
+### 12. MockQuestion Model
+Fields: `id, section_id, text, option1, option2, option3, option4, correct_option (1-4), explanation, marks, created_at`
+Relationships: `section`
+
+### 13. MockAttempt Model
+Fields: `id, user_id, test_id, started_at, server_deadline, submitted_at, status ('in_progress','completed','timed_out','disqualified'), score, total_marks, violation_count, question_order (JSON)`
+Relationships: `user`, `test`, `answers` (cascade delete), `violations` (cascade delete)
+
+### 14. MockAnswer Model
+Fields: `id, attempt_id, question_id, chosen_option (1-4 or None), marked_for_review (bool), time_spent (seconds), is_correct (bool)`
+Relationships: `attempt`, `question`
+
+### 15. MockViolation Model (Anti-Cheat Discipline)
+Fields: `id, attempt_id, violation_type ('tab_switch','window_blur','fullscreen_exit'), timestamp`
+Relationships: `attempt`
+
 ---
 
 ## All Features & Functions
@@ -282,6 +306,52 @@ Admin can view any user's performance by passing user_id param.
 
 ---
 
+### Placement Mock Test Module (/mock/) — (New)
+
+TCS NQT style real exam simulation with server-side timer, per-student question and option randomization, background autosave, and practice-mode anti-cheat discipline.
+
+| Function | Route | Description |
+|---|---|---|
+| `test_list()` | /mock/ or /mock/tests | Company-wise placement mocks list |
+| `instructions()` | /mock/test/\<id\>/instructions | Section breakdown, rules & mandatory checkbox |
+| `start_test()` | /mock/test/\<id\>/start | Shuffles questions/options, sets server deadline, begins attempt |
+| `take_test()` | /mock/attempt/\<id\> | TCS NQT exam interface with question palette & tabs |
+| `save_answer()` | /mock/attempt/\<id\>/save | AJAX autosave on every selection with server clock sync |
+| `record_violation()` | /mock/attempt/\<id\>/violation | Anti-cheat discipline event tracking (tab-switch/blur/fullscreen exit) |
+| `submit_test()` | /mock/attempt/\<id\>/submit | Final submission with zero negative marking |
+| `result()` | /mock/attempt/\<id\>/result | Scorecard, section-wise accuracy, time spent & solutions review |
+
+**Mock Test Exam Engine Highlights:**
+1. **Strict Zero Negative Marking:** Correct = +1 mark (or question weight), wrong or unattempted = 0 marks.
+2. **Server-Side Deadline:** `server_deadline = started_at + duration_minutes`. Client clock drift has no effect; auto-submits on expiration.
+3. **Deterministic Per-Student Randomization:** Randomizes questions and option sequence per candidate upon test start, persisted in `attempt.question_order` (JSON). Reopening/refreshing guarantees the exact same order.
+4. **TCS-Style Palette:** Answered (Green), Not Answered (Red), Not Visited (Grey), Marked for Review (Purple), Answered & Marked for Review (Purple + Green dot).
+5. **Begin Exam Blocking Overlay (Fullscreen Gesture Compliance):**
+   - Modern browsers block programmatic `requestFullscreen()` unless triggered by a direct user gesture (click).
+   - Exam loads with a blocking `#beginExamOverlay` concealing questions.
+   - Clicking **"Begin Exam"** requests fullscreen mode, sets `hasExamStarted = true`, and reveals the test.
+   - Unsupported devices/browsers receive a fallback notice and continue normally.
+   - Anti-cheat tracking does NOT record violations until after the candidate clicks "Begin Exam".
+6. **All Questions Mandatory Rule:**
+   - **Client-Side:** The "Submit Test" button remains disabled until every question has a chosen option (`s.chosen_option !== null`). Questions marked for review without choosing an option remain count-blocked. A dynamic badge indicates `Answer all questions (N left)`.
+   - **Server-Side:** Manual submission (`POST /mock/attempt/<id>/submit`) strictly validates that `answered_count == total_questions`. If incomplete, the submission is rejected with a flash message and redirects back to the exam.
+   - **Automatic Finalizations Unblocked:** Automatic submissions due to timer expiry (`timed_out`) and maximum violations (`disqualified`) bypass this requirement and submit immediately with partial answers.
+7. **Score Calculation on Auto-Submit:**
+   - Computed fairly from answers saved up to the moment of auto-submit: correct answers = points, unanswered = 0, no negative marking.
+   - Clear, friendly notice banners on result page: `"Auto-submitted when time ended"` and `"Auto-submitted due to 3 discipline violations"`.
+8. **Anti-Cheat Controls & Honest Limitations:**
+   - Focus loss and window blur detection via `visibilitychange` and `blur` events with a 1.2s client debounce.
+   - Server-side 1.0s debounce to eliminate duplicate reporting between simultaneous browser focus events.
+   - 3rd violation triggers instant auto-submission with `disqualified` status.
+   - Prevented text copy, cut, paste, right-click, selection, and dev shortcut keys (F12, Ctrl+Shift+I/J/C, Ctrl+C/V/X/U/S/P).
+   - Window `beforeunload` warning modal against accidental tab closure.
+   - **Honest Limitations:** Best-effort browser-level discipline proctoring for recruitment simulations. It cannot detect external physical devices (smartphones, cameras), dual monitors without window focus change, or virtual machines without a native OS background daemon.
+9. **Admin Helpers:**
+   - **Reset Attempt:** Dedicated attempts management view (`/admin/mock-tests/<test_id>/attempts`) with a confirmation modal allowing an admin to delete a student's attempt, answers, and violation logs so they can retake the test.
+   - **Multiple Attempts Toggle:** Configurable per test in the admin create/edit form (`allow_multiple_attempts`).
+
+---
+
 ### Admin Panel (/admin/)
 
 | Function | Route | Description |
@@ -303,6 +373,18 @@ Admin can view any user's performance by passing user_id param.
 | `user_progress_detail()` | /admin/user/id/progress | Single user detail analytics |
 | `admin_user_performance()` | /admin/user/id/performance | User performance dashboard |
 | `admin_profile()` | /admin/profile | Admin profile |
+| `mock_tests_list()` | /admin/mock-tests | Placement mock tests management list |
+| `mock_test_new()` | /admin/mock-tests/new | Create new company mock test |
+| `mock_test_edit()` | /admin/mock-tests/\<id\>/edit | Edit mock test metadata & attempt rules |
+| `mock_test_delete()` | /admin/mock-tests/\<id\>/delete | Delete mock test and cascade delete sections |
+| `mock_sections_manage()` | /admin/mock-tests/\<id\>/sections | Manage sections & section order/time limits |
+| `mock_questions_list()` | /admin/mock-tests/sections/\<sec_id\>/questions | View and filter questions in a section |
+| `mock_question_new()` | /admin/mock-tests/sections/\<sec_id\>/questions/new | Add single question to section |
+| `mock_question_edit()` | /admin/mock-tests/sections/\<sec_id\>/questions/\<q_id\>/edit | Edit section question |
+| `mock_question_delete()` | /admin/mock-tests/sections/\<sec_id\>/questions/\<q_id\>/delete | Delete question from section |
+| `mock_questions_bulk_add()` | /admin/mock-tests/sections/\<sec_id\>/bulk-add | Bulk add questions to mock section |
+| `mock_test_attempts()` | /admin/mock-tests/\<test_id\>/attempts | View all candidate attempts and scores |
+| `mock_attempt_reset()` | /admin/mock-attempts/\<attempt_id\>/reset | Reset candidate attempt to allow exam retake |
 
 ---
 
@@ -616,6 +698,27 @@ python main.py
 
 ## Changelog
 
+### October 27, 2026 — Part 4 (Mock Content Refinement & Production Deployment Readiness)
+| # | Change | File(s) Modified / Added |
+|---|---|---|
+| 48 | **Mock Question Refinements** — Clarified Verbal Q11/Q12 target words ('TRANSPARENT', 'FRUGAL') without bold/underline markup; replaced debatable Q15 with unambiguous preposition question ('fond of') | `scripts/seed_tcs_mock.py`, `seed_tcs_mock_supabase.sql` |
+| 49 | **Default Test Duration Adjusted** — Set default duration to 45 minutes (15 mins per section: Numerical, Verbal, Reasoning) while remaining editable via admin form | `scripts/seed_tcs_mock.py`, `seed_tcs_mock_supabase.sql` |
+| 50 | **Self-Healing Supabase Production Migration Script** — Enhanced `seed_tcs_mock_supabase.sql` with zero-attempt purge/re-insert and attempt-preservation safety guard (logs NOTICE to edit via admin without mutating existing attempts) | `seed_tcs_mock_supabase.sql`, `scripts/generate_supabase_sql.py` |
+| 51 | **Rigorous Independent Verification Suite** — Rewrote `scripts/verify_tcs_questions.py` with genuine formula derivations for all 16 computable questions and documented semantic rationales for 14 qualitative items | `scripts/verify_tcs_questions.py` |
+
+### October 26, 2026 — Part 3 (Placement Mock Test Engine: Phases A, B, C, D)
+| # | Change | File(s) Modified / Added |
+|---|---|---|
+| 39 | **Placement Mock Data Models (Phase A)** — Added `MockTest`, `MockSection`, `MockQuestion`, `MockAttempt`, `MockAnswer`, and `MockViolation` models | `app/models.py`, `phase_a_mock_test_supabase.sql` |
+| 40 | **Server-Side Exam Engine & Shuffling (Phase A)** — Server-enforced countdown deadline, deterministic per-student question and option randomization, background autosave via AJAX, zero negative marking | `app/mock/routes.py`, `app/__init__.py` |
+| 41 | **TCS NQT Style User Interface (Phase B)** — Instructions declaration gate, live color-coded question palette, section navigation tabs, mobile responsive floating palette drawer, and comprehensive post-submit result scorecard | `app/templates/mock/instructions.html`, `app/templates/mock/exam.html`, `app/templates/mock/result.html`, `app/templates/mock/tests.html` |
+| 42 | **Practice Proctoring & Anti-Cheat Controls (Phase C)** — Fullscreen enforcement, focus loss & tab-switch detection (`visibilitychange`, `blur`), client & server debounce (1.0s), 3rd violation automatic submission/disqualification | `app/mock/routes.py`, `app/templates/mock/exam.html`, `app/templates/mock/result.html` |
+| 43 | **Begin Exam User Gesture Fullscreen Compliance** — Added blocking `#beginExamOverlay` so `requestFullscreen()` is invoked strictly within a direct user click handler | `app/templates/mock/exam.html` |
+| 44 | **Mandatory Answers Enforcement** — Submit Test button disabled until all questions are answered, live remaining count badge, server-side rejection of partial manual submissions (while timer expiry and 3rd violation auto-submit cleanly) | `app/templates/mock/exam.html`, `app/mock/routes.py` |
+| 45 | **Admin Attempt Reset & Multiple Attempts Control** — Added dedicated attempt management view with confirm modal to reset/delete candidate attempts, plus per-test `allow_multiple_attempts` toggle | `app/admin/routes.py`, `app/templates/admin/mock_tests.html`, `app/templates/admin/mock_attempts.html` |
+| 46 | **Sample Mock Content: TCS NQT Style Mock** — 30 original verified questions across Numerical Ability (10), Verbal Ability (10), and Reasoning Ability (10) with explanations and verification script | `scripts/verify_tcs_questions.py`, `scripts/seed_tcs_mock.py`, `seed_tcs_mock_supabase.sql` |
+| 47 | **Comprehensive Test Suites** — 22 unit tests (`test_mock_engine.py`) and 12-check smoke test (`scripts/smoke_test_mock.py`) validating student flows, anti-cheat, secrecy, and reset attempt | `test_mock_engine.py`, `scripts/smoke_test_mock.py` |
+
 ### October 26, 2026 — Part 2 (Phase 2: Google OAuth 2.0)
 | # | Change | File(s) Modified |
 |---|---|---|
@@ -669,4 +772,4 @@ python main.py
 
 ---
 
-*Last Updated: October 26, 2026 | Auto-maintained by Antigravity IDE*
+*Last Updated: October 27, 2026 | Auto-maintained by Antigravity IDE*
