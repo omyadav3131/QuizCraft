@@ -698,6 +698,16 @@ python main.py
 
 ## Changelog
 
+### October 28, 2026 — Part 5 (PostgreSQL Timezone Compatibility & Render 500 Fix)
+| # | Change | File(s) Modified / Added |
+|---|---|---|
+| 52 | **PostgreSQL Timezone Normalization** — Added `normalize_utc()` helper to ensure all `server_deadline` comparisons and subtractions work seamlessly across offset-aware PostgreSQL timestamps and naive datetimes without raising `TypeError` | `app/mock/routes.py` |
+| 53 | **Safe Question Layout JSON Deserialization** — Added `get_sections_layout()` to safely parse JSON strings or dictionaries from `question_order` JSONB column on PostgreSQL without raising `AttributeError` | `app/mock/routes.py` |
+| 54 | **Supabase Row Level Security (RLS) Explicit Disable** — Added explicit `ALTER TABLE mock_* DISABLE ROW LEVEL SECURITY` statements to `phase_a_mock_test_supabase.sql` so backend SQLAlchemy operations are never restricted | `phase_a_mock_test_supabase.sql` |
+| 55 | **500 Error Logging** — Added `app.logger.error(..., exc_info=True)` to `@app.errorhandler(500)` so future internal server errors output the complete Python traceback to Render logs | `app/__init__.py` |
+| 56 | **Silenced Relationship SAWarning** — Added `overlaps="attempts"` to `CompetitionAttempt.competition` relationship to eliminate warning output on startup | `app/models.py` |
+| 57 | **Regression Test Suite Expansion** — Added test 23 in `test_mock_engine.py` explicitly asserting timezone-aware deadline comparisons, JSON string question layouts, and aware violation timestamps | `test_mock_engine.py` |
+
 ### October 27, 2026 — Part 4 (Mock Content Refinement & Production Deployment Readiness)
 | # | Change | File(s) Modified / Added |
 |---|---|---|

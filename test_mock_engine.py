@@ -693,7 +693,52 @@ class MockEngineTestCase(unittest.TestCase):
         self.assertIn(self.test.title, html)
         self.assertNotIn('Wipro Draft Assessment', html)
 
+    # 23. Regression: Timezone-aware server_deadline (PostgreSQL) & string question_order handling
+    def test_23_timezone_aware_and_json_string_compatibility(self):
+        from datetime import timezone
+        self.login_as(self.student1)
+        self.client.post(f'/mock/test/{self.test.id}/start')
+        attempt = MockAttempt.query.filter_by(user_id=self.student1.id, test_id=self.test.id).first()
+
+        # Simulate PostgreSQL psycopg2 timezone-aware datetime
+        attempt.server_deadline = datetime.now(timezone.utc) + timedelta(minutes=30)
+        # Simulate JSON serialized as raw string in database
+        import json
+        attempt.question_order = json.dumps(attempt.question_order)
+        db.session.commit()
+
+        # Attempt page MUST load smoothly without TypeError or AttributeError
+        resp = self.client.get(f'/mock/attempt/{attempt.id}')
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(self.test.title, resp.get_data(as_text=True))
+
+        # Autosave MUST succeed
+        q1 = self.sec1.questions[0]
+        save_resp = self.client.post(
+            f'/mock/attempt/{attempt.id}/save',
+            json={'question_id': q1.id, 'chosen_option': 1, 'time_spent': 5}
+        )
+        self.assertEqual(save_resp.status_code, 200)
+        self.assertEqual(save_resp.get_json()['status'], 'saved')
+
+        # Violation debounce with aware violation timestamp MUST succeed
+        v_aware = MockViolation(
+            attempt_id=attempt.id,
+            violation_type='tab_switch',
+            timestamp=datetime.now(timezone.utc)
+        )
+        db.session.add(v_aware)
+        db.session.commit()
+
+        viol_resp = self.client.post(
+            f'/mock/attempt/{attempt.id}/violation',
+            json={'violation_type': 'window_blur'}
+        )
+        self.assertEqual(viol_resp.status_code, 200)
+        self.assertEqual(viol_resp.get_json()['status'], 'debounced')
+
 
 if __name__ == '__main__':
     unittest.main()
+
 

@@ -149,7 +149,7 @@ class CompetitionAttempt(db.Model):
     
     # Relationships
     user = db.relationship('User', backref='competition_attempts', lazy=True)
-    competition = db.relationship('Competition', backref='user_attempts', lazy=True)
+    competition = db.relationship('Competition', backref=db.backref('user_attempts', overlaps="attempts"), lazy=True, overlaps="attempts")
 
 
 # ══════════════════════════════════════════════════════════════════

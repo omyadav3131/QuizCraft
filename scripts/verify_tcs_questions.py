@@ -17,6 +17,8 @@ from fractions import Fraction
 
 # Ensure repository root is in sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 from scripts.seed_tcs_mock import TCS_QUESTIONS_DATA
 

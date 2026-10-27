@@ -78,6 +78,7 @@ def create_app(config_class=Config):
 
     @app.errorhandler(500)
     def server_error(e):
+        app.logger.error(f"Internal Server Error 500: {e}", exc_info=True)
         return render_template('500.html'), 500
 
     return app

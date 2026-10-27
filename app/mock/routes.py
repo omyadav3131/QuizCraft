@@ -1,6 +1,7 @@
+import json
 import logging
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask import render_template, request, redirect, url_for, flash, jsonify, abort
 from flask_login import login_required, current_user
 from app import db, limiter
@@ -8,6 +9,37 @@ from app.models import MockTest, MockSection, MockQuestion, MockAttempt, MockAns
 from . import mock_bp
 
 logger = logging.getLogger(__name__)
+
+
+def normalize_utc(dt):
+    """
+    Ensure datetime is timezone-naive in UTC for consistent comparisons.
+    Works transparently across SQLite (naive) and PostgreSQL/psycopg2 (aware).
+    """
+    if dt is None:
+        return None
+    if getattr(dt, 'tzinfo', None) is not None:
+        return dt.astimezone(timezone.utc).replace(tzinfo=None)
+    return dt
+
+
+def get_sections_layout(question_order):
+    """
+    Safely extract sections layout from question_order.
+    Handles dict, JSON string, or None.
+    """
+    if not question_order:
+        return []
+    if isinstance(question_order, str):
+        try:
+            parsed = json.loads(question_order)
+            if isinstance(parsed, dict):
+                return parsed.get('sections', [])
+        except Exception:
+            return []
+    if isinstance(question_order, dict):
+        return question_order.get('sections', [])
+    return []
 
 
 def finalize_mock_attempt(attempt, status='completed'):
@@ -112,7 +144,8 @@ def instructions(test_id):
     has_active_attempt = False
     if latest_attempt:
         if latest_attempt.status == 'in_progress':
-            if datetime.utcnow() >= latest_attempt.server_deadline:
+            deadline = normalize_utc(latest_attempt.server_deadline)
+            if deadline and datetime.utcnow() >= deadline:
                 finalize_mock_attempt(latest_attempt, status='timed_out')
             else:
                 has_active_attempt = True
@@ -154,7 +187,8 @@ def start_test(test_id):
 
     if existing_attempt:
         if existing_attempt.status == 'in_progress':
-            if now >= existing_attempt.server_deadline:
+            deadline = normalize_utc(existing_attempt.server_deadline)
+            if deadline and now >= deadline:
                 finalize_mock_attempt(existing_attempt, status='timed_out')
                 flash('Your previous attempt expired and has been submitted.', 'info')
                 return redirect(url_for('mock.result', attempt_id=existing_attempt.id))
@@ -234,9 +268,10 @@ def take_test(attempt_id):
         return redirect(url_for('mock.test_list'))
 
     now = datetime.utcnow()
+    deadline = normalize_utc(attempt.server_deadline)
 
     # Check server-side deadline
-    if now >= attempt.server_deadline:
+    if deadline and now >= deadline:
         finalize_mock_attempt(attempt, status='timed_out')
         flash('Time limit expired! Your test has been submitted automatically.', 'info')
         return redirect(url_for('mock.result', attempt_id=attempt.id))
@@ -245,10 +280,10 @@ def take_test(attempt_id):
         return redirect(url_for('mock.result', attempt_id=attempt.id))
 
     # Calculate remaining time in seconds
-    seconds_remaining = max(0, int((attempt.server_deadline - now).total_seconds()))
+    seconds_remaining = max(0, int((deadline - now).total_seconds())) if deadline else 0
 
-    # Load questions based on saved question_order
-    sections_layout = attempt.question_order.get('sections', []) if attempt.question_order else []
+    # Load questions based on saved question_order safely
+    sections_layout = get_sections_layout(attempt.question_order)
 
     # Map question IDs to MockQuestion objects
     all_q_ids = []
@@ -256,7 +291,10 @@ def take_test(attempt_id):
         for q_entry in s.get('questions', []):
             all_q_ids.append(q_entry['id'])
 
-    questions_by_id = {q.id: q for q in MockQuestion.query.filter(MockQuestion.id.in_(all_q_ids)).all()}
+    if all_q_ids:
+        questions_by_id = {q.id: q for q in MockQuestion.query.filter(MockQuestion.id.in_(all_q_ids)).all()}
+    else:
+        questions_by_id = {}
 
     # Load existing saved answers
     answers_by_qid = {
@@ -292,9 +330,10 @@ def save_answer(attempt_id):
         return jsonify({'error': 'This mock test is inactive.'}), 403
 
     now = datetime.utcnow()
+    deadline = normalize_utc(attempt.server_deadline)
 
     # Check server-side deadline (with 5-second buffer for network transit)
-    if now > attempt.server_deadline + timedelta(seconds=5):
+    if deadline and now > deadline + timedelta(seconds=5):
         finalize_mock_attempt(attempt, status='timed_out')
         return jsonify({
             'status': 'expired',
@@ -356,7 +395,7 @@ def save_answer(attempt_id):
 
     db.session.commit()
 
-    remaining_seconds = max(0, int((attempt.server_deadline - now).total_seconds()))
+    remaining_seconds = max(0, int((deadline - now).total_seconds())) if deadline else 0
 
     return jsonify({
         'status': 'saved',
@@ -392,9 +431,10 @@ def record_violation(attempt_id):
         }), 200
 
     now = datetime.utcnow()
+    deadline = normalize_utc(attempt.server_deadline)
 
     # Check deadline
-    if now > attempt.server_deadline + timedelta(seconds=5):
+    if deadline and now > deadline + timedelta(seconds=5):
         finalize_mock_attempt(attempt, status='timed_out')
         return jsonify({
             'status': 'expired',
@@ -412,12 +452,14 @@ def record_violation(attempt_id):
         attempt_id=attempt.id
     ).order_by(MockViolation.timestamp.desc()).first()
 
-    if latest_v and (now - latest_v.timestamp).total_seconds() < 1.0:
-        return jsonify({
-            'status': 'debounced',
-            'violation_count': attempt.violation_count,
-            'max_violations': 3
-        }), 200
+    if latest_v:
+        v_ts = normalize_utc(latest_v.timestamp)
+        if v_ts and (now - v_ts).total_seconds() < 1.0:
+            return jsonify({
+                'status': 'debounced',
+                'violation_count': attempt.violation_count,
+                'max_violations': 3
+            }), 200
 
     # Log violation record
     violation = MockViolation(
@@ -471,7 +513,8 @@ def submit_test(attempt_id):
         return redirect(url_for('mock.result', attempt_id=attempt.id))
 
     status = 'completed'
-    if datetime.utcnow() >= attempt.server_deadline + timedelta(seconds=5):
+    deadline = normalize_utc(attempt.server_deadline)
+    if deadline and datetime.utcnow() >= deadline + timedelta(seconds=5):
         status = 'timed_out'
 
     # Rule: All questions are mandatory for manual submission.

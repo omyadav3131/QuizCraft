@@ -90,3 +90,11 @@ CREATE TABLE IF NOT EXISTS mock_violation (
 );
 
 CREATE INDEX IF NOT EXISTS idx_mock_violation_attempt ON mock_violation(attempt_id);
+
+-- Explicitly disable Row Level Security for backend-managed application tables
+ALTER TABLE mock_test DISABLE ROW LEVEL SECURITY;
+ALTER TABLE mock_section DISABLE ROW LEVEL SECURITY;
+ALTER TABLE mock_question DISABLE ROW LEVEL SECURITY;
+ALTER TABLE mock_attempt DISABLE ROW LEVEL SECURITY;
+ALTER TABLE mock_answer DISABLE ROW LEVEL SECURITY;
+ALTER TABLE mock_violation DISABLE ROW LEVEL SECURITY;
