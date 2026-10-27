@@ -45,11 +45,13 @@ def create_app(config_class=Config):
     from app.admin import admin_bp
     from app.quiz import quiz_bp
     from app.competition import competition_bp
+    from app.mock import mock_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(quiz_bp, url_prefix='/quiz')
     app.register_blueprint(competition_bp, url_prefix='/competition')
+    app.register_blueprint(mock_bp, url_prefix='/mock')
 
     # Public routes
     from flask import render_template

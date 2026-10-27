@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ test.title }} — Placement Mock Test</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --primary-navy: #0f172a;
+            --accent-blue: #2563eb;
+            --color-answered: #16a34a;
+            --color-unanswered: #dc2626;
+            --color-review: #9333ea;
+            --color-unvisited: #e2e8f0;
+            --text-main: #1e293b;
+        }
+        body {
+            background-color: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            -moz-user-select: none;
+        }
+        /* Sticky Top Navigation Bar */
+        .exam-header {
+            background: #ffffff;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 10px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+        .timer-box {
+            background: #0f172a;
+            color: #ffffff;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 1.35rem;
+            font-weight: 700;
+            padding: 6px 16px;
+            border-radius: 8px;
+            letter-spacing: 1.5px;
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #334155;
+        }
+        .timer-warning {
+            background: #dc2626 !important;
+            border-color: #b91c1c !important;
+            animation: pulseTimer 1s infinite alternate;
+        }
+        @keyframes pulseTimer {
+            from { transform: scale(1); opacity: 1; }
+            to { transform: scale(1.03); opacity: 0.85; }
+        }
+        /* Section Navigation Tabs */
+        .section-tabs-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #f1f5f9;
+        }
+        .section-tab-btn {
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            font-size: 0.88rem;
+            padding: 7px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+        .section-tab-btn:hover {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+        .section-tab-btn.active {
+            background: var(--accent-blue);
+            color: #ffffff;
+            border-color: var(--accent-blue);
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+        }
+        .section-tab-btn .sec-badge {
+            background: rgba(0,0,0,0.08);
+            font-size: 0.75rem;
+            padding: 2px 7px;
+            border-radius: 10px;
+            margin-left: 8px;
+            font-weight: 700;
+        }
+        .section-tab-btn.active .sec-badge {
+            background: rgba(255,255,255,0.25);
+            color: #ffffff;
+        }
+        /* Main Layout Cards */
+        .question-card {
+            background: #ffffff;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            min-height: calc(100vh - 195px);
+            display: flex;
+            flex-direction: column;
+        }
+        .palette-card {
+            background: #ffffff;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 110px;
+        }
+        /* TCS NQT Question Palette Number Badges */
+        .q-number-btn {
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            border-radius: 8px;
+            margin: 5px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-block;
+            transition: transform 0.15s, box-shadow 0.15s;
+            position: relative;
+            user-select: none;
+        }
+        .q-number-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.12);
+        }
+        .q-number-btn.active {
+            box-shadow: 0 0 0 3px #2563eb, 0 3px 8px rgba(0,0,0,0.18) !important;
+            transform: scale(1.08);
+            z-index: 2;
+        }
+        .q-answered {
+            background: var(--color-answered);
+            color: #ffffff;
+        }
+        .q-unanswered {
+            background: var(--color-unanswered);
+            color: #ffffff;
+        }
+        .q-review {
+            background: var(--color-review);
+            color: #ffffff;
+            border-radius: 50% !important;
+        }
+        .q-review-answered {
+            background: var(--color-review);
+            color: #ffffff;
+            border-radius: 50% !important;
+        }
+        .q-review-answered::after {
+            content: "";
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            background: #22c55e;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+        }
+        .q-unvisited {
+            background: var(--color-unvisited);
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+        /* Legend Box */
+        .legend-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            background: #f8fafc;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #f1f5f9;
+        }
+        .legend-badge {
+            width: 22px;
+            height: 22px;
+            line-height: 22px;
+            text-align: center;
+            font-size: 0.72rem;
+            font-weight: 700;
+            border-radius: 4px;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+        /* Options Display */
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 14px 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            background: #ffffff;
+            margin-bottom: 12px;
+        }
+        .option-label:hover {
+            border-color: #93c5fd;
+            background: #f8faff;
+        }
+        .option-label.selected {
+            border-color: var(--accent-blue);
+            background: #eff6ff;
+            font-weight: 600;
+            box-shadow: 0 1px 4px rgba(37, 99, 235, 0.1);
+        }
+        .option-letter {
+            width: 34px;
+            height: 34px;
+            line-height: 34px;
+            text-align: center;
+            border-radius: 50%;
+            background: #f1f5f9;
+            color: #475569;
+            font-weight: 700;
+            margin-right: 14px;
+            flex-shrink: 0;
+            border: 1px solid #cbd5e1;
+            transition: all 0.15s;
+        }
+        .option-label.selected .option-letter {
+            background: var(--accent-blue);
+            color: #ffffff;
+            border-color: var(--accent-blue);
+        }
+        /* Mobile Floating Palette Button */
+        .mobile-palette-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1040;
+            border-radius: 30px;
+            font-weight: 700;
+            padding: 10px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }
+        /* Fullscreen Overlay Backdrop */
+        #fullscreenOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.97);
+            z-index: 999999;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Begin Exam Blocking Overlay (Fix for Browser Fullscreen gesture requirement) -->
+    <div id="beginExamOverlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0f172a; z-index: 9999999; display: flex; justify-content: center; align-items: center; padding: 20px;">
+        <div class="card p-4 p-md-5 shadow-lg text-dark border-0 text-center" style="max-width: 540px; border-radius: 16px; background: #ffffff;">
+            <div class="mb-3 text-primary" style="font-size: 3.2rem;">
+                <i class="fas fa-desktop"></i>
+            </div>
+            <h3 class="font-weight-bold mb-2 text-dark">{{ test.title }}</h3>
+            <div class="mb-3">
+                <span class="badge badge-primary px-3 py-1 text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">
+                    {{ test.company_name }} Placement Mock Portal
+                </span>
+            </div>
+            <p class="text-muted mb-4" style="line-height: 1.6;">
+                Click <strong>"Begin Exam"</strong> below to enter fullscreen mode and start your assessment. Questions will be revealed and focus discipline monitoring will activate upon entering.
+            </p>
+            <div class="alert alert-warning py-2 px-3 small font-weight-bold text-left mb-4" style="border-radius: 8px;">
+                <i class="fas fa-exclamation-triangle mr-1"></i> Exam Rules:
+                <ul class="mb-0 pl-3 mt-1 font-weight-normal">
+                    <li><strong>All questions are mandatory:</strong> Submit is disabled until every question is answered.</li>
+                    <li><strong>Discipline:</strong> Tab switches or exiting fullscreen trigger warnings (3rd = auto-submit).</li>
+                    <li><strong>No Negative Marking:</strong> Unanswered or incorrect = 0 marks.</li>
+                </ul>
+            </div>
+            <button type="button" class="btn btn-success btn-lg font-weight-bold px-5 py-3 shadow" id="beginExamBtn" style="font-size: 1.15rem; border-radius: 10px;">
+                <i class="fas fa-play-circle mr-2"></i> Begin Exam
+            </button>
+            <div id="beginUnsupportedNotice" class="text-muted small mt-3" style="display: none;">
+                <i class="fas fa-info-circle mr-1"></i> Fullscreen is not supported on this browser; exam will open in standard view.
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Blocking Overlay (Phase C) -->
+    <div id="fullscreenOverlay">
+        <div class="card p-4 shadow-lg text-dark border-0 text-center" style="max-width: 520px; border-radius: 14px; background: #ffffff;">
+            <div class="text-danger mb-3" style="font-size: 3.2rem;">
+                <i class="fas fa-compress-arrows-alt"></i>
+            </div>
+            <h4 class="font-weight-bold mb-2">Fullscreen Mode Required</h4>
+            <p class="text-muted mb-4" style="line-height: 1.6;">
+                You have exited fullscreen mode. Practice mode discipline requires full-screen operation to prevent window distractions. Please click below to return to fullscreen and resume.
+            </p>
+            <button type="button" class="btn btn-primary btn-lg font-weight-bold px-4 shadow" id="resumeFullscreenBtn">
+                <i class="fas fa-expand mr-2"></i> Return to Fullscreen Mode
+            </button>
+        </div>
+    </div>
+
+    <!-- Header bar -->
+    <header class="exam-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div class="d-flex align-items-center mb-1 mb-md-0">
+                <i class="fas fa-graduation-cap text-primary mr-2" style="font-size: 1.6rem;"></i>
+                <div>
+                    <h5 class="font-weight-bold mb-0 text-dark">{{ test.title }}</h5>
+                    <span class="badge badge-primary px-2 py-0 text-uppercase font-weight-bold" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                        {{ test.company_name }} Placement Mock Portal
+                    </span>
+                    <span class="badge badge-warning px-2 py-0 ml-1 text-dark font-weight-bold" style="font-size: 0.72rem;">
+                        <i class="fas fa-shield-alt mr-1"></i> Practice Discipline Monitored
+                    </span>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center">
+                <div class="mr-3 text-right d-none d-sm-block">
+                    <span class="small text-muted font-weight-bold">Time Remaining:</span>
+                </div>
+                <div class="timer-box" id="timerDisplay">
+                    <i class="far fa-clock mr-2 text-warning"></i> <span id="timeString">--:--</span>
+                </div>
+                <button type="button" class="btn btn-secondary font-weight-bold ml-3 px-3 py-2 shadow-sm" id="submitExamBtn" data-toggle="modal" data-target="#submitModal" disabled>
+                    <i class="fas fa-lock mr-1"></i> <span id="submitBtnText">Submit Test</span>
+                </button>
+                <span class="badge badge-warning text-dark ml-2 d-none d-md-inline-block py-2 px-2" id="unansweredBadge" style="font-size: 0.82rem;">
+                    Checking questions...
+                </span>
+            </div>
+        </div>
+
+        <!-- Section Navigation Tabs -->
+        <div class="section-tabs-container mt-2" id="sectionTabs">
+            {% for sec in sections_layout %}
+            <button class="section-tab-btn {% if loop.first %}active{% endif %}" data-section-idx="{{ loop.index0 }}">
+                {{ sec.name }}
+                <span class="sec-badge" id="secBadge_{{ loop.index0 }}">0/{{ sec.questions|length }}</span>
+            </button>
+            {% endfor %}
+        </div>
+    </header>
+
+    <!-- Flash Messages (e.g. Mandatory submission rejection alert) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="container-fluid px-md-4 pt-2">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show shadow-sm mb-2" role="alert">
+              <i class="fas fa-exclamation-circle mr-1"></i> {{ message }}
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Unsupported Fullscreen Banner (Phase C) -->
+    <div id="unsupportedFsBanner" class="alert alert-info border-0 rounded-0 mb-0 py-2 px-3 text-center small font-weight-bold" style="display: none;">
+        <i class="fas fa-info-circle mr-1"></i> Note: Fullscreen mode is not supported on this browser or mobile device. For the full proctored experience, please use a desktop, laptop, or Android Chrome.
+    </div>
+
+    <!-- Main Exam Container -->
+    <main class="container-fluid py-3 px-md-4">
+        <div class="row">
+            <!-- Left Column: Question Area -->
+            <div class="col-lg-8 col-xl-9 mb-3">
+                <div class="question-card p-4">
+                    <div class="d-flex justify-content-between align-items-center pb-3 border-bottom mb-3 flex-wrap">
+                        <div class="d-flex align-items-center mb-1 mb-sm-0">
+                            <span class="badge badge-light border text-primary font-weight-bold px-2 py-1 mr-2" id="currentSectionNameBadge">Section</span>
+                            <h5 class="font-weight-bold text-dark mb-0">
+                                Question <span id="displayQNum">1</span>
+                            </h5>
+                        </div>
+                        <div class="text-muted small">
+                            <span class="badge badge-pill badge-light border px-2 py-1">Marks: <span id="qMarks">1</span></span>
+                            <span class="badge badge-pill badge-light border px-2 py-1 ml-1 text-success font-weight-bold">0 Negative Marking</span>
+                        </div>
+                    </div>
+
+                    <!-- Question Content -->
+                    <div class="question-body flex-grow-1">
+                        <div class="question-statement mb-4" id="questionText" style="font-size: 1.15rem; line-height: 1.7; color: #0f172a;">
+                            Loading question...
+                        </div>
+
+                        <div class="options-container" id="optionsContainer">
+                            <!-- Options injected dynamically by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons Toolbar -->
+                    <div class="exam-actions pt-3 border-top d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="mb-2 mb-sm-0">
+                            <button type="button" class="btn btn-outline-secondary px-3 mr-2" id="prevBtn">
+                                <i class="fas fa-chevron-left mr-1"></i> Previous
+                            </button>
+                            <button type="button" class="btn btn-outline-danger px-3 mr-2" id="clearBtn">
+                                <i class="fas fa-eraser mr-1"></i> Clear Response
+                            </button>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-warning px-3 mr-2 text-dark font-weight-bold shadow-sm" id="markReviewBtn">
+                                <i class="fas fa-bookmark mr-1"></i> Mark for Review & Next
+                            </button>
+                            <button type="button" class="btn btn-success px-4 font-weight-bold shadow-sm" id="saveNextBtn">
+                                Save & Next <i class="fas fa-chevron-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Question Palette & Student Info (Desktop) -->
+            <div class="col-lg-4 col-xl-3 d-none d-lg-block">
+                <div class="palette-card p-3">
+                    <div class="d-flex align-items-center pb-2 border-bottom mb-3">
+                        <div style="width: 42px; height: 42px; line-height: 42px; border-radius: 50%; background: #2563eb; text-align: center; font-size: 1.2rem; font-weight: 700; color: #ffffff; margin-right: 12px; box-shadow: 0 2px 4px rgba(37,99,235,0.3);">
+                            {{ current_user.username[0]|upper }}
+                        </div>
+                        <div class="overflow-hidden">
+                            <strong class="text-dark text-truncate d-block">{{ current_user.username }}</strong>
+                            <div class="small text-muted text-truncate">{{ current_user.email or 'Student' }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Real-Time Legend with Dynamic Counts -->
+                    <div class="palette-legend pb-3 border-bottom mb-3">
+                        <div class="legend-grid">
+                            <div class="legend-item">
+                                <span class="legend-badge q-answered">✓</span>
+                                <div>Answered (<strong id="countAnswered">0</strong>)</div>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-badge q-unanswered">✕</span>
+                                <div>Not Ans (<strong id="countUnanswered">0</strong>)</div>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-badge q-review">●</span>
+                                <div>Review (<strong id="countReview">0</strong>)</div>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-badge q-unvisited">-</span>
+                                <div>Not Visited (<strong id="countUnvisited">0</strong>)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Question Numbers Grid for Active Section -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="font-weight-bold text-dark mb-0" id="paletteSectionTitle">Section Questions</h6>
+                        <span class="badge badge-light border" id="paletteSectionCount">0 Questions</span>
+                    </div>
+                    <div class="palette-grid text-left" id="paletteGrid" style="max-height: calc(100vh - 460px); overflow-y: auto;">
+                        <!-- Number buttons injected dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Mobile Floating Palette Button -->
+    <button type="button" class="btn btn-primary d-lg-none mobile-palette-btn shadow" data-toggle="modal" data-target="#mobilePaletteModal">
+        <i class="fas fa-th mr-1"></i> Question Palette (<span id="mobAnsweredCount">0</span>/<span id="mobTotalCount">0</span>)
+    </button>
+
+    <!-- Mobile Question Palette Modal -->
+    <div class="modal fade" id="mobilePaletteModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable" role="document">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-light">
+                    <h6 class="modal-title font-weight-bold text-dark">
+                        <i class="fas fa-th text-primary mr-2"></i> Question Palette Navigation
+                    </h6>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-3">
+                    <div class="legend-grid mb-3">
+                        <div class="legend-item">
+                            <span class="legend-badge q-answered">✓</span>
+                            <div>Answered (<strong id="mobCountAnswered">0</strong>)</div>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-badge q-unanswered">✕</span>
+                            <div>Not Ans (<strong id="mobCountUnanswered">0</strong>)</div>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-badge q-review">●</span>
+                            <div>Review (<strong id="mobCountReview">0</strong>)</div>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-badge q-unvisited">-</span>
+                            <div>Not Visited (<strong id="mobCountUnvisited">0</strong>)</div>
+                        </div>
+                    </div>
+                    <h6 class="font-weight-bold mb-2 text-dark" id="mobPaletteSectionTitle">Section Questions</h6>
+                    <div id="mobPaletteGrid" class="text-left">
+                        <!-- Cloned numbers for mobile -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Final Submit Confirmation Modal -->
+    <div class="modal fade" id="submitModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+                <div class="modal-header bg-primary text-white border-0">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-check-double mr-2"></i> Confirm Assessment Submission
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted mb-3">
+                        Are you sure you want to end and submit your assessment? Once submitted, your answers cannot be altered.
+                    </p>
+                    <div class="card bg-light border p-3 mb-3" style="border-radius: 8px;">
+                        <h6 class="font-weight-bold text-dark border-bottom pb-2 mb-2">Test Summary</h6>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Total Questions:</span>
+                            <strong class="text-dark" id="modalTotalCount">0</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Answered:</span>
+                            <strong class="text-success" id="modalAnsweredCount">0</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Marked for Review:</span>
+                            <strong class="text-warning" id="modalReviewCount">0</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Unanswered / Not Visited:</span>
+                            <strong class="text-danger" id="modalUnansweredCount">0</strong>
+                        </div>
+                    </div>
+                    <div id="modalUnansweredAlert" class="alert alert-danger py-2 px-3 small font-weight-bold mb-0" style="display: none;">
+                        <i class="fas fa-exclamation-circle mr-1"></i> All questions are mandatory. You have <span id="modalUnansweredCountWarn">0</span> question(s) left to answer before you can submit.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0 bg-light">
+                    <button type="button" class="btn btn-outline-secondary font-weight-bold" data-dismiss="modal">
+                        Resume Assessment
+                    </button>
+                    <form action="{{ url_for('mock.submit_test', attempt_id=attempt.id) }}" method="POST" id="finalSubmitForm">
+                        <button type="submit" class="btn btn-danger font-weight-bold px-4 shadow-sm" id="modalConfirmSubmitBtn">
+                            <i class="fas fa-check-circle mr-1"></i> Yes, Submit Test
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anti-Cheat Violation Warning Modal (Phase C) -->
+    <div class="modal fade" id="violationWarningModal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+                <div class="modal-header bg-warning text-dark border-0">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-exclamation-triangle mr-2"></i> Discipline Warning (<span id="warnModalCurrent">1</span> of 3)
+                    </h5>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div class="text-warning mb-3" style="font-size: 2.8rem;">
+                        <i class="fas fa-eye-slash"></i>
+                    </div>
+                    <h5 class="font-weight-bold text-dark mb-2">Focus Loss / Tab Switch Detected</h5>
+                    <p class="text-muted mb-3" id="warnModalMsg">
+                        You navigated away from the exam window or minimized the screen. This assessment simulates real hiring test discipline and must be completed with continuous focus.
+                    </p>
+                    <div class="alert alert-danger py-2 px-3 small font-weight-bold mb-0">
+                        <i class="fas fa-shield-alt mr-1"></i> Critical: On the 3rd warning, your test will be automatically submitted!
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-light justify-content-center">
+                    <button type="button" class="btn btn-primary font-weight-bold px-4 shadow-sm" data-dismiss="modal" id="ackWarningBtn">
+                        I Understand & Resume Assessment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anti-Cheat Disqualified Modal (3rd Violation Auto-Submit) -->
+    <div class="modal fade" id="disqualifiedModal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+                <div class="modal-header bg-danger text-white border-0">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-ban mr-2"></i> Assessment Auto-Submitted
+                    </h5>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div class="text-danger mb-3" style="font-size: 3rem;">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <h5 class="font-weight-bold text-dark mb-2">3 of 3 Warnings Exceeded</h5>
+                    <p class="text-muted mb-3">
+                        You have exceeded the maximum allowed tab switch and window blur warnings. In accordance with exam rules, your assessment has been automatically submitted.
+                    </p>
+                    <a href="#" id="viewResultsBtn" class="btn btn-danger font-weight-bold px-4 shadow">
+                        View Assessment Scorecard <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap & jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Exam Engine & Anti-Cheat Script (Phase B & C) -->
+    <script>
+    (function() {
+        // Raw Data from Backend
+        const attemptId = {{ attempt.id }};
+        const saveUrl = "{{ url_for('mock.save_answer', attempt_id=attempt.id) }}";
+        const violationUrl = "{{ url_for('mock.record_violation', attempt_id=attempt.id) }}";
+        let secondsRemaining = {{ seconds_remaining }};
+        let isSubmitting = false;
+        let hasExamStarted = false;
+
+        // Shuffled Sections Layout from Attempt
+        const sectionsData = {{ sections_layout|tojson }};
+
+        // All Questions Map from Backend (strictly text and options only, zero secrets)
+        const questionsMap = {
+            {% for q_id, q in questions_by_id.items() %}
+            {{ q_id }}: {
+                id: {{ q.id }},
+                text: {{ q.text|tojson }},
+                option1: {{ q.option1|tojson }},
+                option2: {{ q.option2|tojson }},
+                option3: {{ q.option3|tojson }},
+                option4: {{ q.option4|tojson }},
+                marks: {{ q.marks or 1 }}
+            },
+            {% endfor %}
+        };
+
+        // Existing Saved Answers State
+        const answersState = {
+            {% for q_id, ans in answers_by_qid.items() %}
+            {{ q_id }}: {
+                chosen_option: {{ ans.chosen_option if ans.chosen_option is not none else 'null' }},
+                marked_for_review: {{ 'true' if ans.marked_for_review else 'false' }},
+                time_spent: {{ ans.time_spent or 0 }},
+                visited: true
+            },
+            {% endfor %}
+        };
+
+        // Flatten all question IDs in sequence
+        let allQuestionsList = [];
+        sectionsData.forEach((sec, sIdx) => {
+            sec.questions.forEach((qEntry) => {
+                allQuestionsList.push({
+                    sectionIdx: sIdx,
+                    sectionName: sec.name,
+                    questionId: qEntry.id,
+                    optionOrder: qEntry.option_order || [1, 2, 3, 4]
+                });
+                if (!answersState[qEntry.id]) {
+                    answersState[qEntry.id] = {
+                        chosen_option: null,
+                        marked_for_review: false,
+                        time_spent: 0,
+                        visited: false
+                    };
+                }
+            });
+        });
+
+        let currentGlobalIndex = 0;
+        let questionStartTime = Date.now();
+
+        // ──────────────────────────────────────────────────────────────────────
+        // PHASE C: Anti-Cheat Controls (Best Effort & Practice Mode Discipline)
+        // ──────────────────────────────────────────────────────────────────────
+
+        // 1. Disable Copy, Cut, Paste, Right-Click, and Key Shortcuts on Exam Page
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        document.addEventListener('copy', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        document.addEventListener('cut', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        document.addEventListener('paste', function(e) {
+            e.preventDefault();
+            return false;
+        });
+
+        document.addEventListener('keydown', function(e) {
+            // Disable F12
+            if (e.key === 'F12' || e.keyCode === 123) {
+                e.preventDefault();
+                return false;
+            }
+            // Disable Ctrl/Cmd combinations
+            if (e.ctrlKey || e.metaKey) {
+                const key = e.key ? e.key.toLowerCase() : '';
+                // Block Ctrl+C (copy), Ctrl+V (paste), Ctrl+X (cut), Ctrl+U (view source), Ctrl+S (save), Ctrl+P (print)
+                if (['c', 'v', 'x', 'u', 's', 'p'].includes(key)) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Block Ctrl+Shift+I, J, C (Inspect / DevTools)
+                if (e.shiftKey && ['i', 'j', 'c'].includes(key)) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
+
+        // 2. Prevent Accidental Page Leave (beforeunload)
+        window.addEventListener('beforeunload', function(e) {
+            if (!isSubmitting) {
+                e.preventDefault();
+                e.returnValue = 'Are you sure you want to exit the exam? Your progress may be disrupted.';
+                return e.returnValue;
+            }
+        });
+
+        document.getElementById('finalSubmitForm').addEventListener('submit', function() {
+            isSubmitting = true;
+        });
+
+        // 3. Fullscreen Management & Blocking Overlay
+        const overlay = document.getElementById('fullscreenOverlay');
+        const resumeFsBtn = document.getElementById('resumeFullscreenBtn');
+        const unsupportedBanner = document.getElementById('unsupportedFsBanner');
+
+        const isFullscreenSupported = !!(
+            document.fullscreenEnabled ||
+            document.webkitFullscreenEnabled ||
+            document.mozFullScreenEnabled ||
+            document.msFullscreenEnabled
+        );
+
+        if (!isFullscreenSupported) {
+            unsupportedBanner.style.display = 'block';
+        }
+
+        function isFullscreenActive() {
+            return !!(
+                document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.mozFullScreenElement ||
+                document.msFullscreenElement
+            );
+        }
+
+        function requestFullscreenMode() {
+            if (!isFullscreenSupported) return;
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(() => {});
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+        }
+
+        function onFullscreenChange() {
+            if (!isFullscreenSupported || !hasExamStarted) return;
+            if (!isFullscreenActive()) {
+                if (!isSubmitting) {
+                    overlay.style.display = 'flex';
+                    sendViolationToServer('fullscreen_exit');
+                }
+            } else {
+                overlay.style.display = 'none';
+            }
+        }
+
+        document.addEventListener('fullscreenchange', onFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+
+        resumeFsBtn.addEventListener('click', function() {
+            requestFullscreenMode();
+        });
+
+        // Begin Exam Button: Request Fullscreen on explicit user click & reveal exam
+        const beginOverlay = document.getElementById('beginExamOverlay');
+        const beginExamBtn = document.getElementById('beginExamBtn');
+        const beginUnsupportedNotice = document.getElementById('beginUnsupportedNotice');
+
+        if (!isFullscreenSupported && beginUnsupportedNotice) {
+            beginUnsupportedNotice.style.display = 'block';
+        }
+
+        if (beginExamBtn) {
+            beginExamBtn.addEventListener('click', function() {
+                if (isFullscreenSupported) {
+                    requestFullscreenMode();
+                }
+                hasExamStarted = true;
+                if (beginOverlay) {
+                    beginOverlay.style.opacity = '0';
+                    beginOverlay.style.transition = 'opacity 0.25s ease';
+                    setTimeout(() => {
+                        beginOverlay.style.display = 'none';
+                    }, 250);
+                }
+            });
+        }
+
+        // 4. Tab Switch & Window Blur Detection
+        let lastViolationSentAt = 0;
+
+        function sendViolationToServer(vType) {
+            if (!hasExamStarted || isSubmitting) return;
+
+            const now = Date.now();
+            // Client-side debounce: 1.2 seconds to prevent double firing between blur and visibilitychange
+            if (now - lastViolationSentAt < 1200) {
+                return;
+            }
+            lastViolationSentAt = now;
+
+            fetch(violationUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ violation_type: vType })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'debounced') return;
+
+                if (data.status === 'disqualified') {
+                    isSubmitting = true;
+                    $('#violationWarningModal').modal('hide');
+                    document.getElementById('viewResultsBtn').href = data.redirect_url;
+                    $('#disqualifiedModal').modal('show');
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 2500);
+                } else if (data.status === 'warning') {
+                    document.getElementById('warnModalCurrent').innerText = data.violation_count;
+                    if (data.message) {
+                        document.getElementById('warnModalMsg').innerText = data.message;
+                    }
+                    $('#violationWarningModal').modal('show');
+                }
+            })
+            .catch(err => console.error("Violation reporting issue:", err));
+        }
+
+        document.addEventListener('visibilitychange', function() {
+            if (hasExamStarted && document.hidden && !isSubmitting) {
+                sendViolationToServer('tab_switch');
+            }
+        });
+
+        window.addEventListener('blur', function() {
+            if (hasExamStarted && !isSubmitting) {
+                sendViolationToServer('window_blur');
+            }
+        });
+
+        // ──────────────────────────────────────────────────────────────────────
+        // Server-Synced Countdown Timer
+        // ──────────────────────────────────────────────────────────────────────
+        const timeStringEl = document.getElementById('timeString');
+        const timerBoxEl = document.getElementById('timerDisplay');
+
+        function updateTimerDisplay() {
+            if (secondsRemaining <= 0) {
+                timeStringEl.innerText = "00:00";
+                autoSubmitExam();
+                return;
+            }
+            const hours = Math.floor(secondsRemaining / 3600);
+            const mins = Math.floor((secondsRemaining % 3600) / 60);
+            const secs = secondsRemaining % 60;
+
+            if (hours > 0) {
+                timeStringEl.innerText = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            } else {
+                timeStringEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            if (secondsRemaining <= 300) {
+                timerBoxEl.classList.add('timer-warning');
+            } else {
+                timerBoxEl.classList.remove('timer-warning');
+            }
+        }
+
+        const timerInterval = setInterval(() => {
+            secondsRemaining--;
+            updateTimerDisplay();
+        }, 1000);
+        updateTimerDisplay();
+
+        function autoSubmitExam() {
+            clearInterval(timerInterval);
+            isSubmitting = true;
+            alert("Examination time has elapsed! Your test is being automatically submitted.");
+            document.getElementById('finalSubmitForm').submit();
+        }
+
+        // ──────────────────────────────────────────────────────────────────────
+        // Question Navigation & Rendering
+        // ──────────────────────────────────────────────────────────────────────
+        function loadQuestion(index) {
+            if (index < 0 || index >= allQuestionsList.length) return;
+
+            // Track time spent on previous question
+            const prevQ = allQuestionsList[currentGlobalIndex];
+            if (prevQ && answersState[prevQ.questionId]) {
+                const elapsed = Math.round((Date.now() - questionStartTime) / 1000);
+                if (elapsed > 0) {
+                    answersState[prevQ.questionId].time_spent += elapsed;
+                }
+            }
+            questionStartTime = Date.now();
+
+            currentGlobalIndex = index;
+            const qMeta = allQuestionsList[currentGlobalIndex];
+            const q = questionsMap[qMeta.questionId];
+            const state = answersState[qMeta.questionId];
+
+            state.visited = true;
+
+            // Update Header & Question Info
+            document.getElementById('displayQNum').innerText = `${currentGlobalIndex + 1} of ${allQuestionsList.length}`;
+            document.getElementById('currentSectionNameBadge').innerText = qMeta.sectionName;
+            document.getElementById('qMarks').innerText = q.marks;
+            document.getElementById('questionText').innerText = q.text;
+
+            // Highlight Active Section Tab
+            document.querySelectorAll('.section-tab-btn').forEach((btn, sIdx) => {
+                btn.classList.toggle('active', sIdx === qMeta.sectionIdx);
+            });
+            document.getElementById('paletteSectionTitle').innerText = qMeta.sectionName;
+            const mobSecTitle = document.getElementById('mobPaletteSectionTitle');
+            if (mobSecTitle) mobSecTitle.innerText = qMeta.sectionName;
+
+            // Render Options in Shuffled Order
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            const letterMap = ['A', 'B', 'C', 'D'];
+
+            qMeta.optionOrder.forEach((canonicalOptNum, dispIdx) => {
+                const optText = q['option' + canonicalOptNum];
+                if (!optText) return;
+
+                const isSelected = (state.chosen_option === canonicalOptNum);
+                const optLabel = document.createElement('label');
+                optLabel.className = 'option-label' + (isSelected ? ' selected' : '');
+                optLabel.innerHTML = `
+                    <div class="option-letter">${letterMap[dispIdx]}</div>
+                    <div class="flex-grow-1">${optText}</div>
+                    <input type="radio" name="exam_option" value="${canonicalOptNum}" class="d-none" ${isSelected ? 'checked' : ''}>
+                `;
+
+                optLabel.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelectorAll('.option-label').forEach(el => el.classList.remove('selected'));
+                    optLabel.classList.add('selected');
+                    state.chosen_option = canonicalOptNum;
+                    saveAnswerToServer(qMeta.questionId);
+                    updatePalette();
+                });
+
+                optionsContainer.appendChild(optLabel);
+            });
+
+            // Update Prev Button State
+            document.getElementById('prevBtn').disabled = (currentGlobalIndex === 0);
+
+            updatePalette();
+        }
+
+        // Autosave AJAX Call to Server
+        function saveAnswerToServer(qId, callback) {
+            const state = answersState[qId];
+            const timeDelta = Math.round((Date.now() - questionStartTime) / 1000);
+            questionStartTime = Date.now();
+
+            fetch(saveUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    question_id: qId,
+                    chosen_option: state.chosen_option,
+                    marked_for_review: state.marked_for_review,
+                    time_spent: Math.max(1, timeDelta)
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'expired') {
+                    isSubmitting = true;
+                    alert(data.message || 'Time limit expired!');
+                    window.location.href = data.redirect_url;
+                    return;
+                }
+                // Resync remaining seconds with server clock
+                if (typeof data.seconds_remaining === 'number') {
+                    secondsRemaining = data.seconds_remaining;
+                    updateTimerDisplay();
+                }
+                if (typeof callback === 'function') callback();
+            })
+            .catch(err => {
+                console.error("Autosave issue:", err);
+                if (typeof callback === 'function') callback();
+            });
+        }
+
+        // Update Question Palette Grid and Counters
+        function updatePalette() {
+            const currentQMeta = allQuestionsList[currentGlobalIndex];
+            const currentSecIdx = currentQMeta.sectionIdx;
+            const grid = document.getElementById('paletteGrid');
+            const mobGrid = document.getElementById('mobPaletteGrid');
+            grid.innerHTML = '';
+            if (mobGrid) mobGrid.innerHTML = '';
+
+            let cAnswered = 0;
+            let cUnanswered = 0;
+            let cReview = 0;
+            let cUnvisited = 0;
+
+            const secAnsweredCounts = {};
+            sectionsData.forEach((_, idx) => { secAnsweredCounts[idx] = 0; });
+
+            let currentSecQCount = 0;
+
+            allQuestionsList.forEach((qEntry, gIdx) => {
+                const s = answersState[qEntry.questionId];
+                let statusClass = 'q-unvisited';
+
+                if (s.chosen_option !== null && s.marked_for_review) {
+                    statusClass = 'q-review-answered';
+                    cReview++;
+                    cAnswered++;
+                    secAnsweredCounts[qEntry.sectionIdx]++;
+                } else if (s.marked_for_review) {
+                    statusClass = 'q-review';
+                    cReview++;
+                } else if (s.chosen_option !== null) {
+                    statusClass = 'q-answered';
+                    cAnswered++;
+                    secAnsweredCounts[qEntry.sectionIdx]++;
+                } else if (s.visited) {
+                    statusClass = 'q-unanswered';
+                    cUnanswered++;
+                } else {
+                    cUnvisited++;
+                }
+
+                // Append buttons for questions belonging to the active section
+                if (qEntry.sectionIdx === currentSecIdx) {
+                    currentSecQCount++;
+                    const btn = document.createElement('div');
+                    btn.className = `q-number-btn ${statusClass}` + (gIdx === currentGlobalIndex ? ' active' : '');
+                    btn.innerText = gIdx + 1;
+                    btn.title = `Question ${gIdx + 1}`;
+                    btn.addEventListener('click', () => {
+                        loadQuestion(gIdx);
+                        $('#mobilePaletteModal').modal('hide');
+                    });
+                    grid.appendChild(btn);
+
+                    if (mobGrid) {
+                        const mobBtn = btn.cloneNode(true);
+                        mobBtn.addEventListener('click', () => {
+                            loadQuestion(gIdx);
+                            $('#mobilePaletteModal').modal('hide');
+                        });
+                        mobGrid.appendChild(mobBtn);
+                    }
+                }
+            });
+
+            // Update Legend Counters
+            document.getElementById('countAnswered').innerText = cAnswered;
+            document.getElementById('countUnanswered').innerText = cUnanswered;
+            document.getElementById('countReview').innerText = cReview;
+            document.getElementById('countUnvisited').innerText = cUnvisited;
+
+            // Mobile Legend Counters
+            const mobAns = document.getElementById('mobCountAnswered');
+            if (mobAns) {
+                mobAns.innerText = cAnswered;
+                document.getElementById('mobCountUnanswered').innerText = cUnanswered;
+                document.getElementById('mobCountReview').innerText = cReview;
+                document.getElementById('mobCountUnvisited').innerText = cUnvisited;
+                document.getElementById('mobAnsweredCount').innerText = cAnswered;
+                document.getElementById('mobTotalCount').innerText = allQuestionsList.length;
+            }
+
+            // Update Section Badges in Tabs
+            sectionsData.forEach((sec, idx) => {
+                const badge = document.getElementById(`secBadge_${idx}`);
+                if (badge) {
+                    badge.innerText = `${secAnsweredCounts[idx]}/${sec.questions.length}`;
+                }
+            });
+
+            document.getElementById('paletteSectionCount').innerText = `${currentSecQCount} Questions`;
+
+            // Modal Summary
+            document.getElementById('modalTotalCount').innerText = allQuestionsList.length;
+            document.getElementById('modalAnsweredCount').innerText = cAnswered;
+            document.getElementById('modalReviewCount').innerText = cReview;
+            document.getElementById('modalUnansweredCount').innerText = cUnanswered + cUnvisited;
+
+            // Mandatory Questions Check for Submit Test Button
+            const unansweredLeft = allQuestionsList.length - cAnswered;
+            const submitBtn = document.getElementById('submitExamBtn');
+            const submitBtnText = document.getElementById('submitBtnText');
+            const unansBadge = document.getElementById('unansweredBadge');
+            const modalAlert = document.getElementById('modalUnansweredAlert');
+            const modalWarnCount = document.getElementById('modalUnansweredCountWarn');
+            const modalSubmitBtn = document.getElementById('modalConfirmSubmitBtn');
+
+            if (unansweredLeft > 0) {
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.classList.remove('btn-success');
+                    submitBtn.classList.add('btn-secondary');
+                }
+                if (submitBtnText) {
+                    submitBtnText.innerText = `Submit Test (${unansweredLeft} left)`;
+                }
+                if (unansBadge) {
+                    unansBadge.className = 'badge badge-warning text-dark ml-2 d-none d-md-inline-block py-2 px-2';
+                    unansBadge.innerHTML = `<i class="fas fa-lock mr-1"></i> Answer all questions (${unansweredLeft} left)`;
+                }
+                if (modalAlert) modalAlert.style.display = 'block';
+                if (modalWarnCount) modalWarnCount.innerText = unansweredLeft;
+                if (modalSubmitBtn) modalSubmitBtn.disabled = true;
+            } else {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('btn-secondary');
+                    submitBtn.classList.add('btn-success');
+                }
+                if (submitBtnText) {
+                    submitBtnText.innerText = 'Submit Test';
+                }
+                if (unansBadge) {
+                    unansBadge.className = 'badge badge-success text-white ml-2 d-none d-md-inline-block py-2 px-2';
+                    unansBadge.innerHTML = '<i class="fas fa-check-circle mr-1"></i> All questions answered ✓';
+                }
+                if (modalAlert) modalAlert.style.display = 'none';
+                if (modalSubmitBtn) modalSubmitBtn.disabled = false;
+            }
+        }
+
+        // Action Buttons
+        document.getElementById('saveNextBtn').addEventListener('click', function() {
+            const currentQ = allQuestionsList[currentGlobalIndex];
+            answersState[currentQ.questionId].marked_for_review = false;
+            saveAnswerToServer(currentQ.questionId, () => {
+                if (currentGlobalIndex < allQuestionsList.length - 1) {
+                    loadQuestion(currentGlobalIndex + 1);
+                }
+            });
+        });
+
+        document.getElementById('markReviewBtn').addEventListener('click', function() {
+            const currentQ = allQuestionsList[currentGlobalIndex];
+            answersState[currentQ.questionId].marked_for_review = true;
+            saveAnswerToServer(currentQ.questionId, () => {
+                if (currentGlobalIndex < allQuestionsList.length - 1) {
+                    loadQuestion(currentGlobalIndex + 1);
+                }
+            });
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            const currentQ = allQuestionsList[currentGlobalIndex];
+            answersState[currentQ.questionId].chosen_option = null;
+            answersState[currentQ.questionId].marked_for_review = false;
+            document.querySelectorAll('.option-label').forEach(el => el.classList.remove('selected'));
+            saveAnswerToServer(currentQ.questionId);
+            updatePalette();
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', function() {
+            if (currentGlobalIndex > 0) {
+                loadQuestion(currentGlobalIndex - 1);
+            }
+        });
+
+        // Section Tabs Event
+        document.querySelectorAll('.section-tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const sIdx = parseInt(this.getAttribute('data-section-idx'));
+                const firstQInSec = allQuestionsList.findIndex(q => q.sectionIdx === sIdx);
+                if (firstQInSec !== -1) {
+                    loadQuestion(firstQInSec);
+                }
+            });
+        });
+
+        // Load First Question on Start
+        loadQuestion(0);
+    })();
+    </script>
+</body>
+</html>

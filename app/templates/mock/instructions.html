@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 900px;">
+    <div class="card shadow-sm border-0" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
+        <!-- Header Banner -->
+        <div class="card-header bg-primary text-white p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <span class="badge badge-light text-primary font-weight-bold px-3 py-1 mb-2 text-uppercase letter-spacing">
+                        <i class="fas fa-building mr-1"></i> {{ test.company_name }} Placement Mock Test
+                    </span>
+                    <h2 class="h3 font-weight-bold mb-1">{{ test.title }}</h2>
+                    <p class="mb-0 text-white-50 small">Standard Assessment Portal &bull; Practice Mode Discipline</p>
+                </div>
+                <div class="text-right mt-3 mt-sm-0">
+                    <div class="badge badge-pill badge-warning px-3 py-2 font-weight-bold" style="font-size: 1rem;">
+                        <i class="far fa-clock mr-1"></i> {{ test.duration_minutes }} Minutes
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+            {% if has_active_attempt %}
+            <div class="alert alert-warning border-0 shadow-sm mb-4 p-3" style="border-left: 5px solid #f59e0b !important; border-radius: 8px;">
+                <div class="d-flex align-items-center justify-content-between flex-wrap">
+                    <div>
+                        <h6 class="font-weight-bold mb-1 text-dark">
+                            <i class="fas fa-history text-warning mr-2"></i> Active Assessment Session In Progress
+                        </h6>
+                        <p class="mb-0 text-muted small">
+                            You have an active test session currently counting down on the server. Your timer continues running.
+                        </p>
+                    </div>
+                    <form action="{{ url_for('mock.start_test', test_id=test.id) }}" method="POST" class="mt-2 mt-sm-0">
+                        <button type="submit" class="btn btn-warning font-weight-bold px-4 py-2 shadow-sm">
+                            <i class="fas fa-play mr-1"></i> Resume Attempt
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Section 1: Test Structure -->
+            <h5 class="font-weight-bold text-dark mb-3">
+                <i class="fas fa-layer-group text-primary mr-2"></i> Section Structure & Marks Distribution
+            </h5>
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered text-center mb-0" style="font-size: 0.95rem;">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Section #</th>
+                            <th class="text-left">Section Name</th>
+                            <th>Questions</th>
+                            <th>Total Marks</th>
+                            <th>Section Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sec in test.sections %}
+                        <tr>
+                            <td class="font-weight-bold text-muted">{{ loop.index }}</td>
+                            <td class="text-left font-weight-bold text-dark">{{ sec.name }}</td>
+                            <td>{{ sec.questions|length }}</td>
+                            <td>{{ sec.questions|length }}</td>
+                            <td>
+                                {% if sec.section_minutes %}
+                                <span class="badge badge-light border">{{ sec.section_minutes }} mins</span>
+                                {% else %}
+                                <span class="text-muted">Combined ({{ test.duration_minutes }} mins total)</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="font-weight-bold bg-light">
+                        <tr>
+                            <td colspan="2" class="text-left">Total Assessment Summary</td>
+                            <td class="text-primary">{{ test.total_questions_count() }} Questions</td>
+                            <td class="text-primary">{{ test.total_marks() }} Marks</td>
+                            <td class="text-primary">{{ test.duration_minutes }} Minutes</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Section 2: Question Palette Symbol Guide -->
+            <h5 class="font-weight-bold text-dark mb-3">
+                <i class="fas fa-palette text-primary mr-2"></i> Question Palette Status Symbols (TCS Standard)
+            </h5>
+            <div class="card bg-light border-0 p-3 mb-4" style="border-radius: 8px;">
+                <div class="row align-items-center" style="font-size: 0.9rem;">
+                    <div class="col-md-6 mb-2">
+                        <div class="d-flex align-items-center">
+                            <div class="text-center font-weight-bold text-white mr-3" style="width: 34px; height: 34px; line-height: 34px; background: #22c55e; border-radius: 6px;">1</div>
+                            <div><strong>Answered:</strong> You have answered the question.</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <div class="d-flex align-items-center">
+                            <div class="text-center font-weight-bold text-white mr-3" style="width: 34px; height: 34px; line-height: 34px; background: #ef4444; border-radius: 6px;">2</div>
+                            <div><strong>Not Answered:</strong> You have visited but not answered.</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <div class="d-flex align-items-center">
+                            <div class="text-center font-weight-bold mr-3" style="width: 34px; height: 34px; line-height: 34px; background: #e2e8f0; color: #475569; border-radius: 6px;">3</div>
+                            <div><strong>Not Visited:</strong> You have not visited the question yet.</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <div class="d-flex align-items-center">
+                            <div class="text-center font-weight-bold text-white mr-3" style="width: 34px; height: 34px; line-height: 34px; background: #8b5cf6; border-radius: 6px;">4</div>
+                            <div><strong>Marked for Review:</strong> You marked to review later.</div>
+                        </div>
+                    </div>
+                    <div class="col-12 mt-1">
+                        <div class="d-flex align-items-center">
+                            <div class="position-relative text-center font-weight-bold text-white mr-3" style="width: 34px; height: 34px; line-height: 34px; background: #8b5cf6; border-radius: 6px;">
+                                5
+                                <span style="position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; background: #22c55e; border-radius: 50%; border: 2px solid white;"></span>
+                            </div>
+                            <div><strong>Answered & Marked for Review:</strong> The question is answered and will be considered in evaluation.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: General Exam Rules -->
+            <h5 class="font-weight-bold text-dark mb-3">
+                <i class="fas fa-shield-alt text-primary mr-2"></i> General Instructions & Marking Scheme
+            </h5>
+            <div class="card border p-3 mb-4" style="border-radius: 8px; font-size: 0.92rem; line-height: 1.7; background: #fafafa; border-color: #e2e8f0;">
+                <ol class="mb-0 pl-3 text-secondary">
+                    <li><strong class="text-dark">Strict Zero Negative Marking:</strong> Each correct response awards <span class="badge badge-success px-2 py-0">+1 mark</span>. Unanswered or wrong questions award <span class="badge badge-secondary px-2 py-0">0 marks</span>. No negative marks are deducted under any circumstance.</li>
+                    <li><strong class="text-dark">Server-Side Clock:</strong> The countdown timer at the top of your screen is synced continuously with the backend server. When time expires, your assessment is automatically submitted.</li>
+                    <li><strong class="text-dark">Instant Autosave:</strong> Every question selection is saved immediately to the server via background AJAX. Refreshing your page or closing your browser will preserve your answers and resume at the exact remaining server time.</li>
+                    <li><strong class="text-dark">Navigating Between Questions:</strong>
+                        <ul class="pl-3 mt-1">
+                            <li>Click <strong>Save & Next</strong> to save your answer and proceed to the next question.</li>
+                            <li>Click <strong>Mark for Review & Next</strong> to flag the question and proceed.</li>
+                            <li>Click <strong>Clear Response</strong> to deselect the currently chosen option.</li>
+                            <li>Click <strong>Previous</strong> to return to the previous question.</li>
+                            <li>Click any question number in the <strong>Question Palette</strong> to jump directly to it.</li>
+                        </ul>
+                    </li>
+                    <li><strong class="text-dark">Section Navigation:</strong> You can switch between sections at any time by clicking the section tab names at the top of the exam screen.</li>
+                    <li><strong class="text-dark">Practice-Mode Discipline Monitoring:</strong> This assessment features basic browser-level anti-cheat controls (fullscreen mode, tab-switch and window-blur tracking) designed to simulate the discipline of real corporate hiring tests like TCS NQT. If you switch tabs, minimize your window, or exit fullscreen, a warning is recorded on the server. On the <strong>3rd warning</strong>, your assessment is automatically submitted. <em>No webcams, screen recordings, or paid proctoring tools are used.</em></li>
+                </ol>
+            </div>
+
+            <!-- Section 4: Mandatory Declaration & Start Form -->
+            <form action="{{ url_for('mock.start_test', test_id=test.id) }}" method="POST" id="startExamForm">
+                <div class="custom-control custom-checkbox mb-4 p-3 border rounded shadow-sm" style="background: #ffffff; border-color: #93c5fd !important;">
+                    <input type="checkbox" class="custom-control-input" id="declarationCheck" required>
+                    <label class="custom-control-label font-weight-bold text-dark" for="declarationCheck" style="cursor: pointer; font-size: 0.95rem;">
+                        I have read, understood, and agreed to all the examination instructions and rules stated above. I confirm that I am ready to begin the test in a quiet environment.
+                    </label>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center flex-wrap pt-2">
+                    <a href="{{ url_for('mock.test_list') }}" class="btn btn-outline-secondary px-4 py-2 font-weight-bold">
+                        <i class="fas fa-arrow-left mr-1"></i> Back to Placement Mocks
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg px-5 font-weight-bold shadow-sm" id="startBtn" disabled>
+                        {% if has_active_attempt %}
+                        <i class="fas fa-play mr-2"></i> Resume Assessment
+                        {% else %}
+                        <i class="fas fa-rocket mr-2"></i> I am Ready to Begin
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const check = document.getElementById('declarationCheck');
+    const btn = document.getElementById('startBtn');
+    const form = document.getElementById('startExamForm');
+
+    if (check && btn) {
+        check.addEventListener('change', function() {
+            btn.disabled = !this.checked;
+            if (this.checked) {
+                btn.classList.add('pulse-ready');
+            } else {
+                btn.classList.remove('pulse-ready');
+            }
+        });
+
+        form.addEventListener('submit', function(e) {
+            if (!check.checked) {
+                e.preventDefault();
+                alert('Please check the declaration checkbox to confirm you have read the instructions.');
+                check.focus();
+            }
+        });
+    }
+});
+</script>
+
+<style>
+.pulse-ready {
+    animation: readyGlow 1.5s infinite alternate;
+}
+@keyframes readyGlow {
+    from { box-shadow: 0 0 5px rgba(37, 99, 235, 0.4); }
+    to { box-shadow: 0 0 15px rgba(37, 99, 235, 0.8); }
+}
+</style>
+{% endblock %}
