@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb & Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb bg-transparent p-0 mb-1 small">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">Admin</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.mock_tests_list') }}">Mock Tests</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ test.title }} Attempts</li>
+                </ol>
+            </nav>
+            <h1 class="h3 font-weight-bold text-dark mb-1">
+                <i class="fas fa-users-cog text-primary mr-2"></i> Student Attempts: {{ test.title }}
+            </h1>
+            <p class="text-muted mb-0">
+                Company: <span class="badge badge-primary">{{ test.company_name }}</span> &bull;
+                Total Attempts: <strong>{{ attempts|length }}</strong>
+            </p>
+        </div>
+        <div class="mt-3 mt-md-0">
+            <a href="{{ url_for('admin.mock_tests_list') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Mock Tests
+            </a>
+        </div>
+    </div>
+
+    {% if attempts %}
+    <div class="card shadow-sm border-0" style="border-radius: 12px; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="thead-light">
+                    <tr>
+                        <th style="width: 70px;">#ID</th>
+                        <th>Student</th>
+                        <th>Status</th>
+                        <th>Score</th>
+                        <th>Discipline Violations</th>
+                        <th>Started (UTC)</th>
+                        <th>Submitted (UTC)</th>
+                        <th style="width: 220px;" class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for att in attempts %}
+                    <tr>
+                        <td class="font-weight-bold text-muted">#{{ att.id }}</td>
+                        <td>
+                            <strong class="text-dark">{{ att.user.username if att.user else 'Unknown' }}</strong>
+                            <div class="small text-muted">{{ att.user.email if att.user else 'No email' }}</div>
+                        </td>
+                        <td>
+                            {% if att.status == 'completed' %}
+                            <span class="badge badge-success"><i class="fas fa-check-circle mr-1"></i> Completed</span>
+                            {% elif att.status == 'in_progress' %}
+                            <span class="badge badge-primary"><i class="fas fa-spinner fa-spin mr-1"></i> In Progress</span>
+                            {% elif att.status == 'timed_out' %}
+                            <span class="badge badge-warning text-dark"><i class="fas fa-clock mr-1"></i> Timed Out</span>
+                            {% elif att.status == 'disqualified' %}
+                            <span class="badge badge-danger"><i class="fas fa-ban mr-1"></i> Auto-Submitted (3 Warnings)</span>
+                            {% else %}
+                            <span class="badge badge-secondary">{{ att.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong class="text-primary">{{ att.score }}</strong> / {{ att.total_marks }}
+                        </td>
+                        <td>
+                            {% if att.violation_count == 0 %}
+                            <span class="text-success small font-weight-bold"><i class="fas fa-check mr-1"></i> 0 violations</span>
+                            {% else %}
+                            <span class="text-danger small font-weight-bold"><i class="fas fa-exclamation-triangle mr-1"></i> {{ att.violation_count }} warnings</span>
+                            {% endif %}
+                        </td>
+                        <td class="small text-muted">{{ att.started_at.strftime('%Y-%m-%d %H:%M') if att.started_at else '-' }}</td>
+                        <td class="small text-muted">{{ att.submitted_at.strftime('%Y-%m-%d %H:%M') if att.submitted_at else '-' }}</td>
+                        <td class="text-right">
+                            <a href="{{ url_for('mock.result', attempt_id=att.id) }}" class="btn btn-sm btn-outline-info" title="View Scorecard" target="_blank">
+                                <i class="fas fa-chart-bar mr-1"></i> Scorecard
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#resetModal_{{ att.id }}" title="Reset student attempt to allow retake">
+                                <i class="fas fa-redo-alt mr-1"></i> Reset
+                            </button>
+
+                            <!-- Confirm Reset Modal -->
+                            <div class="modal fade text-left" id="resetModal_{{ att.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                    <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+                                        <div class="modal-header bg-danger text-white border-0">
+                                            <h5 class="modal-title font-weight-bold">
+                                                <i class="fas fa-redo-alt mr-2"></i> Confirm Attempt Reset
+                                            </h5>
+                                            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body p-4">
+                                            <p class="mb-2">
+                                                Are you sure you want to reset this attempt for student <strong>{{ att.user.username if att.user else 'User' }}</strong>?
+                                            </p>
+                                            <div class="alert alert-warning py-2 px-3 small font-weight-bold mb-0">
+                                                <i class="fas fa-exclamation-triangle mr-1"></i> This action permanently deletes Attempt #{{ att.id }}, all recorded answers, and any discipline violations. The student will be allowed to retake the exam from scratch.
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-0 pt-0 bg-light">
+                                            <button type="button" class="btn btn-outline-secondary font-weight-bold" data-dismiss="modal">
+                                                Cancel
+                                            </button>
+                                            <form action="{{ url_for('admin.mock_attempt_reset', attempt_id=att.id) }}" method="POST">
+                                                <button type="submit" class="btn btn-danger font-weight-bold px-3">
+                                                    <i class="fas fa-trash-alt mr-1"></i> Confirm & Reset Attempt
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="card shadow-sm border-0 text-center p-5" style="border-radius: 12px;">
+        <div style="font-size: 3rem; color: #94a3b8; margin-bottom: 16px;">
+            <i class="fas fa-user-clock"></i>
+        </div>
+        <h4 class="text-dark font-weight-bold">No Attempts Recorded Yet</h4>
+        <p class="text-muted mb-0">No students have started or submitted an attempt for this mock test yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

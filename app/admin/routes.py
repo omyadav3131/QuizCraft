@@ -10,7 +10,11 @@ TIPS: Add your notes here to help future edits.
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from app.admin import admin_bp
-from app.models import db, Question, Category, User, Competition, CompetitionAttempt, Attempt, AttemptAnswer, LeaderboardEntry, Role
+from app.models import (
+    db, Question, Category, User, Competition, CompetitionAttempt,
+    Attempt, AttemptAnswer, LeaderboardEntry, Role,
+    MockTest, MockSection, MockQuestion, MockAttempt, MockAnswer
+)
 
 from sqlalchemy import func, case, and_, or_
 from datetime import datetime, timedelta
@@ -604,3 +608,402 @@ def admin_user_performance(user_id):
     user = User.query.get_or_404(user_id)
     performance_url = url_for('quiz.performance_dashboard', user_id=user.id)
     return redirect(performance_url)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Admin Mock Test Management Routes (Phase A)
+# ──────────────────────────────────────────────────────────────────────────────
+
+@admin_bp.route('/mock-tests')
+@login_required
+@admin_required
+def mock_tests_list():
+    tests = MockTest.query.order_by(MockTest.company_name.asc(), MockTest.created_at.desc()).all()
+    return render_template('admin/mock_tests.html', tests=tests)
+
+
+@admin_bp.route('/mock-tests/new', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def mock_test_new():
+    if request.method == 'POST':
+        company_name = request.form.get('company_name', '').strip()
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        duration_minutes = request.form.get('duration_minutes', '60').strip()
+        is_active = bool(request.form.get('is_active'))
+        allow_multiple_attempts = bool(request.form.get('allow_multiple_attempts'))
+
+        if not company_name or not title:
+            flash('Company name and test title are required.', 'danger')
+            return render_template('admin/mock_test_form.html', test=None)
+
+        try:
+            duration = int(duration_minutes)
+            if duration <= 0:
+                duration = 60
+        except ValueError:
+            duration = 60
+
+        test = MockTest(
+            company_name=company_name,
+            title=title,
+            description=description,
+            duration_minutes=duration,
+            is_active=is_active,
+            allow_multiple_attempts=allow_multiple_attempts
+        )
+        db.session.add(test)
+        db.session.commit()
+        flash(f'Mock test "{title}" created successfully! Now add sections and questions.', 'success')
+        return redirect(url_for('admin.mock_sections_manage', test_id=test.id))
+
+    return render_template('admin/mock_test_form.html', test=None)
+
+
+@admin_bp.route('/mock-tests/<int:test_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def mock_test_edit(test_id):
+    test = MockTest.query.get_or_404(test_id)
+    if request.method == 'POST':
+        company_name = request.form.get('company_name', '').strip()
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        duration_minutes = request.form.get('duration_minutes', '60').strip()
+        is_active = bool(request.form.get('is_active'))
+        allow_multiple_attempts = bool(request.form.get('allow_multiple_attempts'))
+
+        if not company_name or not title:
+            flash('Company name and test title are required.', 'danger')
+            return render_template('admin/mock_test_form.html', test=test)
+
+        try:
+            duration = int(duration_minutes)
+            if duration <= 0:
+                duration = 60
+        except ValueError:
+            duration = 60
+
+        test.company_name = company_name
+        test.title = title
+        test.description = description
+        test.duration_minutes = duration
+        test.is_active = is_active
+        test.allow_multiple_attempts = allow_multiple_attempts
+
+        db.session.commit()
+        flash(f'Mock test "{title}" updated successfully.', 'success')
+        return redirect(url_for('admin.mock_tests_list'))
+
+    return render_template('admin/mock_test_form.html', test=test)
+
+
+@admin_bp.route('/mock-tests/<int:test_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def mock_test_delete(test_id):
+    test = MockTest.query.get_or_404(test_id)
+    title = test.title
+    db.session.delete(test)
+    db.session.commit()
+    flash(f'Mock test "{title}" and all associated sections/questions deleted.', 'success')
+    return redirect(url_for('admin.mock_tests_list'))
+
+
+@admin_bp.route('/mock-tests/<int:test_id>/sections', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def mock_sections_manage(test_id):
+    test = MockTest.query.get_or_404(test_id)
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        order = request.form.get('order', '1').strip()
+        num_questions = request.form.get('num_questions', '10').strip()
+        section_minutes = request.form.get('section_minutes', '').strip()
+
+        if not name:
+            flash('Section name is required.', 'danger')
+        else:
+            try:
+                order_num = int(order)
+            except ValueError:
+                order_num = len(test.sections) + 1
+
+            try:
+                num_q = int(num_questions)
+            except ValueError:
+                num_q = 10
+
+            sec_min = int(section_minutes) if section_minutes.isdigit() else None
+
+            section = MockSection(
+                test_id=test.id,
+                name=name,
+                order=order_num,
+                num_questions=num_q,
+                section_minutes=sec_min
+            )
+            db.session.add(section)
+            db.session.commit()
+            flash(f'Section "{name}" added to {test.title}.', 'success')
+            return redirect(url_for('admin.mock_sections_manage', test_id=test.id))
+
+    return render_template('admin/mock_sections.html', test=test)
+
+
+@admin_bp.route('/mock-tests/sections/<int:section_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def mock_section_delete(section_id):
+    section = MockSection.query.get_or_404(section_id)
+    test_id = section.test_id
+    db.session.delete(section)
+    db.session.commit()
+    flash('Section deleted successfully.', 'success')
+    return redirect(url_for('admin.mock_sections_manage', test_id=test_id))
+
+
+@admin_bp.route('/mock-tests/sections/<int:section_id>/questions')
+@login_required
+@admin_required
+def mock_questions_list(section_id):
+    section = MockSection.query.get_or_404(section_id)
+    return render_template('admin/mock_questions.html', section=section, test=section.test)
+
+
+@admin_bp.route('/mock-tests/sections/<int:section_id>/questions/new', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def mock_question_new(section_id):
+    section = MockSection.query.get_or_404(section_id)
+    if request.method == 'POST':
+        text = request.form.get('text', '').strip()
+        option1 = request.form.get('option1', '').strip()
+        option2 = request.form.get('option2', '').strip()
+        option3 = request.form.get('option3', '').strip()
+        option4 = request.form.get('option4', '').strip()
+        correct_option = request.form.get('correct_option', '1').strip()
+        explanation = request.form.get('explanation', '').strip()
+        marks = request.form.get('marks', '1').strip()
+
+        if not text or not option1 or not option2 or not correct_option:
+            flash('Question text, Option 1, Option 2, and Correct Option are required.', 'danger')
+            return render_template('admin/mock_question_form.html', section=section, question=None)
+
+        try:
+            corr_opt = int(correct_option)
+            if corr_opt not in (1, 2, 3, 4):
+                flash('Correct Option must be between 1 and 4.', 'danger')
+                return render_template('admin/mock_question_form.html', section=section, question=None)
+        except (ValueError, TypeError):
+            flash('Correct Option must be a valid number between 1 and 4.', 'danger')
+            return render_template('admin/mock_question_form.html', section=section, question=None)
+
+        if corr_opt == 3 and not option3:
+            flash('Option 3 was chosen as correct answer, but Option 3 is empty.', 'danger')
+            return render_template('admin/mock_question_form.html', section=section, question=None)
+
+        if corr_opt == 4 and not option4:
+            flash('Option 4 was chosen as correct answer, but Option 4 is empty.', 'danger')
+            return render_template('admin/mock_question_form.html', section=section, question=None)
+
+        try:
+            m = int(marks) if int(marks) > 0 else 1
+        except ValueError:
+            m = 1
+
+        q = MockQuestion(
+            section_id=section.id,
+            text=text,
+            option1=option1,
+            option2=option2,
+            option3=option3 if option3 else None,
+            option4=option4 if option4 else None,
+            correct_option=corr_opt,
+            explanation=explanation if explanation else None,
+            marks=m
+        )
+        db.session.add(q)
+        db.session.commit()
+        flash('Question added successfully!', 'success')
+        return redirect(url_for('admin.mock_questions_list', section_id=section.id))
+
+    return render_template('admin/mock_question_form.html', section=section, question=None)
+
+
+@admin_bp.route('/mock-tests/sections/<int:section_id>/questions/<int:question_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def mock_question_edit(section_id, question_id):
+    section = MockSection.query.get_or_404(section_id)
+    question = MockQuestion.query.get_or_404(question_id)
+
+    if request.method == 'POST':
+        text = request.form.get('text', '').strip()
+        option1 = request.form.get('option1', '').strip()
+        option2 = request.form.get('option2', '').strip()
+        option3 = request.form.get('option3', '').strip()
+        option4 = request.form.get('option4', '').strip()
+        correct_option = request.form.get('correct_option', '1').strip()
+        explanation = request.form.get('explanation', '').strip()
+        marks = request.form.get('marks', '1').strip()
+
+        if not text or not option1 or not option2 or not correct_option:
+            flash('Question text, Option 1, Option 2, and Correct Option are required.', 'danger')
+            return render_template('admin/mock_question_form.html', section=section, question=question)
+
+        try:
+            corr_opt = int(correct_option)
+            if corr_opt not in (1, 2, 3, 4):
+                flash('Correct Option must be between 1 and 4.', 'danger')
+                return render_template('admin/mock_question_form.html', section=section, question=question)
+        except (ValueError, TypeError):
+            flash('Correct Option must be a valid number between 1 and 4.', 'danger')
+            return render_template('admin/mock_question_form.html', section=section, question=question)
+
+        if corr_opt == 3 and not option3:
+            flash('Option 3 was chosen as correct answer, but Option 3 is empty.', 'danger')
+            return render_template('admin/mock_question_form.html', section=section, question=question)
+
+        if corr_opt == 4 and not option4:
+            flash('Option 4 was chosen as correct answer, but Option 4 is empty.', 'danger')
+            return render_template('admin/mock_question_form.html', section=section, question=question)
+
+        try:
+            m = int(marks) if int(marks) > 0 else 1
+        except ValueError:
+            m = 1
+
+        question.text = text
+        question.option1 = option1
+        question.option2 = option2
+        question.option3 = option3 if option3 else None
+        question.option4 = option4 if option4 else None
+        question.correct_option = corr_opt
+        question.explanation = explanation if explanation else None
+        question.marks = m
+
+        db.session.commit()
+        flash('Question updated successfully!', 'success')
+        return redirect(url_for('admin.mock_questions_list', section_id=section.id))
+
+    return render_template('admin/mock_question_form.html', section=section, question=question)
+
+
+@admin_bp.route('/mock-tests/sections/<int:section_id>/questions/<int:question_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def mock_question_delete(section_id, question_id):
+    question = MockQuestion.query.get_or_404(question_id)
+    db.session.delete(question)
+    db.session.commit()
+    flash('Question deleted successfully.', 'success')
+    return redirect(url_for('admin.mock_questions_list', section_id=section_id))
+
+
+@admin_bp.route('/mock-tests/sections/<int:section_id>/bulk-add', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def mock_questions_bulk_add(section_id):
+    section = MockSection.query.get_or_404(section_id)
+    if request.method == 'POST':
+        num_questions = int(request.form.get('num_questions', 5))
+        added_count = 0
+        errors = []
+
+        for i in range(1, num_questions + 1):
+            text = request.form.get(f'text_{i}', '').strip()
+            option1 = request.form.get(f'option1_{i}', '').strip()
+            option2 = request.form.get(f'option2_{i}', '').strip()
+            option3 = request.form.get(f'option3_{i}', '').strip()
+            option4 = request.form.get(f'option4_{i}', '').strip()
+            correct_option = request.form.get(f'correct_option_{i}', '').strip()
+            explanation = request.form.get(f'explanation_{i}', '').strip()
+            marks = request.form.get(f'marks_{i}', '1').strip()
+
+            if not text and not option1 and not option2 and not correct_option:
+                continue  # Completely blank row
+
+            if not text or not option1 or not option2 or not correct_option:
+                errors.append(f'Row {i}: Text, Option 1, Option 2, and Correct Option (1-4) are required.')
+                continue
+
+            try:
+                corr_opt = int(correct_option)
+                if corr_opt not in (1, 2, 3, 4):
+                    errors.append(f'Row {i}: Correct Option must be between 1 and 4.')
+                    continue
+            except (ValueError, TypeError):
+                errors.append(f'Row {i}: Correct Option must be a number (1-4).')
+                continue
+
+            if corr_opt == 3 and not option3:
+                errors.append(f'Row {i}: Option 3 was chosen as correct, but Option 3 is empty.')
+                continue
+
+            if corr_opt == 4 and not option4:
+                errors.append(f'Row {i}: Option 4 was chosen as correct, but Option 4 is empty.')
+                continue
+
+            try:
+                m = int(marks) if marks.isdigit() and int(marks) > 0 else 1
+
+                q = MockQuestion(
+                    section_id=section.id,
+                    text=text,
+                    option1=option1,
+                    option2=option2,
+                    option3=option3 if option3 else None,
+                    option4=option4 if option4 else None,
+                    correct_option=corr_opt,
+                    explanation=explanation if explanation else None,
+                    marks=m
+                )
+                db.session.add(q)
+                added_count += 1
+            except Exception as e:
+                errors.append(f'Row {i}: {str(e)}')
+
+        if added_count > 0:
+            db.session.commit()
+            flash(f'{added_count} question(s) added successfully to {section.name}!', 'success')
+            return redirect(url_for('admin.mock_questions_list', section_id=section.id))
+
+        if errors:
+            for err in errors:
+                flash(err, 'warning')
+        else:
+            flash('No questions were added. Please fill in at least one question.', 'warning')
+
+    return render_template('admin/mock_bulk_add_questions.html', section=section, test=section.test)
+
+
+@admin_bp.route('/mock-tests/<int:test_id>/attempts')
+@login_required
+@admin_required
+def mock_test_attempts(test_id):
+    """View all student attempts for a mock test, with options to inspect or reset."""
+    test = MockTest.query.get_or_404(test_id)
+    attempts = MockAttempt.query.filter_by(test_id=test.id).order_by(MockAttempt.started_at.desc()).all()
+    return render_template('admin/mock_attempts.html', test=test, attempts=attempts)
+
+
+@admin_bp.route('/mock-attempts/<int:attempt_id>/reset', methods=['POST'])
+@login_required
+@admin_required
+def mock_attempt_reset(attempt_id):
+    """
+    Reset a student's mock attempt: permanently removes the attempt,
+    its answers, and violation logs so the student can retake the test.
+    """
+    attempt = MockAttempt.query.get_or_404(attempt_id)
+    test_id = attempt.test_id
+    student_name = attempt.user.username if attempt.user else f"User #{attempt.user_id}"
+
+    db.session.delete(attempt)
+    db.session.commit()
+
+    flash(f'Attempt #{attempt_id} for student "{student_name}" was reset successfully. They can now retake this test.', 'success')
+    return redirect(url_for('admin.mock_test_attempts', test_id=test_id))
+

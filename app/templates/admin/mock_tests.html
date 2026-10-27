@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <div>
+            <h1 class="h3 font-weight-bold text-dark mb-1"><i class="fas fa-laptop-code text-primary mr-2"></i> Placement Mock Tests</h1>
+            <p class="text-muted mb-0">Create and manage multi-section company placement mocks (e.g. TCS NQT, Infosys).</p>
+        </div>
+        <div class="mt-3 mt-md-0">
+            <a href="{{ url_for('admin.mock_test_new') }}" class="btn btn-primary">
+                <i class="fas fa-plus mr-1"></i> Create Mock Test
+            </a>
+            <a href="{{ url_for('admin.index') }}" class="btn btn-outline-secondary ml-2">
+                <i class="fas fa-arrow-left mr-1"></i> Admin Panel
+            </a>
+        </div>
+    </div>
+
+    {% if tests %}
+    <div class="card shadow-sm border-0" style="border-radius: 10px; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="thead-light">
+                    <tr>
+                        <th style="width: 140px;">Company</th>
+                        <th>Test Title</th>
+                        <th>Duration</th>
+                        <th>Sections</th>
+                        <th>Questions</th>
+                        <th>Retakes</th>
+                        <th>Status</th>
+                        <th style="width: 280px;" class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test in tests %}
+                    <tr>
+                        <td>
+                            <span class="badge badge-pill badge-primary px-3 py-2" style="font-size: 0.85rem;">
+                                {{ test.company_name }}
+                            </span>
+                        </td>
+                        <td>
+                            <strong>{{ test.title }}</strong>
+                            {% if test.description %}
+                            <div class="text-muted small" style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                {{ test.description }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td><i class="far fa-clock text-muted mr-1"></i> {{ test.duration_minutes }} mins</td>
+                        <td>
+                            <span class="badge badge-info">{{ test.sections|length }} sections</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-secondary">{{ test.total_questions_count() }} Qs ({{ test.total_marks() }} pts)</span>
+                        </td>
+                        <td>
+                            {% if test.allow_multiple_attempts %}
+                            <span class="badge badge-success">Allowed</span>
+                            {% else %}
+                            <span class="badge badge-warning">1 Attempt Only</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if test.is_active %}
+                            <span class="badge badge-success"><i class="fas fa-check-circle mr-1"></i> Active</span>
+                            {% else %}
+                            <span class="badge badge-secondary"><i class="fas fa-pause-circle mr-1"></i> Draft</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right">
+                            <a href="{{ url_for('admin.mock_test_attempts', test_id=test.id) }}" class="btn btn-sm btn-outline-secondary" title="View & Reset Student Attempts">
+                                <i class="fas fa-users mr-1"></i> Attempts
+                            </a>
+                            <a href="{{ url_for('admin.mock_sections_manage', test_id=test.id) }}" class="btn btn-sm btn-info" title="Manage Sections & Questions">
+                                <i class="fas fa-layer-group mr-1"></i> Sections
+                            </a>
+                            <a href="{{ url_for('admin.mock_test_edit', test_id=test.id) }}" class="btn btn-sm btn-outline-primary" title="Edit Test Details">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="{{ url_for('admin.mock_test_delete', test_id=test.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete mock test {{ test.title }} and all its sections/questions?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Test">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="card shadow-sm border-0 text-center p-5" style="border-radius: 12px;">
+        <div style="font-size: 3rem; color: #94a3b8; margin-bottom: 16px;">
+            <i class="fas fa-clipboard-list"></i>
+        </div>
+        <h4 class="text-dark font-weight-bold">No Placement Mock Tests Created Yet</h4>
+        <p class="text-muted mb-4">Start by creating your first company mock test (e.g. TCS NQT Style Mock).</p>
+        <div>
+            <a href="{{ url_for('admin.mock_test_new') }}" class="btn btn-primary px-4 py-2">
+                <i class="fas fa-plus mr-1"></i> Create First Mock Test
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

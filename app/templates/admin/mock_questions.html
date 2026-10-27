@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <div>
+            <div class="text-muted small mb-1">
+                <a href="{{ url_for('admin.mock_tests_list') }}" class="text-primary">Mock Tests</a> / 
+                <a href="{{ url_for('admin.mock_sections_manage', test_id=test.id) }}" class="text-primary">{{ test.title }}</a> / 
+                {{ section.name }}
+            </div>
+            <h1 class="h3 font-weight-bold text-dark mb-0">
+                <i class="fas fa-list-ol text-primary mr-2"></i> {{ section.name }} — Questions ({{ section.questions|length }})
+            </h1>
+        </div>
+        <div class="mt-3 mt-md-0">
+            <a href="{{ url_for('admin.mock_question_new', section_id=section.id) }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus mr-1"></i> Add Single Question
+            </a>
+            <a href="{{ url_for('admin.mock_questions_bulk_add', section_id=section.id) }}" class="btn btn-success btn-sm ml-2">
+                <i class="fas fa-upload mr-1"></i> Bulk Add Questions
+            </a>
+            <a href="{{ url_for('admin.mock_sections_manage', test_id=test.id) }}" class="btn btn-outline-secondary btn-sm ml-2">
+                Back to Sections
+            </a>
+        </div>
+    </div>
+
+    {% if section.questions %}
+    <div class="row">
+        {% for q in section.questions %}
+        <div class="col-12 mb-3">
+            <div class="card shadow-sm border-0" style="border-radius: 10px;">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap">
+                        <div style="flex: 1; min-width: 250px;">
+                            <span class="badge badge-secondary mr-2">Q{{ loop.index }}</span>
+                            <span class="badge badge-info mr-2">{{ q.marks }} mark{% if q.marks != 1 %}s{% endif %}</span>
+                            <h5 class="d-inline font-weight-bold text-dark">{{ q.text }}</h5>
+                        </div>
+                        <div class="mt-2 mt-sm-0">
+                            <a href="{{ url_for('admin.mock_question_edit', section_id=section.id, question_id=q.id) }}" class="btn btn-sm btn-outline-primary" title="Edit Question">
+                                <i class="fas fa-edit mr-1"></i> Edit
+                            </a>
+                            <form action="{{ url_for('admin.mock_question_delete', section_id=section.id, question_id=q.id) }}" method="POST" class="d-inline ml-1" onsubmit="return confirm('Delete this question?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Question">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6 mb-2">
+                            <div class="p-2 border rounded {% if q.correct_option == 1 %}border-success bg-light text-success font-weight-bold{% endif %}">
+                                <strong>A)</strong> {{ q.option1 or '—' }}
+                                {% if q.correct_option == 1 %} <i class="fas fa-check-circle float-right mt-1"></i>{% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <div class="p-2 border rounded {% if q.correct_option == 2 %}border-success bg-light text-success font-weight-bold{% endif %}">
+                                <strong>B)</strong> {{ q.option2 or '—' }}
+                                {% if q.correct_option == 2 %} <i class="fas fa-check-circle float-right mt-1"></i>{% endif %}
+                            </div>
+                        </div>
+                        {% if q.option3 %}
+                        <div class="col-md-6 mb-2">
+                            <div class="p-2 border rounded {% if q.correct_option == 3 %}border-success bg-light text-success font-weight-bold{% endif %}">
+                                <strong>C)</strong> {{ q.option3 }}
+                                {% if q.correct_option == 3 %} <i class="fas fa-check-circle float-right mt-1"></i>{% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if q.option4 %}
+                        <div class="col-md-6 mb-2">
+                            <div class="p-2 border rounded {% if q.correct_option == 4 %}border-success bg-light text-success font-weight-bold{% endif %}">
+                                <strong>D)</strong> {{ q.option4 }}
+                                {% if q.correct_option == 4 %} <i class="fas fa-check-circle float-right mt-1"></i>{% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if q.explanation %}
+                    <div class="alert alert-light border small mt-2 mb-0 text-muted">
+                        <strong><i class="fas fa-lightbulb text-warning mr-1"></i> Explanation:</strong> {{ q.explanation }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card shadow-sm border-0 text-center p-5" style="border-radius: 12px;">
+        <div style="font-size: 2.8rem; color: #94a3b8; margin-bottom: 12px;">
+            <i class="fas fa-question-circle"></i>
+        </div>
+        <h4 class="text-dark font-weight-bold">No Questions in This Section</h4>
+        <p class="text-muted mb-4">Add questions one-by-one or use the bulk importer.</p>
+        <div>
+            <a href="{{ url_for('admin.mock_question_new', section_id=section.id) }}" class="btn btn-primary px-3 py-2 mr-2">
+                <i class="fas fa-plus mr-1"></i> Add Single Question
+            </a>
+            <a href="{{ url_for('admin.mock_questions_bulk_add', section_id=section.id) }}" class="btn btn-success px-3 py-2">
+                <i class="fas fa-upload mr-1"></i> Bulk Add Questions
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

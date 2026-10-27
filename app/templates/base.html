@@ -42,12 +42,14 @@
             {%- else -%}
                 {%- if current_user.is_admin() -%}
                 <a href="{{ url_for('admin.index') }}"><i class="fas fa-cog"></i> Admin</a>
+                <a href="{{ url_for('admin.mock_tests_list') }}"><i class="fas fa-laptop-code"></i> Placement Mocks</a>
                 <a href="{{ url_for('admin.competitions_view') }}"><i class="fas fa-gamepad"></i> Competitions</a>
                 <a href="{{ url_for('admin.user_progress') }}"><i class="fas fa-chart-bar"></i> User Progress</a>
                 <a href="{{ url_for('admin.feedback') }}"><i class="fas fa-comment-alt"></i> Feedback</a>
                 <a href="{{ url_for('quiz.leaderboard') }}"><i class="fas fa-trophy"></i> Leaderboard</a>
                 {%- else -%}
                 <a href="{{ url_for('quiz.select') }}"><i class="fas fa-play-circle"></i> Quiz</a>
+                <a href="{{ url_for('mock.test_list') }}"><i class="fas fa-laptop-code"></i> Placement Mocks</a>
                 <a href="{{ url_for('quiz.leaderboard') }}"><i class="fas fa-trophy"></i> Leaderboard</a>
                 <a href="{{ url_for('quiz.performance_dashboard') }}"><i class="fas fa-chart-line"></i> Performance</a>
                 <!-- Competition link -->

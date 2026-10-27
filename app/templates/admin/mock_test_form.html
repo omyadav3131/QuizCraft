@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 760px;">
+    <div class="card shadow-sm border-0" style="border-radius: 12px;">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+            <h2 class="h4 font-weight-bold text-dark mb-1">
+                <i class="fas fa-file-signature text-primary mr-2"></i>
+                {% if test %}Edit Mock Test: {{ test.title }}{% else %}Create New Placement Mock Test{% endif %}
+            </h2>
+            <p class="text-muted small">Configure general parameters including duration and attempt limits.</p>
+        </div>
+        <div class="card-body p-4">
+            <form method="POST">
+                <div class="form-row">
+                    <div class="form-group col-md-5">
+                        <label for="company_name" class="font-weight-bold">Company Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="company_name" name="company_name"
+                               placeholder="e.g. TCS, Infosys, Wipro, Cognizant"
+                               value="{{ test.company_name if test else '' }}" required>
+                        <small class="form-text text-muted">Used to group mocks on the student dashboard.</small>
+                    </div>
+                    <div class="form-group col-md-7">
+                        <label for="title" class="font-weight-bold">Test Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="title" name="title"
+                               placeholder="e.g. TCS NQT Style Mock Test 1"
+                               value="{{ test.title if test else '' }}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description" class="font-weight-bold">Test Description & Instructions</label>
+                    <textarea class="form-control" id="description" name="description" rows="3"
+                              placeholder="Brief overview of syllabus, negative marking policy (0 for wrong), and target batch.">{{ test.description if test else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="duration_minutes" class="font-weight-bold">Total Duration (Minutes) <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="duration_minutes" name="duration_minutes" min="5" max="300"
+                           value="{{ test.duration_minutes if test else 60 }}" required>
+                    <small class="form-text text-muted">Server-side timer enforces this deadline automatically.</small>
+                </div>
+
+                <div class="card bg-light border-0 p-3 mb-4" style="border-radius: 8px;">
+                    <h6 class="font-weight-bold mb-2 text-dark"><i class="fas fa-sliders-h mr-1"></i> Exam Rules & Policies</h6>
+                    
+                    <div class="custom-control custom-checkbox mb-2">
+                        <input type="checkbox" class="custom-control-input" id="is_active" name="is_active" value="1"
+                               {% if not test or test.is_active %}checked{% endif %}>
+                        <label class="custom-control-label" for="is_active">
+                            <strong>Active (Visible to Students)</strong> — Students can see and attempt this test.
+                        </label>
+                    </div>
+
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" id="allow_multiple_attempts" name="allow_multiple_attempts" value="1"
+                               {% if test and test.allow_multiple_attempts %}checked{% endif %}>
+                        <label class="custom-control-label" for="allow_multiple_attempts">
+                            <strong>Allow Multiple Attempts</strong> — When unchecked, students can only attempt this test once (standard exam rule).
+                        </label>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{{ url_for('admin.mock_tests_list') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times mr-1"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-save mr-1"></i> {% if test %}Save Changes{% else %}Create & Add Sections{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

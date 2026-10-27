@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <div>
+            <div class="text-muted small mb-1">
+                {{ test.company_name }} / {{ test.title }} / {{ section.name }}
+            </div>
+            <h1 class="h3 font-weight-bold text-dark mb-0">
+                <i class="fas fa-upload text-success mr-2"></i> Bulk Add Questions to {{ section.name }}
+            </h1>
+        </div>
+        <div class="mt-3 mt-md-0">
+            <a href="{{ url_for('admin.mock_questions_list', section_id=section.id) }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Questions
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4" style="border-radius: 12px;">
+        <div class="card-body p-4">
+            <p class="text-muted mb-3">
+                Quickly add multiple questions to this section. Fill out the questions below and submit once when ready.
+            </p>
+
+            <form method="POST" id="bulkAddForm">
+                <input type="hidden" name="num_questions" id="num_questions_input" value="5">
+
+                <div id="questionsContainer">
+                    {% for i in range(1, 6) %}
+                    <div class="card border mb-4 question-block" id="q_block_{{ i }}" style="border-radius: 8px; background: #fafafa;">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 px-3">
+                            <span class="font-weight-bold text-dark">Question #{{ i }}</span>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="form-group mb-2">
+                                <label class="font-weight-bold small mb-1">Question Text <span class="text-danger">*</span></label>
+                                <textarea class="form-control form-control-sm" name="text_{{ i }}" rows="2" placeholder="Statement for Question #{{ i }}"></textarea>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-3 mb-2">
+                                    <label class="font-weight-bold small mb-1">Option 1 (A) <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-sm" name="option1_{{ i }}" placeholder="Option 1">
+                                </div>
+                                <div class="form-group col-md-3 mb-2">
+                                    <label class="font-weight-bold small mb-1">Option 2 (B) <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-sm" name="option2_{{ i }}" placeholder="Option 2">
+                                </div>
+                                <div class="form-group col-md-3 mb-2">
+                                    <label class="font-weight-bold small mb-1">Option 3 (C)</label>
+                                    <input type="text" class="form-control form-control-sm" name="option3_{{ i }}" placeholder="Option 3">
+                                </div>
+                                <div class="form-group col-md-3 mb-2">
+                                    <label class="font-weight-bold small mb-1">Option 4 (D)</label>
+                                    <input type="text" class="form-control form-control-sm" name="option4_{{ i }}" placeholder="Option 4">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group col-md-4 mb-2">
+                                    <label class="font-weight-bold small mb-1">Correct Option <span class="text-danger">*</span></label>
+                                    <select class="form-control form-control-sm" name="correct_option_{{ i }}">
+                                        <option value="1">Option 1 (A)</option>
+                                        <option value="2">Option 2 (B)</option>
+                                        <option value="3">Option 3 (C)</option>
+                                        <option value="4">Option 4 (D)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-2 mb-2">
+                                    <label class="font-weight-bold small mb-1">Marks</label>
+                                    <input type="number" class="form-control form-control-sm" name="marks_{{ i }}" value="1" min="1">
+                                </div>
+                                <div class="form-group col-md-6 mb-2">
+                                    <label class="font-weight-bold small mb-1">Explanation (Optional)</label>
+                                    <input type="text" class="form-control form-control-sm" name="explanation_{{ i }}" placeholder="Brief explanation">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <button type="button" class="btn btn-outline-primary" id="addMoreBtn">
+                        <i class="fas fa-plus mr-1"></i> Add Another Question Block
+                    </button>
+                    <button type="submit" class="btn btn-success px-4 py-2 font-weight-bold">
+                        <i class="fas fa-check mr-1"></i> Save All Questions
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let qCount = 5;
+    const addMoreBtn = document.getElementById('addMoreBtn');
+    const container = document.getElementById('questionsContainer');
+    const numInput = document.getElementById('num_questions_input');
+
+    addMoreBtn.addEventListener('click', function() {
+        qCount++;
+        numInput.value = qCount;
+        const div = document.createElement('div');
+        div.className = 'card border mb-4 question-block';
+        div.id = `q_block_${qCount}`;
+        div.style.borderRadius = '8px';
+        div.style.background = '#fafafa';
+        div.innerHTML = `
+            <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 px-3">
+                <span class="font-weight-bold text-dark">Question #${qCount}</span>
+            </div>
+            <div class="card-body p-3">
+                <div class="form-group mb-2">
+                    <label class="font-weight-bold small mb-1">Question Text <span class="text-danger">*</span></label>
+                    <textarea class="form-control form-control-sm" name="text_${qCount}" rows="2" placeholder="Statement for Question #${qCount}"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-3 mb-2">
+                        <label class="font-weight-bold small mb-1">Option 1 (A) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-sm" name="option1_${qCount}" placeholder="Option 1">
+                    </div>
+                    <div class="form-group col-md-3 mb-2">
+                        <label class="font-weight-bold small mb-1">Option 2 (B) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-sm" name="option2_${qCount}" placeholder="Option 2">
+                    </div>
+                    <div class="form-group col-md-3 mb-2">
+                        <label class="font-weight-bold small mb-1">Option 3 (C)</label>
+                        <input type="text" class="form-control form-control-sm" name="option3_${qCount}" placeholder="Option 3">
+                    </div>
+                    <div class="form-group col-md-3 mb-2">
+                        <label class="font-weight-bold small mb-1">Option 4 (D)</label>
+                        <input type="text" class="form-control form-control-sm" name="option4_${qCount}" placeholder="Option 4">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4 mb-2">
+                        <label class="font-weight-bold small mb-1">Correct Option <span class="text-danger">*</span></label>
+                        <select class="form-control form-control-sm" name="correct_option_${qCount}">
+                            <option value="1">Option 1 (A)</option>
+                            <option value="2">Option 2 (B)</option>
+                            <option value="3">Option 3 (C)</option>
+                            <option value="4">Option 4 (D)</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2 mb-2">
+                        <label class="font-weight-bold small mb-1">Marks</label>
+                        <input type="number" class="form-control form-control-sm" name="marks_${qCount}" value="1" min="1">
+                    </div>
+                    <div class="form-group col-md-6 mb-2">
+                        <label class="font-weight-bold small mb-1">Explanation (Optional)</label>
+                        <input type="text" class="form-control form-control-sm" name="explanation_${qCount}" placeholder="Brief explanation">
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+});
+</script>
+{% endblock %}
