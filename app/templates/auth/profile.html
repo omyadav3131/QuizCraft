@@ -1,44 +1,66 @@
 {% extends 'base.html' %}
+{% block title %}My Profile - QuizCraft{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-md-7">
-      <div class="card shadow-lg border-0">
-        <div class="card-body p-4">
-          <div class="d-flex align-items-center mb-4">
-            <div class="profile-avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; font-size: 2.5rem;">
-              <i class="fas fa-user"></i>
-            </div>
-            <div class="ml-4">
-              <h3 class="mb-0">{{ current_user.username }}</h3>
-              <p class="text-muted mb-0">{{ current_user.email }}</p>
-              <span class="badge badge-info">User ID: {{ current_user.id }}</span>
-            </div>
-          </div>
-          <hr>
-          <h5 class="mb-3"><i class="fas fa-chart-line"></i> Your Stats</h5>
-          <ul class="list-group mb-4">
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <span><i class="fas fa-tasks"></i> Total Quizzes Taken</span>
-              <span class="badge badge-primary badge-pill">{{ current_user.attempts|length }}</span>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <span><i class="fas fa-gamepad"></i> Competitions Joined</span>
-              <span class="badge badge-success badge-pill">{{ current_user.competition_attempts|length }}</span>
-            </li>
-          </ul>
-          <div class="text-center mb-3">
-            <a href="{{ url_for('auth.change_password') }}" class="btn btn-outline-primary mr-2"><i class="fas fa-key"></i> Change Password</a>
-            <a href="{{ url_for('quiz.performance_dashboard') }}" class="btn btn-outline-info"><i class="fas fa-chart-line"></i> Performance Dashboard</a>
+<div class="container py-4 py-md-5" style="max-width: 680px;">
+  <div class="card shadow-sm border-0" style="border-radius: 14px; border: 1px solid #e2e8f0 !important; overflow: hidden;">
+    <!-- Profile Card Header -->
+    <div class="card-header bg-white border-bottom p-4">
+      <div class="d-flex align-items-center flex-wrap">
+        <div class="profile-avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mr-3 mb-2 mb-sm-0" style="width: 72px; height: 72px; font-size: 2rem; background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%) !important; box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25); flex-shrink: 0;">
+          {{ current_user.username[0]|upper }}
+        </div>
+        <div class="overflow-hidden">
+          <h1 class="h4 font-weight-bold mb-1 text-dark text-truncate">{{ current_user.username }}</h1>
+          <p class="text-muted small mb-1 text-truncate"><i class="fas fa-envelope mr-1"></i>{{ current_user.email }}</p>
+          <div>
+            <span class="badge badge-light border text-muted small mr-1">User ID: #{{ current_user.id }}</span>
+            {% if current_user.is_admin() %}
+              <span class="badge badge-warning text-dark font-weight-bold small"><i class="fas fa-user-shield mr-1"></i> Admin</span>
+            {% else %}
+              <span class="badge badge-primary font-weight-bold small"><i class="fas fa-user-graduate mr-1"></i> Student</span>
+            {% endif %}
+            {% if current_user.is_verified %}
+              <span class="badge badge-success font-weight-bold small"><i class="fas fa-check-circle mr-1"></i> Verified</span>
+            {% endif %}
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Body -->
+    <div class="card-body p-4">
+      <h2 class="h6 font-weight-bold text-dark mb-3">
+        <i class="fas fa-chart-pie text-primary mr-2"></i> Activity & Learning Stats
+      </h2>
+      <ul class="list-group mb-4" style="font-size: 0.92rem;">
+        <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+          <span><i class="fas fa-tasks text-primary mr-2"></i> Daily Quizzes Taken</span>
+          <span class="badge badge-primary badge-pill px-3 py-1 font-weight-bold">{{ current_user.attempts|length }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+          <span><i class="fas fa-laptop-code text-info mr-2"></i> Placement Mocks Taken</span>
+          <span class="badge badge-info badge-pill px-3 py-1 font-weight-bold">{{ current_user.mock_attempts|length }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+          <span><i class="fas fa-gamepad text-success mr-2"></i> Multiplayer Competitions</span>
+          <span class="badge badge-success badge-pill px-3 py-1 font-weight-bold">{{ current_user.competition_attempts|length }}</span>
+        </li>
+      </ul>
+
+      <!-- Action Buttons -->
+      <div class="d-flex flex-column flex-sm-row justify-content-center" style="gap: 10px;">
+        <a href="{{ url_for('quiz.performance_dashboard') }}" class="btn btn-primary font-weight-bold shadow-sm" style="border-radius: 8px;">
+          <i class="fas fa-chart-line mr-1"></i> View Performance
+        </a>
+        <a href="{{ url_for('mock.test_list') }}" class="btn btn-outline-info font-weight-bold" style="border-radius: 8px;">
+          <i class="fas fa-laptop-code mr-1"></i> Placement Mocks
+        </a>
+        <a href="{{ url_for('auth.change_password') }}" class="btn btn-outline-secondary font-weight-bold" style="border-radius: 8px;">
+          <i class="fas fa-key mr-1"></i> Change Password
+        </a>
+      </div>
+    </div>
   </div>
 </div>
-<style>
-.profile-avatar {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-}
-</style>
 {% endblock %}

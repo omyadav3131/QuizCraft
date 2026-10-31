@@ -1,52 +1,128 @@
 <!-- HEADER_COMMENT_AUTOGEN -->
 <!-- FILE: app\templates\quiz\select.html -->
-<!-- PURPOSE: Brief description of this template and common edit points. -->
+<!-- PURPOSE: Student category selection page for standard quizzes -->
 
 {% extends 'base.html' %}
+{% block title %}Select Quiz Category - QuizCraft{% endblock %}
 
 {% block content %}
-<div class="quiz-container">
-  <div class="container-max1200">
-    <div class="admin-header">
-      <h1><i class="fas fa-list"></i> Select Category</h1>
-      <p>Choose a subject and test your knowledge</p>
+<div class="quiz-container py-4">
+  <div class="container-max1200 px-3">
+    <!-- Header Banner -->
+    <div class="admin-header text-center mb-4">
+      <h1 class="h3 font-weight-bold mb-1"><i class="fas fa-list mr-2"></i> Select Quiz Category</h1>
+      <p class="mb-0 text-white-50">Choose a subject to practice questions across Easy, Medium, and Hard difficulty</p>
+    </div>
+
+    <!-- Promo Banner for Placement Mocks -->
+    <div class="alert alert-primary border-0 shadow-sm d-flex align-items-center justify-content-between flex-wrap p-3 mb-4" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-left: 5px solid #2563eb !important; border-radius: 10px;">
+      <div class="d-flex align-items-center mb-2 mb-sm-0">
+        <div class="mr-3 text-primary" style="font-size: 1.8rem;">
+          <i class="fas fa-laptop-code"></i>
+        </div>
+        <div>
+          <strong class="text-dark d-block">Preparing for Campus Placements?</strong>
+          <span class="text-muted small">Take full-length simulated TCS NQT mock tests with timed sections and discipline monitoring.</span>
+        </div>
+      </div>
+      <a href="{{ url_for('mock.test_list') }}" class="btn btn-primary btn-sm font-weight-bold px-3 py-2 shadow-sm" style="border-radius: 6px;">
+        <i class="fas fa-rocket mr-1"></i> Placement Mocks
+      </a>
+    </div>
+
+    <!-- Live Search Filter -->
+    <div class="card shadow-sm border-0 mb-4" style="border-radius: 10px; border: 1px solid #e2e8f0 !important;">
+      <div class="card-body p-3">
+        <div class="row align-items-center">
+          <div class="col-md-8 mb-2 mb-md-0">
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text bg-white border-right-0"><i class="fas fa-search text-muted"></i></span>
+              </div>
+              <input type="text" id="catSearchInput" class="form-control border-left-0" placeholder="Filter categories by name (e.g. Python, Reasoning, Quantitative, General)...">
+            </div>
+          </div>
+          <div class="col-md-4 text-md-right text-muted small">
+            <span id="catCounter">Showing <strong>{{ categories|length }}</strong> categories</span>
+          </div>
+        </div>
+      </div>
     </div>
     
-    <div class="categories-grid">
+    <div class="categories-grid" id="categoriesGrid">
       {% for category in categories %}
-      <div class="category-card">
+      <div class="category-card" data-cat-name="{{ category.name|lower }}">
         <div class="category-icon">
-          {% if 'Programming' in category.name %}
+          {% if 'Programming' in category.name or 'Python' in category.name or 'Java' in category.name or 'C' in category.name %}
             <i class="fas fa-code"></i>
-          {% elif 'SQL' in category.name %}
+          {% elif 'SQL' in category.name or 'Database' in category.name %}
             <i class="fas fa-database"></i>
           {% elif 'Data' in category.name %}
             <i class="fas fa-sitemap"></i>
-          {% elif 'Quantitative' in category.name %}
+          {% elif 'Quantitative' in category.name or 'Math' in category.name %}
             <i class="fas fa-calculator"></i>
           {% elif 'General' in category.name %}
             <i class="fas fa-lightbulb"></i>
-          {% elif 'Logical' in category.name %}
+          {% elif 'Logical' in category.name or 'Reasoning' in category.name %}
             <i class="fas fa-puzzle-piece"></i>
           {% else %}
             <i class="fas fa-book"></i>
           {% endif %}
         </div>
-        <h5>{{ category.name }}</h5>
-        <p><small>Test your skills across multiple difficulty levels</small></p>
-        <a href="{{ url_for('quiz.start', category_id=category.id) }}" class="btn btn-primary btn-sm">
-          <i class="fas fa-arrow-right"></i> Start
+        <h5 class="cat-title">{{ category.name }}</h5>
+        <p><small class="text-muted">Test your skills across multiple difficulty levels</small></p>
+        <a href="{{ url_for('quiz.start', category_id=category.id) }}" class="btn btn-primary btn-sm btn-block font-weight-bold shadow-sm" style="border-radius: 6px;">
+          <i class="fas fa-play-circle mr-1"></i> Start Quiz
         </a>
       </div>
       {% endfor %}
     </div>
+
+    <div id="noSearchMatches" class="card shadow-sm border-0 text-center p-4 mx-auto my-3" style="display: none; max-width: 450px; border-radius: 10px;">
+      <i class="fas fa-search text-muted mb-2" style="font-size: 2rem;"></i>
+      <h6 class="font-weight-bold text-dark mb-1">No Matching Categories</h6>
+      <p class="text-muted small mb-0">Try a different search keyword or clear the search input.</p>
+    </div>
     
     {% if not categories %}
-    <div class="alert alert-info text-center">
-      <i class="fas fa-info-circle"></i> No categories available. Please contact admin.
+    <div class="alert alert-info text-center shadow-sm" style="border-radius: 10px;">
+      <i class="fas fa-info-circle mr-1"></i> No quiz categories are currently configured. Please check back soon or visit the Placement Mocks section!
     </div>
     {% endif %}
   </div>
 </div>
-{% endblock %}
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('catSearchInput');
+    const counter = document.getElementById('catCounter');
+    const noMatches = document.getElementById('noSearchMatches');
+    const cards = document.querySelectorAll('.category-card');
+    const total = cards.length;
+
+    if (input && cards.length > 0) {
+        input.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
+            let visible = 0;
+
+            cards.forEach(card => {
+                const name = card.getAttribute('data-cat-name') || '';
+                if (!query || name.includes(query)) {
+                    card.style.display = '';
+                    visible++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (counter) {
+                counter.innerHTML = `Showing <strong>${visible}</strong> of ${total} categories`;
+            }
+            if (noMatches) {
+                noMatches.style.display = (visible === 0 && query !== '') ? 'block' : 'none';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -2,55 +2,124 @@
 {% block title %}Leaderboard - QuizCraft{% endblock %}
 
 {% block content %}
-<div class="quiz-container" style="display: block; padding-top: 2rem;">
-  <style>
-    .card { max-width: 100% !important; }
-  </style>
-  <div class="result-container" style="max-width: 1700px; width: 96%; margin: 0 auto; background: transparent; padding: 0; box-shadow: none; text-align: left;">
-  <h2 style="color: #0d6efd; margin-bottom: 2rem; text-align: center;"><i class="fas fa-trophy"></i> Leaderboard</h2>
+<div class="container py-4 py-md-5" style="max-width: 1200px;">
+  <!-- Page Header -->
+  <div class="text-center mb-4">
+    <div style="width: 58px; height: 58px; line-height: 58px; border-radius: 50%; background: #fef3c7; color: #d97706; font-size: 26px; margin: 0 auto 12px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15);">
+      <i class="fas fa-trophy"></i>
+    </div>
+    <h1 class="h3 font-weight-bold text-dark mb-1">Global Hall of Fame</h1>
+    <p class="text-muted small mx-auto mb-0" style="max-width: 550px;">
+      Top performing learners across all quiz categories and skill assessments.
+    </p>
+  </div>
 
-  <div class="card mb-4" style="border-radius: 12px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-    <div class="card-header"><strong>Top Overall</strong></div>
+  <!-- Top Overall Table Card -->
+  <div class="card shadow-sm border-0 mb-4 mb-md-5" style="border-radius: 12px; border: 1px solid #e2e8f0 !important; overflow: hidden;">
+    <div class="card-header bg-white border-bottom p-3 d-flex align-items-center justify-content-between flex-wrap">
+      <h2 class="h5 font-weight-bold text-dark mb-0">
+        <i class="fas fa-crown text-warning mr-2"></i> Top Overall Performers
+      </h2>
+      <span class="badge badge-pill badge-light border text-muted px-3 py-1 font-weight-bold small">
+        Ranked by Accuracy & Score
+      </span>
+    </div>
     <div class="card-body p-0">
-      <table class="table table-sm mb-0">
-        <thead>
-          <tr><th>#</th><th>User</th><th>Score</th><th>When</th></tr>
-        </thead>
-        <tbody>
-        {% for e in top_overall %}
-          <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ e.username }}</td>
-            <td>{{ e.score }}{% if e.total %} / {{ e.total }}{% endif %}</td>
-            <td>{{ e.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-          </tr>
-        {% else %}
-          <tr><td colspan="4">No entries yet.</td></tr>
-        {% endfor %}
-        </tbody>
-      </table>
+      <div class="table-responsive mb-0">
+        <table class="table table-hover align-middle mb-0" style="font-size: 0.92rem;">
+          <thead class="thead-light">
+            <tr>
+              <th style="width: 60px;" class="text-center">#</th>
+              <th>Learner</th>
+              <th class="text-center">Score</th>
+              <th class="text-right pr-4">Achieved (IST)</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for e in top_overall %}
+            <tr>
+              <td class="text-center font-weight-bold">
+                {% if loop.index == 1 %}
+                  <span class="badge badge-warning text-dark px-2 py-1" title="1st Place"><i class="fas fa-medal"></i> 1</span>
+                {% elif loop.index == 2 %}
+                  <span class="badge badge-secondary px-2 py-1" style="background: #94a3b8;" title="2nd Place"><i class="fas fa-medal"></i> 2</span>
+                {% elif loop.index == 3 %}
+                  <span class="badge badge-danger px-2 py-1" style="background: #d97706;" title="3rd Place"><i class="fas fa-medal"></i> 3</span>
+                {% else %}
+                  <span class="text-muted font-weight-bold">{{ loop.index }}</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <div style="width: 32px; height: 32px; line-height: 32px; border-radius: 50%; background: #e0e7ff; color: #4338ca; text-align: center; font-weight: 700; font-size: 0.85rem; margin-right: 10px; flex-shrink: 0;">
+                    {{ e.username[0]|upper }}
+                  </div>
+                  <div>
+                    <strong class="text-dark">{{ e.username }}</strong>
+                    {% if current_user.is_authenticated and current_user.username == e.username %}
+                      <span class="badge badge-pill badge-primary ml-1" style="font-size: 0.7rem;">You</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+              <td class="text-center font-weight-bold text-primary">
+                {{ e.score }}{% if e.total %} <span class="text-muted font-weight-normal">/ {{ e.total }}</span>{% endif %}
+              </td>
+              <td class="text-right pr-4 text-muted small">
+                {{ e.created_at|to_ist('%d %b %Y, %I:%M %p') }}
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="4" class="text-center py-4 text-muted">
+                <i class="fas fa-trophy text-muted mb-2" style="font-size: 2rem;"></i>
+                <p class="mb-0">No overall leaderboard entries yet. Take a quiz to claim the first spot!</p>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <h4>Top by Category</h4>
+  <!-- Top by Category Cards -->
+  <div class="d-flex align-items-center justify-content-between pb-2 mb-3 border-bottom">
+    <h2 class="h5 font-weight-bold text-dark mb-0">
+      <i class="fas fa-layer-group text-primary mr-2"></i> Category Leaders
+    </h2>
+    <span class="text-muted small">Top 3 learners per subject</span>
+  </div>
+
   <div class="row">
     {% for cat_id, entries in top_by_cat.items() %}
-      <div class="col-md-6 mb-3">
-        <div class="card">
-          <div class="card-header">{{ categories_map.get(cat_id, 'Category') }}</div>
-          <ul class="list-group list-group-flush">
+      <div class="col-12 col-md-6 mb-3 mb-md-4">
+        <div class="card h-100 shadow-sm border-0" style="border-radius: 12px; border: 1px solid #e2e8f0 !important; overflow: hidden;">
+          <div class="card-header bg-light p-3 d-flex justify-content-between align-items-center">
+            <strong class="text-dark"><i class="fas fa-book text-primary mr-2"></i>{{ categories_map.get(cat_id, 'Category') }}</strong>
+            <span class="badge badge-light border text-muted small">{{ entries|length }} Leader{% if entries|length != 1 %}s{% endif %}</span>
+          </div>
+          <ul class="list-group list-group-flush mb-0" style="font-size: 0.9rem;">
             {% for e in entries %}
-              <li class="list-group-item">
-                <strong>{{ e.username }}</strong> — {{ e.score }}{% if e.total %}/{{ e.total }}{% endif %} <small class="text-muted">({{ e.created_at.strftime('%Y-%m-%d') }})</small>
+              <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                <div class="d-flex align-items-center text-truncate">
+                  <span class="badge badge-light border text-muted font-weight-bold mr-2" style="width: 24px; text-align: center;">{{ loop.index }}</span>
+                  <strong class="text-dark text-truncate">{{ e.username }}</strong>
+                </div>
+                <div class="text-right flex-shrink-0 ml-2">
+                  <span class="badge badge-primary font-weight-bold px-2 py-1">{{ e.score }}{% if e.total %}/{{ e.total }}{% endif %}</span>
+                  <div class="text-muted" style="font-size: 0.72rem;">{{ e.created_at|to_ist('%d %b') }}</div>
+                </div>
               </li>
             {% else %}
-              <li class="list-group-item text-muted">No entries</li>
+              <li class="list-group-item text-muted text-center py-3 small">
+                <i class="fas fa-hourglass-start mr-1"></i> No recorded scores yet
+              </li>
             {% endfor %}
           </ul>
         </div>
       </div>
     {% endfor %}
   </div>
-</div>
 </div>
 {% endblock %}

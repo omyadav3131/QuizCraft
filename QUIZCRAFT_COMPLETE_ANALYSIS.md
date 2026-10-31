@@ -3,7 +3,7 @@
 > **Live URL:** [https://quizcraft-qt15.onrender.com](https://quizcraft-qt15.onrender.com)
 > **Author:** Om Yadav | **GitHub:** [omyadav3131](https://github.com/omyadav3131)
 > **Status:** Deployed & Live on Render
-> **Last Updated:** October 25, 2026
+> **Last Updated:** October 30, 2026
 
 ---
 
@@ -626,25 +626,35 @@ TCS NQT style real exam simulation with server-side timer, per-student question 
 5. ✅ Leaderboard best-score fix — one entry per user per category
 6. ⏳ Remove all `print()` debug statements from competition/routes.py
 
-### Phase 2 — UX Improvements
-7. ✅ **DONE Oct 25** — Remove debug `print()` statements → proper `logging` module
-8. ✅ **DONE Oct 25** — Custom 404/403/500 error pages
-9. ⏳ Mobile responsive audit and fixes
-10. ⏳ Profile page with stats + recent quiz history
+### Phase 2 — UX Improvements & Platform Standardization ✅ COMPLETED Oct 25-30
+7. ✅ **DONE** — Remove debug `print()` statements → proper `logging` module
+8. ✅ **DONE** — Custom 404/403/500 error pages
+9. ✅ **DONE** — Mobile responsive audit and fixes across all screens (360px - 1440px)
+10. ✅ **DONE** — User profile page with stats + quiz and mock test history
+11. ✅ **DONE** — Standardized admin UI with breadcrumbs, instant search filters, and empty states
+12. ✅ **DONE** — Admin navbar overflow and wrapping elimination on laptop screens (1366px)
+13. ✅ **DONE** — IST (+5:30) timestamp display standardization across all user-facing views
 
-### Phase 3 — New Features
-11. ⏳ Guest quiz mode (5 questions without login)
-12. ⏳ Badge/achievement system
-13. ⏳ CSV question import for admin
-14. ⏳ Social share result button
-15. ⏳ Email notifications for competition invites
+### Phase 3 — Enterprise Placement Mock Engine ✅ COMPLETED Oct 26-30
+14. ✅ **DONE** — Full-length Placement Mock Test engine (Phases A, B, C, D)
+15. ✅ **DONE** — TCS NQT Pattern Diagnostic mock with 30 verified questions (Numerical, Verbal, Reasoning)
+16. ✅ **DONE** — Practice-mode proctoring & anti-cheat discipline controls (fullscreen, focus loss, tab switch)
+17. ✅ **DONE** — Anti-cheat concurrency race condition fix and post-finalization event rejection (HTTP 409)
+18. ✅ **DONE** — Scannable post-submit result scorecard with interactive question filter chips
+19. ✅ **DONE** — Strict Admin RBAC returning HTTP 403 Forbidden for non-admins across all admin actions
 
-### Phase 4 — Scale for Real Users
-16. ⏳ Real-time competition via WebSockets (Flask-SocketIO)
-17. ⏳ Caching for leaderboard (Flask-Caching)
-18. ⏳ Pagination for all list views
-19. ⏳ Email verification for new registrations
-20. ⏳ Admin analytics enhancement with charts
+### Phase 4 — Authentication & Security Enhancements ✅ COMPLETED Oct 26
+20. ✅ **DONE** — Brevo HTTPS REST API transactional emailer
+21. ✅ **DONE** — Email verification token flow and unverified user login guard
+22. ✅ **DONE** — Google OAuth 2.0 OpenID Connect sign-in with CSRF state protection
+
+### Phase 5 — Future Roadmap & Remaining Backlog
+23. ⏳ Real-time multiplayer competition upgrade to WebSockets (Flask-SocketIO)
+24. ⏳ Caching for global leaderboard and category catalog (Flask-Caching / Redis)
+25. ⏳ Server-side pagination for extensive question and user lists (>500 items)
+26. ⏳ CSV/Excel bulk question import for admin
+27. ⏳ Badge and achievement system for milestone test completions
+28. ⏳ Social share card generator for exam scorecards
 
 ---
 
@@ -697,6 +707,20 @@ python main.py
 ---
 
 ## Changelog
+
+### October 30, 2026 — Part 6 (Anti-Cheat Concurrency, Mock Result Redesign, Full Admin UI Polish & Student Experience)
+| # | Change | File(s) Modified / Added |
+|---|---|---|
+| 58 | **Violation Concurrency & Race Condition Elimination (Phase 1a)** — In `/mock/attempt/<id>/violation`, added strict status validation rejecting non-in-progress attempts with HTTP 409 Conflict, stopping further events and redirecting client; capped timeline rows to `violation_count` | `app/mock/routes.py`, `app/templates/mock/exam.html`, `test_mock_engine.py` |
+| 59 | **Doubled Apostrophes Sanitization (Phase 1b)** — Fixed literal doubled apostrophes in question text/options/explanations; created idempotent Supabase migration `fix_mock_apostrophes_supabase.sql` and verification script `scripts/check_apostrophes.py` asserting zero consecutive apostrophes | `scripts/seed_tcs_mock.py`, `seed_tcs_mock_supabase.sql`, `fix_mock_apostrophes_supabase.sql`, `scripts/check_apostrophes.py` |
+| 60 | **IST Datetime Filter & Standardization (Phase 1c)** — Registered `@app.template_filter('to_ist')` converting UTC to IST (+5:30) with safe handling across naive and aware timestamps across mock results, user progress, competitions, feedback, and leaderboards | `app/__init__.py`, `app/mock/routes.py`, `app/templates/mock/result.html`, `app/templates/admin/*.html` |
+| 61 | **Comprehensive Mock Result Scorecard Redesign (Phase 1d)** — Built scannable performance metrics (Score, Accuracy, Time, Violations), interactive question filters (All, Correct, Incorrect, Unanswered, Review), question jump palette, solution explanations, and proctoring audit log | `app/templates/mock/result.html` |
+| 62 | **Admin Navbar Overflow & Wrapping Fix (Phase 2)** — Configured `flex-wrap: nowrap !important` on desktop with specialized breakpoint (`993px–1400px`) reducing link padding and font size; total width at 1366px is ~915px with ~450px breathing room and zero horizontal scroll | `app/static/css/professional.css`, `app/templates/base.html` |
+| 63 | **Admin Mock Tests View Redesign (Phase 2)** — Standardized layout with Actions column (320px) always visible without horizontal scroll; responsive `.mock-test-card` for mobile screens; added instant search `#mockSearchInput` with counter; added `POST /admin/mock-tests/<id>/toggle-active` | `app/admin/routes.py`, `app/templates/admin/mock_tests.html`, `test_mock_engine.py` |
+| 64 | **Platform-Wide Admin UI Standardization (Phase 2)** — Overhauled all 15 admin list and form views with breadcrumbs, empty-state notices, IST timestamps, delete confirmations, and instant client-side search across Categories, Questions, Users, Feedback, Progress, and Competitions | `app/templates/admin/*.html` |
+| 65 | **Strict Admin RBAC 403 Enforcement (Phase 3)** — Updated `admin_required` decorator so authenticated non-admin users attempting to access or POST to admin endpoints receive HTTP 403 Forbidden (`abort(403)`), rendering `403.html`. Added unit test 25 | `app/admin/routes.py`, `test_mock_engine.py` |
+| 66 | **Placement Mocks Catalog Grouping & Status (Phase 3)** — Grouped mock tests by company with clean responsive cards showing company chips, title, duration, question count, explicit Attempted / Not Attempted / In Progress badges, and clean empty state | `app/templates/mock/tests.html` |
+| 67 | **Student Exam & Core Views Polish (Phase 3)** — Added mobile (<576px) and tablet (<768px) responsive rules to exam header, palette, actions toolbar, home page, category selection, difficulty selection, global leaderboard, and student profile; verified zero horizontal overflow at 375px | `app/templates/mock/exam.html`, `app/templates/mock/instructions.html`, `app/templates/home.html`, `app/templates/quiz/*.html`, `app/templates/auth/profile.html` |
 
 ### October 28, 2026 — Part 5 (PostgreSQL Timezone Compatibility & Render 500 Fix)
 | # | Change | File(s) Modified / Added |
@@ -782,4 +806,4 @@ python main.py
 
 ---
 
-*Last Updated: October 27, 2026 | Auto-maintained by Antigravity IDE*
+*Last Updated: October 30, 2026 | Auto-maintained by Antigravity IDE*

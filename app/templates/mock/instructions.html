@@ -146,7 +146,7 @@
                         </ul>
                     </li>
                     <li><strong class="text-dark">Section Navigation:</strong> You can switch between sections at any time by clicking the section tab names at the top of the exam screen.</li>
-                    <li><strong class="text-dark">Practice-Mode Discipline Monitoring:</strong> This assessment features basic browser-level anti-cheat controls (fullscreen mode, tab-switch and window-blur tracking) designed to simulate the discipline of real corporate hiring tests like TCS NQT. If you switch tabs, minimize your window, or exit fullscreen, a warning is recorded on the server. On the <strong>3rd warning</strong>, your assessment is automatically submitted. <em>No webcams, screen recordings, or paid proctoring tools are used.</em></li>
+                    <li><strong class="text-dark">Practice-Mode Discipline Monitoring:</strong> This assessment features basic browser-level anti-cheat controls (fullscreen mode, tab-switch and window-blur tracking) designed to simulate the discipline of real corporate hiring tests like TCS NQT. If you switch tabs, minimize your window, or exit fullscreen, a warning is recorded on the server. Exiting fullscreen mode also counts as a discipline violation. On the <strong>3rd warning</strong>, your assessment is automatically submitted. <em>No webcams, screen recordings, or paid proctoring tools are used.</em></li>
                 </ol>
             </div>
 
@@ -159,11 +159,11 @@
                     </label>
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center flex-wrap pt-2">
-                    <a href="{{ url_for('mock.test_list') }}" class="btn btn-outline-secondary px-4 py-2 font-weight-bold">
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center pt-2">
+                    <a href="{{ url_for('mock.test_list') }}" class="btn btn-outline-secondary px-4 py-2 font-weight-bold mb-2 mb-sm-0 text-center">
                         <i class="fas fa-arrow-left mr-1"></i> Back to Placement Mocks
                     </a>
-                    <button type="submit" class="btn btn-primary btn-lg px-5 font-weight-bold shadow-sm" id="startBtn" disabled>
+                    <button type="submit" class="btn btn-primary btn-lg px-4 px-md-5 font-weight-bold shadow-sm" id="startBtn" disabled>
                         {% if has_active_attempt %}
                         <i class="fas fa-play mr-2"></i> Resume Assessment
                         {% else %}

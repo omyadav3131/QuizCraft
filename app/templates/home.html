@@ -1,33 +1,68 @@
 <!-- HEADER_COMMENT_AUTOGEN -->
 <!-- FILE: app\templates\home.html -->
-<!-- PURPOSE: Brief description of this template and common edit points. -->
+<!-- PURPOSE: Landing home page for QuizCraft -->
 
 {% extends 'base.html' %}
+{% block title %}QuizCraft - Learn & Test Your Knowledge{% endblock %}
 
 {% block content %}
-<div class="home-container">
-  <div class="home-content">
-    <h1><i class="fas fa-graduation-cap"></i> Quiz Master</h1>
-    <p>Test your knowledge across multiple categories and difficulty levels. Learn, practice, and excel!</p>
+<div class="home-container py-4 py-md-5">
+  <div class="home-content shadow-lg mx-3" style="max-width: 680px; width: 100%; border-radius: 16px;">
+    <div style="width: 64px; height: 64px; line-height: 64px; border-radius: 50%; background: #e0e7ff; color: #0d6efd; font-size: 28px; margin: 0 auto 16px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15);">
+      <i class="fas fa-graduation-cap"></i>
+    </div>
+    <h1 class="font-weight-bold mb-2" style="font-size: clamp(2rem, 5vw, 2.8rem); color: #0d6efd;">QuizCraft</h1>
+    <p class="text-muted mb-4 mx-auto" style="max-width: 520px; font-size: clamp(0.95rem, 2.5vw, 1.1rem); line-height: 1.7;">
+      Master placement tests and challenge your skills. Practice company-pattern mock assessments, compete in real-time rooms, and track detailed performance analytics.
+    </p>
+
+    <!-- Quick Feature Chips -->
+    <div class="d-flex justify-content-center flex-wrap gap-2 mb-4" style="gap: 8px;">
+      <span class="badge badge-pill badge-light border text-muted px-3 py-1 font-weight-bold small">
+        <i class="fas fa-laptop-code text-primary mr-1"></i> Placement Mocks
+      </span>
+      <span class="badge badge-pill badge-light border text-muted px-3 py-1 font-weight-bold small">
+        <i class="fas fa-bolt text-warning mr-1"></i> Instant Autosave
+      </span>
+      <span class="badge badge-pill badge-light border text-muted px-3 py-1 font-weight-bold small">
+        <i class="fas fa-shield-alt text-success mr-1"></i> Discipline Monitored
+      </span>
+    </div>
     
     <div class="home-buttons">
       {% if not current_user.is_authenticated %}
-        <a class="btn btn-primary" href="{{ url_for('auth.register') }}">
-          <i class="fas fa-user-plus"></i> Get Started
+        <a class="btn btn-primary font-weight-bold shadow-sm" href="{{ url_for('auth.register') }}">
+          <i class="fas fa-user-plus mr-1"></i> Get Started
         </a>
-        <a class="btn btn-secondary" href="{{ url_for('auth.login') }}">
-          <i class="fas fa-sign-in-alt"></i> Login
+        <a class="btn btn-outline-primary font-weight-bold" href="{{ url_for('auth.login') }}">
+          <i class="fas fa-sign-in-alt mr-1"></i> Login
         </a>
-        <a class="btn btn-success" href="{{ url_for('quiz.leaderboard') }}">
-          <i class="fas fa-trophy"></i> View Leaderboard
+        <a class="btn btn-info font-weight-bold" href="{{ url_for('mock.test_list') }}" style="background: #0284c7; border-color: #0284c7;">
+          <i class="fas fa-laptop-code mr-1"></i> Placement Mocks
+        </a>
+        <a class="btn btn-success font-weight-bold" href="{{ url_for('quiz.leaderboard') }}">
+          <i class="fas fa-trophy mr-1"></i> Leaderboard
         </a>
       {% else %}
         {% if not current_user.is_admin() %}
-        <a class="btn btn-primary" href="{{ url_for('quiz.select') }}">
-          <i class="fas fa-play-circle"></i> Start Quiz
+        <a class="btn btn-primary font-weight-bold shadow-sm" href="{{ url_for('mock.test_list') }}" style="background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);">
+          <i class="fas fa-laptop-code mr-1"></i> Placement Mocks <span class="badge badge-warning text-dark ml-1">TCS NQT</span>
         </a>
-        <a class="btn btn-info" href="{{ url_for('quiz.feedback') }}" style="background: #17a2b8; border-color: #17a2b8;">
-          <i class="fas fa-comment-alt"></i> Feedback
+        <a class="btn btn-success font-weight-bold shadow-sm" href="{{ url_for('quiz.select') }}">
+          <i class="fas fa-play-circle mr-1"></i> Daily Quizzes
+        </a>
+        <a class="btn btn-outline-info font-weight-bold" href="{{ url_for('quiz.performance_dashboard') }}">
+          <i class="fas fa-chart-line mr-1"></i> My Performance
+        </a>
+        <a class="btn btn-outline-secondary font-weight-bold" href="{{ url_for('quiz.leaderboard') }}">
+          <i class="fas fa-trophy mr-1"></i> Leaderboard
+        </a>
+        {% else %}
+        <a class="btn btn-primary font-weight-bold shadow-sm" href="{{ url_for('admin.index') }}">
+          <i class="fas fa-cog mr-1"></i> Admin Dashboard
+        </a>
+        <a class="btn btn-info font-weight-bold shadow-sm" href="{{ url_for('admin.mock_tests_list') }}">
+          <i class="fas fa-laptop-code mr-1"></i> Manage Mock Tests
         </a>
         {% endif %}
       {% endif %}
