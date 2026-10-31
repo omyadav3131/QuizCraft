@@ -7,8 +7,19 @@
   <div class="admin-wrapper">
     <section class="dashboard-intro">
       <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb bg-transparent p-0 mb-1 small">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">Admin</a></li>
+            <li class="breadcrumb-item active" aria-current="page">User Progress</li>
+          </ol>
+        </nav>
         <h1 class="page-title">User Progress Overview</h1>
         <p class="page-subtitle">Track learner engagement, performance trends, and competition health in real time.</p>
+      </div>
+      <div>
+        <a class="btn btn-outline-secondary" href="{{ url_for('admin.index') }}">
+          <i class="fas fa-arrow-left mr-1"></i> Admin Panel
+        </a>
       </div>
     </section>
 
@@ -51,21 +62,24 @@
           <h2 class="panel-title">User Engagement</h2>
           <p class="panel-subtitle">Regular user accounts with quiz history</p>
         </div>
-        <span class="badge badge-soft">Regular users only</span>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <input type="text" id="userEngagementSearch" class="form-control form-control-sm" placeholder="Filter learners..." style="min-width: 200px;">
+          <span class="badge badge-soft">Regular users only</span>
+        </div>
       </header>
       <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0 analytics-table">
+        <table class="table table-hover align-middle mb-0 analytics-table" id="engagementTable">
           <thead>
             <tr>
               <th scope="col">User</th>
               <th scope="col" class="text-center">Attempts</th>
               <th scope="col" class="text-center">Avg. Score</th>
-              <th scope="col">Last Activity</th>
+              <th scope="col">Last Activity (IST)</th>
             </tr>
           </thead>
           <tbody>
             {% for user in users %}
-            <tr>
+            <tr class="engagement-row" data-username="{{ user.username|lower }}">
               <td>
                 <a class="user-link" href="{{ url_for('admin.admin_user_performance', user_id=user.id) }}" target="_blank" rel="noopener">
                   {{ user.username }}
@@ -75,7 +89,7 @@
               <td class="text-center">{{ user.avg_score }}%</td>
               <td>
                 {% if user.last_activity %}
-                  {{ user.last_activity.strftime('%d %b %Y %H:%M') }}
+                  {{ user.last_activity|to_ist('%d %b %Y, %I:%M %p') ~ ' IST' }}
                 {% else %}
                   <span class="text-muted">—</span>
                 {% endif %}
@@ -88,6 +102,9 @@
             {% endfor %}
           </tbody>
         </table>
+      </div>
+      <div id="noEngagementMatch" class="text-center py-3 text-muted d-none">
+        <small><i class="fas fa-search mr-1"></i> No learners match your search.</small>
       </div>
     </section>
 
@@ -108,7 +125,7 @@
               <th scope="col">Difficulty</th>
               <th scope="col" class="text-center">Participants</th>
               <th scope="col" class="text-center">Avg. Score</th>
-              <th scope="col">Started</th>
+              <th scope="col">Started (IST)</th>
             </tr>
           </thead>
           <tbody>
@@ -121,7 +138,7 @@
               <td class="text-center">{{ competition.avg_score }}%</td>
               <td>
                 {% if competition.started_at %}
-                  {{ competition.started_at.strftime('%d %b %Y %H:%M') }}
+                  {{ competition.started_at|to_ist('%d %b %Y, %I:%M %p') ~ ' IST' }}
                 {% else %}
                   <span class="text-muted">—</span>
                 {% endif %}
@@ -335,4 +352,37 @@
   }
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('userEngagementSearch');
+  if (!searchInput) return;
+
+  const rows = document.querySelectorAll('.engagement-row');
+  const noMatch = document.getElementById('noEngagementMatch');
+
+  searchInput.addEventListener('input', function() {
+    const q = this.value.trim().toLowerCase();
+    let matches = 0;
+
+    rows.forEach(row => {
+      const name = row.getAttribute('data-username') || '';
+      if (name.includes(q)) {
+        row.style.display = '';
+        matches++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    if (noMatch) {
+      if (matches === 0 && q.length > 0) {
+        noMatch.classList.remove('d-none');
+      } else {
+        noMatch.classList.add('d-none');
+      }
+    }
+  });
+});
+</script>
 {% endblock %}

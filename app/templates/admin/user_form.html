@@ -1,46 +1,63 @@
 <!-- HEADER_COMMENT_AUTOGEN -->
 <!-- FILE: app\templates\admin\user_form.html -->
-<!-- PURPOSE: Brief description of this template and common edit points. -->
+<!-- PURPOSE: Create and edit user accounts with role assignment. -->
 
 {% extends 'base.html' %}
 {% block content %}
 <div class="admin-container">
-  <div class="admin-wrapper">
-    <div class="admin-header">
-      <h1>{% if user %}<i class="fas fa-edit"></i> Edit User{% else %}<i class="fas fa-user-plus"></i> New User{% endif %}</h1>
-      <p>{% if user %}Update user details{% else %}Create a new user account{% endif %}</p>
+  <div class="admin-wrapper" style="max-width: 720px;">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb bg-transparent p-0 mb-3 small">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">Admin</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.users') }}">Users Directory</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{% if user %}Edit User{% else %}New User{% endif %}</li>
+      </ol>
+    </nav>
+
+    <div class="admin-header mb-4">
+      <h1 class="h3 font-weight-bold mb-1">
+        {% if user %}<i class="fas fa-edit text-primary mr-2"></i> Edit User: {{ user.username }}{% else %}<i class="fas fa-user-plus text-primary mr-2"></i> Create New User{% endif %}
+      </h1>
+      <p class="text-muted mb-0">{% if user %}Update credentials and role for this user account{% else %}Register a new account manually{% endif %}</p>
     </div>
 
-    <div class="form-card">
-      <form method="post">
-        <div class="mb-3">
-          <label class="form-label">Username *</label>
-          <input type="text" id="username" name="username" class="form-control form-control-lg" placeholder="Username" required value="{{ user.username if user else '' }}">
-        </div>
+    <div class="card shadow-sm border-0" style="border-radius: 12px;">
+      <div class="card-body p-4">
+        <form method="post">
+          <div class="form-group mb-3">
+            <label class="font-weight-bold">Username <span class="text-danger">*</span></label>
+            <input type="text" id="username" name="username" class="form-control form-control-lg" placeholder="Enter username" required value="{{ user.username if user else '' }}">
+          </div>
 
-        <div class="mb-3">
-          <label class="form-label">Email</label>
-          <input type="email" id="email" name="email" class="form-control form-control-lg" placeholder="Email (optional)" value="{{ user.email if user else '' }}">
-        </div>
+          <div class="form-group mb-3">
+            <label class="font-weight-bold">Email Address</label>
+            <input type="email" id="email" name="email" class="form-control form-control-lg" placeholder="email@example.com (optional)" value="{{ user.email if user else '' }}">
+          </div>
 
-        <div class="mb-3">
-          <label class="form-label">Password {% if not user %}*{% endif %}</label>
-          <input type="password" name="password" class="form-control form-control-lg" {% if not user %}required{% endif %} placeholder="Leave blank to keep current password">
-        </div>
+          <div class="form-group mb-3">
+            <label class="font-weight-bold">Password {% if not user %}<span class="text-danger">*</span>{% endif %}</label>
+            <input type="password" name="password" class="form-control form-control-lg" {% if not user %}required{% endif %} placeholder="{% if user %}Leave blank to keep existing password{% else %}Enter initial password{% endif %}">
+          </div>
 
-        <div class="mb-3">
-          <label class="form-label">Role</label>
-          <select name="role" id="role" class="form-select form-select-lg" aria-label="User role" title="User role">
-            <option value="user" {% if not user or user.role=='user' %}selected{% endif %}>User</option>
-            <option value="admin" {% if user and user.role=='admin' %}selected{% endif %}>Admin</option>
-          </select>
-        </div>
+          <div class="form-group mb-4">
+            <label class="font-weight-bold">User Role</label>
+            <select name="role" id="role" class="form-control form-control-lg" aria-label="User role" title="User role">
+              <option value="user" {% if not user or user.role=='user' %}selected{% endif %}>User (Learner)</option>
+              <option value="admin" {% if user and user.role=='admin' %}selected{% endif %}>Admin (Full Access)</option>
+            </select>
+          </div>
 
-        <div class="form-actions">
-          <button class="btn btn-success btn-lg" type="submit">Save</button>
-          <a class="btn btn-secondary btn-lg" href="{{ url_for('admin.users') }}">Cancel</a>
-        </div>
-      </form>
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <a class="btn btn-outline-secondary btn-lg" href="{{ url_for('admin.users') }}">
+              <i class="fas fa-times mr-1"></i> Cancel
+            </a>
+            <button class="btn btn-success btn-lg px-4 font-weight-bold" type="submit">
+              <i class="fas fa-save mr-1"></i> {% if user %}Save Changes{% else %}Create User{% endif %}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </div>

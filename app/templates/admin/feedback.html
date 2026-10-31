@@ -1,94 +1,148 @@
 <!-- HEADER_COMMENT_AUTOGEN -->
 <!-- FILE: app\templates\admin\feedback.html -->
-<!-- PURPOSE: Admin feedback management template -->
+<!-- PURPOSE: Admin feedback management template with ratings, search, and IST timestamps. -->
 
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="admin-container">
-  <div class="admin-wrapper">
-    <div class="admin-header">
-      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h1><i class="fas fa-comment-alt"></i> User Feedback</h1>
-        <a class="btn btn-secondary" href="{{ url_for('admin.index') }}">
-          <i class="fas fa-arrow-left"></i> Back to Dashboard
+<div class="container-fluid px-3 px-md-4 py-4" style="max-width: 1400px;">
+  <div class="admin-wrapper" style="max-width: 100%;">
+    <!-- Page Header & Breadcrumbs -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+      <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb bg-transparent p-0 mb-1 small">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">Admin</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Feedback</li>
+          </ol>
+        </nav>
+        <h1 class="h3 font-weight-bold text-dark mb-1">
+          <i class="fas fa-comment-alt text-primary mr-2"></i> User Feedback & Ratings
+        </h1>
+        <p class="text-muted mb-0">View user feedback, testimonials, and feature suggestions.</p>
+      </div>
+      <div class="mt-3 mt-md-0">
+        <a class="btn btn-outline-secondary" href="{{ url_for('admin.index') }}">
+          <i class="fas fa-arrow-left mr-1"></i> Admin Panel
         </a>
       </div>
-      <p>View all user feedback and ratings</p>
     </div>
 
-    <div class="table-responsive">
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Rating</th>
-            <th>Feedback</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% if feedbacks %}
-            {% for feedback in feedbacks %}
+    {% if feedbacks %}
+    <!-- Search Filter -->
+    <div class="card shadow-sm border-0 mb-4" style="border-radius: 10px;">
+      <div class="card-body p-3">
+        <div class="row align-items-center">
+          <div class="col-md-7 col-lg-8 mb-2 mb-md-0">
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text bg-white border-right-0 text-muted"><i class="fas fa-search"></i></span>
+              </div>
+              <input type="text" id="feedbackSearchInput" class="form-control border-left-0" placeholder="Filter feedback by user name, keywords, or rating...">
+            </div>
+          </div>
+          <div class="col-md-5 col-lg-4 text-md-right text-muted small">
+            <span class="badge badge-light border px-2 py-1 font-weight-normal" style="font-size: 0.85rem;">
+              Showing <strong id="visibleFeedbackCount">{{ feedbacks|length }}</strong> of {{ feedbacks|length }} reviews
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0" style="border-radius: 10px; overflow: hidden;">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="feedbackTable">
+          <thead class="thead-light">
             <tr>
-              <td><span class="badge badge-primary">{{ feedback.id }}</span></td>
+              <th style="width: 70px;">ID</th>
+              <th style="width: 180px;">User Name</th>
+              <th style="width: 180px;">Rating</th>
+              <th>Feedback Comment</th>
+              <th style="width: 200px;">Submitted (IST)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for feedback in feedbacks %}
+            <tr class="feedback-row" data-search="{{ (feedback.name ~ ' ' ~ feedback.feedback_text ~ ' ' ~ feedback.rating ~ ' star')|lower }}">
+              <td><span class="badge badge-secondary">#{{ feedback.id }}</span></td>
               <td><strong>{{ feedback.name }}</strong></td>
               <td>
-                <div class="rating-display">
+                <div class="d-flex align-items-center">
                   {% for i in range(1, 6) %}
                     {% if i <= feedback.rating %}
-                      <i class="fas fa-star text-warning"></i>
+                      <i class="fas fa-star text-warning" style="font-size: 0.85rem;"></i>
                     {% else %}
-                      <i class="far fa-star text-muted"></i>
+                      <i class="far fa-star text-muted" style="font-size: 0.85rem;"></i>
                     {% endif %}
                   {% endfor %}
-                  <span class="badge badge-info ml-2">{{ feedback.rating }}/5</span>
+                  <span class="badge badge-info ml-2 font-weight-bold">{{ feedback.rating }}/5</span>
                 </div>
               </td>
-              <td class="feedback-text">{{ feedback.feedback_text }}</td>
-              <td>{{ feedback.created_at.strftime('%Y-%m-%d %H:%M') if feedback.created_at else 'N/A' }}</td>
-            </tr>
-            {% endfor %}
-          {% else %}
-            <tr>
-              <td colspan="5" class="text-center text-muted py-4">
-                <i class="fas fa-inbox"></i> No feedback yet
+              <td>
+                <div style="max-width: 550px; line-height: 1.5; color: #334155;">
+                  {{ feedback.feedback_text }}
+                </div>
+              </td>
+              <td class="small text-muted">
+                {{ feedback.created_at|to_ist('%d %b %Y, %I:%M %p') ~ ' IST' if feedback.created_at else '—' }}
               </td>
             </tr>
-          {% endif %}
-        </tbody>
-      </table>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
+
+    <div id="noFeedbackMatch" class="card shadow-sm border-0 text-center p-4 d-none" style="border-radius: 10px;">
+      <p class="text-muted mb-0"><i class="fas fa-search mr-1"></i> No feedback matches your search filter.</p>
+    </div>
+
+    {% else %}
+    <div class="card shadow-sm border-0 text-center p-5" style="border-radius: 12px;">
+      <div style="font-size: 2.8rem; color: #94a3b8; margin-bottom: 12px;">
+        <i class="fas fa-comment-slash"></i>
+      </div>
+      <h5 class="text-dark font-weight-bold">No Feedback Submitted Yet</h5>
+      <p class="text-muted mb-0">Feedback submitted by users on quizzes and tests will appear here.</p>
+    </div>
+    {% endif %}
   </div>
 </div>
 
-<style>
-.rating-display {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('feedbackSearchInput');
+  if (!searchInput) return;
 
-.feedback-text {
-  max-width: 400px;
-  word-wrap: break-word;
-}
+  const rows = document.querySelectorAll('.feedback-row');
+  const countEl = document.getElementById('visibleFeedbackCount');
+  const noMatch = document.getElementById('noFeedbackMatch');
 
-.table th {
-  background-color: #f8f9fa;
-  font-weight: 600;
-}
+  searchInput.addEventListener('input', function() {
+    const q = this.value.trim().toLowerCase();
+    let visible = 0;
 
-@media (max-width: 768px) {
-  .table-responsive {
-    font-size: 0.9rem;
-  }
-  
-  .feedback-text {
-    max-width: 200px;
-  }
-}
-</style>
+    rows.forEach(row => {
+      const text = row.getAttribute('data-search') || '';
+      if (text.includes(q)) {
+        row.style.display = '';
+        visible++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    if (countEl) countEl.textContent = visible;
+
+    if (noMatch) {
+      if (visible === 0 && q.length > 0) {
+        noMatch.classList.remove('d-none');
+      } else {
+        noMatch.classList.add('d-none');
+      }
+    }
+  });
+});
+</script>
 {% endblock %}
-

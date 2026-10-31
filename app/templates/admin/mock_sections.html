@@ -1,20 +1,28 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container-fluid px-3 px-md-4 py-4" style="max-width: 1400px;">
+    <!-- Breadcrumbs & Header -->
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
         <div>
-            <div class="text-muted small mb-1">
-                <a href="{{ url_for('admin.mock_tests_list') }}" class="text-primary"><i class="fas fa-arrow-left"></i> All Mock Tests</a> / {{ test.company_name }}
-            </div>
-            <h1 class="h3 font-weight-bold text-dark mb-0">{{ test.title }} — Sections</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb bg-transparent p-0 mb-1 small">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">Admin</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.mock_tests_list') }}">Placement Mocks</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ test.title }} Sections</li>
+                </ol>
+            </nav>
+            <h1 class="h3 font-weight-bold text-dark mb-0">
+                <i class="fas fa-layer-group text-primary mr-2"></i> {{ test.title }} — Sections
+            </h1>
+            <p class="text-muted mb-0 small mt-1">Company: <span class="badge badge-primary">{{ test.company_name }}</span> &bull; Total Duration: {{ test.duration_minutes }} mins</p>
         </div>
-        <div class="mt-3 mt-md-0">
-            <a href="{{ url_for('admin.mock_test_edit', test_id=test.id) }}" class="btn btn-outline-primary btn-sm">
+        <div class="mt-3 mt-md-0 d-flex flex-wrap gap-2">
+            <a href="{{ url_for('admin.mock_test_edit', test_id=test.id) }}" class="btn btn-outline-primary">
                 <i class="fas fa-cog mr-1"></i> Edit Test Settings
             </a>
-            <a href="{{ url_for('admin.mock_tests_list') }}" class="btn btn-outline-secondary btn-sm ml-2">
-                Back to Tests
+            <a href="{{ url_for('admin.mock_tests_list') }}" class="btn btn-outline-secondary ml-md-2">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Tests
             </a>
         </div>
     </div>
@@ -23,15 +31,18 @@
         <!-- Sections List -->
         <div class="col-lg-7 mb-4">
             <div class="card shadow-sm border-0" style="border-radius: 12px; overflow: hidden;">
-                <div class="card-header bg-white border-0 py-3 px-4">
-                    <h5 class="font-weight-bold mb-0 text-dark"><i class="fas fa-layer-group text-primary mr-2"></i> Current Sections ({{ test.sections|length }})</h5>
+                <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="font-weight-bold mb-0 text-dark">
+                        <i class="fas fa-list-ol text-primary mr-2"></i> Current Sections ({{ test.sections|length }})
+                    </h5>
+                    <span class="badge badge-light border">{{ test.total_questions_count() }} total questions</span>
                 </div>
                 <div class="card-body p-0">
                     {% if test.sections %}
                     <ul class="list-group list-group-flush">
                         {% for sec in test.sections %}
                         <li class="list-group-item p-3 d-flex justify-content-between align-items-center flex-wrap">
-                            <div>
+                            <div class="mb-2 mb-sm-0">
                                 <span class="badge badge-secondary mr-2">#{{ sec.order }}</span>
                                 <strong class="text-dark" style="font-size: 1.05rem;">{{ sec.name }}</strong>
                                 <div class="text-muted small mt-1">
@@ -41,11 +52,11 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="mt-2 mt-sm-0">
-                                <a href="{{ url_for('admin.mock_questions_list', section_id=sec.id) }}" class="btn btn-sm btn-primary">
+                            <div class="d-flex align-items-center">
+                                <a href="{{ url_for('admin.mock_questions_list', section_id=sec.id) }}" class="btn btn-sm btn-primary mr-1">
                                     <i class="fas fa-list-ol mr-1"></i> Questions ({{ sec.questions|length }})
                                 </a>
-                                <form action="{{ url_for('admin.mock_section_delete', section_id=sec.id) }}" method="POST" class="d-inline ml-1" onsubmit="return confirm('Delete section {{ sec.name }} and all its questions?');">
+                                <form action="{{ url_for('admin.mock_section_delete', section_id=sec.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete section {{ sec.name }} and all its questions?');">
                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Section">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
@@ -56,8 +67,11 @@
                     </ul>
                     {% else %}
                     <div class="text-center py-5 text-muted">
-                        <i class="fas fa-folder-open mb-2" style="font-size: 2.5rem; color: #cbd5e1;"></i>
-                        <p class="mb-0">No sections added yet. Add your first section using the form on the right.</p>
+                        <div style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 8px;">
+                            <i class="fas fa-folder-open"></i>
+                        </div>
+                        <h6 class="font-weight-bold text-dark">No Sections Added Yet</h6>
+                        <p class="small text-muted mb-0">Use the form on the right to add exam sections (e.g. Numerical Ability, Verbal Ability).</p>
                     </div>
                     {% endif %}
                 </div>
@@ -68,7 +82,7 @@
         <div class="col-lg-5">
             <div class="card shadow-sm border-0" style="border-radius: 12px;">
                 <div class="card-header bg-white border-0 py-3 px-4">
-                    <h5 class="font-weight-bold mb-0 text-dark"><i class="fas fa-plus-circle text-success mr-2"></i> Add Section</h5>
+                    <h5 class="font-weight-bold mb-0 text-dark"><i class="fas fa-plus-circle text-success mr-2"></i> Add New Section</h5>
                 </div>
                 <div class="card-body p-4 pt-2">
                     <form method="POST">
@@ -80,7 +94,7 @@
 
                         <div class="form-row">
                             <div class="form-group col-6">
-                                <label for="order" class="font-weight-bold">Order #</label>
+                                <label for="order" class="font-weight-bold">Display Order #</label>
                                 <input type="number" class="form-control" id="order" name="order"
                                        value="{{ test.sections|length + 1 }}" min="1">
                             </div>

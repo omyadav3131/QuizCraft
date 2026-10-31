@@ -1,63 +1,131 @@
 <!-- HEADER_COMMENT_AUTOGEN -->
 <!-- FILE: app\templates\admin\categories.html -->
-<!-- PURPOSE: Brief description of this template and common edit points. -->
+<!-- PURPOSE: Manage quiz categories with add form and question counts. -->
 
 {% extends 'base.html' %}
 {% block content %}
 <div class="admin-container">
   <div class="admin-wrapper">
-    <div class="admin-header">
-      <h1><i class="fas fa-layer-group"></i> Manage Categories</h1>
-      <p>Add and view all quiz categories</p>
-    </div>
-
-    <div class="admin-header">
-      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h2>Add New Category</h2>
-        <div class="btn-group">
-          <a class="btn btn-outline-secondary" href="{{ url_for('admin.index') }}" title="Back to Questions">
-            <i class="fas fa-arrow-left"></i> Questions
-          </a>
-          <a class="btn btn-outline-secondary" href="{{ url_for('admin.users') }}" title="View Users">
-            <i class="fas fa-users"></i> Users
-          </a>
-        </div>
+    <!-- Page Header & Breadcrumbs -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+      <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb bg-transparent p-0 mb-1 small">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">Admin</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Categories</li>
+          </ol>
+        </nav>
+        <h1 class="h3 font-weight-bold text-dark mb-1">
+          <i class="fas fa-layer-group text-primary mr-2"></i> Quiz Categories
+        </h1>
+        <p class="text-muted mb-0">Create and view question categories for regular quizzes.</p>
+      </div>
+      <div class="mt-3 mt-md-0 d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-primary" href="{{ url_for('admin.index') }}" title="Back to Questions">
+          <i class="fas fa-arrow-left mr-1"></i> Questions Dashboard
+        </a>
+        <a class="btn btn-outline-secondary" href="{{ url_for('admin.users') }}" title="Manage Users">
+          <i class="fas fa-users mr-1"></i> Users
+        </a>
       </div>
     </div>
 
-    <div class="table-responsive">
-      <form method="post" class="row g-2 p-3 bg-white">
-        <div class="col-auto">
-          <input name="name" class="form-control form-control-lg" placeholder="Enter category name" required>
-        </div>
-        <div class="col-auto">
-          <button class="btn btn-primary btn-lg" type="submit">
-            <i class="fas fa-plus"></i> Add Category
-          </button>
-        </div>
-      </form>
-    </div>
-
-    <div class="admin-header mt-4">
-      <h2><i class="fas fa-list"></i> Existing Categories</h2>
-    </div>
-
-    <div class="table-responsive">
-      <div class="admin-cards">
-        {% if categories %}
-          {% for c in categories %}
-            <div class="admin-card">
-              <h4>{{ c.name }}</h4>
-              <p class="text-muted">Active Category</p>
-            </div>
-          {% endfor %}
-        {% else %}
-          <div class="alert alert-info w-100" role="alert">
-            <i class="fas fa-info-circle"></i> No categories found. Add one above.
+    <!-- Add Category Card -->
+    <div class="card shadow-sm border-0 mb-4" style="border-radius: 10px;">
+      <div class="card-header bg-white border-0 py-3 px-4">
+        <h5 class="font-weight-bold mb-0 text-dark"><i class="fas fa-plus-circle text-primary mr-2"></i> Add New Category</h5>
+      </div>
+      <div class="card-body px-4 pb-4 pt-1">
+        <form method="post" class="form-row align-items-center">
+          <div class="col-md-8 col-lg-9 mb-2 mb-md-0">
+            <input name="name" class="form-control form-control-lg" placeholder="Enter category name (e.g. Science, Literature, Data Science)" required>
           </div>
-        {% endif %}
+          <div class="col-md-4 col-lg-3">
+            <button class="btn btn-primary btn-lg btn-block" type="submit">
+              <i class="fas fa-plus mr-1"></i> Add Category
+            </button>
+          </div>
+        </form>
       </div>
     </div>
+
+    <!-- Existing Categories Section -->
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+      <h4 class="font-weight-bold text-dark mb-2 mb-md-0">
+        <i class="fas fa-list text-info mr-2"></i> Existing Categories ({{ categories|length }})
+      </h4>
+      {% if categories %}
+      <div style="min-width: 250px;">
+        <input type="text" id="categorySearchInput" class="form-control form-control-sm" placeholder="Filter categories...">
+      </div>
+      {% endif %}
+    </div>
+
+    {% if categories %}
+    <div class="row" id="categoriesGrid">
+      {% for c in categories %}
+      <div class="col-sm-6 col-md-4 col-lg-3 mb-3 category-card-col" data-cat-name="{{ c.name|lower }}">
+        <div class="card shadow-sm border-0 h-100" style="border-radius: 10px; border-top: 4px solid #0d6efd !important;">
+          <div class="card-body text-center p-3 d-flex flex-column justify-content-between">
+            <div class="my-2">
+              <div style="font-size: 1.8rem; color: #0d6efd; margin-bottom: 8px;">
+                <i class="fas fa-folder"></i>
+              </div>
+              <h5 class="font-weight-bold text-dark mb-1">{{ c.name }}</h5>
+              <span class="badge badge-info">{{ c.questions|length }} question{% if c.questions|length != 1 %}s{% endif %}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div id="noCatSearchMatch" class="card shadow-sm border-0 text-center p-4 d-none" style="border-radius: 10px;">
+      <p class="text-muted mb-0"><i class="fas fa-search mr-1"></i> No categories match your search.</p>
+    </div>
+
+    {% else %}
+    <div class="card shadow-sm border-0 text-center p-5" style="border-radius: 12px;">
+      <div style="font-size: 2.8rem; color: #94a3b8; margin-bottom: 12px;">
+        <i class="fas fa-inbox"></i>
+      </div>
+      <h5 class="text-dark font-weight-bold">No Categories Found</h5>
+      <p class="text-muted mb-0">Use the form above to add your first category.</p>
+    </div>
+    {% endif %}
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('categorySearchInput');
+  if (searchInput) {
+    const cards = document.querySelectorAll('.category-card-col');
+    const noMatch = document.getElementById('noCatSearchMatch');
+
+    searchInput.addEventListener('input', function() {
+      const q = this.value.trim().toLowerCase();
+      let matchCount = 0;
+
+      cards.forEach(card => {
+        const name = card.getAttribute('data-cat-name') || '';
+        if (name.includes(q)) {
+          card.style.display = '';
+          matchCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      if (noMatch) {
+        if (matchCount === 0 && q.length > 0) {
+          noMatch.classList.remove('d-none');
+        } else {
+          noMatch.classList.add('d-none');
+        }
+      }
+    });
+  }
+});
+</script>
 {% endblock %}

@@ -41,6 +41,7 @@ nav {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
+    flex-wrap: nowrap !important;
 }
 
 nav::before {
@@ -64,14 +65,16 @@ nav::before {
 }
 
 .nav-brand {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 700;
     color: #0d6efd;
     display: flex;
     align-items: center;
     gap: 0.5rem;
     margin: 0 !important;
-    padding: 1rem 1.5rem !important;
+    padding: 0.85rem 1.25rem !important;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .nav-links {
@@ -80,32 +83,48 @@ nav::before {
     gap: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
-}
-
-.nav-links {
-    display: flex !important;
-    gap: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    align-items: center;
+    flex-wrap: nowrap !important;
 }
 
 .nav-links a {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 1rem 1.5rem !important;
+    gap: 0.4rem;
+    padding: 0.85rem 0.95rem !important;
     text-decoration: none !important;
     color: #333 !important;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 13.5px;
     transition: all 0.3s ease;
     border-bottom: 3px solid transparent;
+    white-space: nowrap;
 }
 
 .nav-links a:hover {
     color: #0d6efd !important;
     border-bottom-color: #0d6efd;
     background: rgba(13, 110, 253, 0.05);
+}
+
+/* Specific styling for laptop widths (1366px, 1280px, 1024px) to prevent wrapping */
+@media (min-width: 993px) and (max-width: 1400px) {
+    .nav-brand {
+        font-size: 18px;
+        padding: 0.75rem 0.9rem !important;
+    }
+    .nav-links a {
+        padding: 0.75rem 0.6rem !important;
+        font-size: 12.5px;
+        gap: 0.25rem;
+    }
+    .nav-links .dropdown {
+        margin: 0 4px !important;
+    }
+    .nav-links .dropdown .btn {
+        padding: 4px 8px !important;
+        font-size: 12px !important;
+    }
 }
 
 /* ==================== HOME PAGE ==================== */
@@ -814,7 +833,7 @@ nav::before {
 
 @media (max-width: 992px) {
     nav {
-        flex-wrap: wrap;
+        flex-wrap: wrap !important;
     }
 
     .nav-toggle {
@@ -826,6 +845,7 @@ nav::before {
     nav .nav-links {
         display: none !important;
         width: 100%;
+        flex-wrap: wrap !important;
     }
 
     nav.nav-open .nav-links {
@@ -835,8 +855,9 @@ nav::before {
 
 @media (max-width: 768px) {
     nav {
-        flex-direction: column;
+        flex-direction: column !important;
         align-items: stretch !important;
+        flex-wrap: wrap !important;
     }
 
     .nav-brand {
@@ -846,11 +867,12 @@ nav::before {
     }
 
     .nav-links {
-        flex-direction: column;
-        align-items: stretch;
-        width: 100%;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        width: 100% !important;
         padding: 0 0.5rem 0.75rem !important;
         gap: 0.25rem !important;
+        flex-wrap: nowrap !important;
     }
 
     .nav-links a {

@@ -3,41 +3,63 @@
 {% block title %}{{ user.username }} — Progress{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+<div class="container-fluid px-3 px-md-4 py-4" style="max-width: 1200px;">
+  <!-- Breadcrumbs & Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
     <div>
-      <h2 class="mb-1">{{ user.username }} — Performance Summary</h2>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb bg-transparent p-0 mb-1 small">
+          <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">Admin</a></li>
+          <li class="breadcrumb-item"><a href="{{ url_for('admin.user_progress') }}">User Progress</a></li>
+          <li class="breadcrumb-item active" aria-current="page">{{ user.username }}</li>
+        </ol>
+      </nav>
+      <h2 class="h3 font-weight-bold text-dark mb-1">{{ user.username }} — Performance Summary</h2>
       <p class="text-muted mb-0">Detailed view of attempts and score trends for the selected user.</p>
     </div>
-    <div class="card shadow-sm border-0">
-      <div class="card-body py-3 px-4 text-center text-md-left">
-        <div class="small text-muted text-uppercase">Attempts</div>
-        <div class="h4 mb-0">{{ total_attempts }}</div>
+    <div class="mt-3 mt-md-0 d-flex gap-2">
+      <a href="{{ url_for('admin.user_progress') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left mr-1"></i> Back to User Progress
+      </a>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-sm-6 mb-3 mb-sm-0">
+      <div class="card shadow-sm border-0 h-100" style="border-radius: 12px; border-left: 4px solid #0d6efd !important;">
+        <div class="card-body py-3 px-4 text-center text-sm-left">
+          <div class="small text-muted text-uppercase font-weight-bold">Total Attempts</div>
+          <div class="h3 mb-0 font-weight-bold text-primary">{{ total_attempts }}</div>
+        </div>
       </div>
     </div>
-    <div class="card shadow-sm border-0">
-      <div class="card-body py-3 px-4 text-center text-md-left">
-        <div class="small text-muted text-uppercase">Average Score</div>
-        <div class="h4 mb-0">{{ avg_score }}%</div>
+    <div class="col-sm-6">
+      <div class="card shadow-sm border-0 h-100" style="border-radius: 12px; border-left: 4px solid #10b981 !important;">
+        <div class="card-body py-3 px-4 text-center text-sm-left">
+          <div class="small text-muted text-uppercase font-weight-bold">Average Score</div>
+          <div class="h3 mb-0 font-weight-bold text-success">{{ avg_score }}%</div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
-      <h5 class="mb-3">Score Trend</h5>
-      <canvas id="scoreChart" height="120"></canvas>
+  <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+    <div class="card-body p-4">
+      <h5 class="font-weight-bold text-dark mb-3"><i class="fas fa-chart-line text-primary mr-2"></i> Score Trend</h5>
+      <div style="position: relative; height: 260px;">
+        <canvas id="scoreChart"></canvas>
+      </div>
     </div>
   </div>
 
-  <div class="card border-0 shadow-sm">
-    <div class="card-body">
-      <h5 class="mb-3">Attempt History</h5>
+  <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+    <div class="card-body p-4">
+      <h5 class="font-weight-bold text-dark mb-3"><i class="fas fa-history text-info mr-2"></i> Attempt History</h5>
       <div class="table-responsive">
-        <table class="table table-sm align-middle mb-0">
-          <thead class="table-light">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="thead-light">
             <tr>
-              <th scope="col">Date</th>
+              <th scope="col">Date (IST)</th>
               <th scope="col">Category</th>
               <th scope="col">Difficulty</th>
               <th scope="col" class="text-center">Score %</th>
@@ -48,12 +70,16 @@
           <tbody>
             {% for attempt in attempts %}
             <tr>
-              <td>{{ attempt.created_at.strftime('%d %b %Y %H:%M') }}</td>
-              <td>{{ attempt.category_name }}</td>
-              <td>{{ attempt.difficulty }}</td>
-              <td class="text-center">{{ attempt.score_pct }}%</td>
+              <td class="small text-muted">{{ attempt.created_at|to_ist('%d %b %Y, %I:%M %p') ~ ' IST' if attempt.created_at else '—' }}</td>
+              <td><strong>{{ attempt.category_name }}</strong></td>
+              <td>
+                <span class="badge badge-{% if attempt.difficulty == 'Easy' %}success{% elif attempt.difficulty == 'Medium' %}warning text-dark{% else %}danger{% endif %}">
+                  {{ attempt.difficulty }}
+                </span>
+              </td>
+              <td class="text-center font-weight-bold text-primary">{{ attempt.score_pct }}%</td>
               <td class="text-center">{{ attempt.score }} / {{ attempt.total }}</td>
-              <td class="text-center">{{ attempt.points }}</td>
+              <td class="text-center"><span class="badge badge-light border font-weight-bold">{{ attempt.points }}</span></td>
             </tr>
             {% else %}
             <tr>

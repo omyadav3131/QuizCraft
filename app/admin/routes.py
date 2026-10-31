@@ -7,7 +7,7 @@ TIPS: Add your notes here to help future edits.
 """
 
 # app/admin/routes.py
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash, abort
 from flask_login import login_required, current_user
 from app.admin import admin_bp
 from app.models import (
@@ -18,26 +18,27 @@ from app.models import (
 
 from sqlalchemy import func, case, and_, or_
 from datetime import datetime, timedelta
+from functools import wraps
+
+def admin_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not current_user.is_authenticated:
+            flash('Admin access required', 'danger')
+            return redirect(url_for('auth.login'))
+        if not current_user.is_admin():
+            abort(403)
+        return f(*args, **kwargs)
+    return wrapper
 
 @admin_bp.route('/profile')
 @login_required
+@admin_required
 def admin_profile():
     questions_count = Question.query.count()
     competitions_count = Competition.query.count()
     users_count = User.query.count()
     return render_template('admin/profile.html', questions_count=questions_count, competitions_count=competitions_count, users_count=users_count)
-
-from datetime import datetime, timedelta
-
-def admin_required(f):
-    from functools import wraps
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.is_admin():
-            flash('Admin access required', 'danger')
-            return redirect(url_for('auth.login'))
-        return f(*args, **kwargs)
-    return wrapper
 
 @admin_bp.route('/competitions')
 @login_required
@@ -103,9 +104,9 @@ def competitions_view():
             'status': comp.status,
             'scores': scores,
             'winner': winner_name,
-            'created_at': comp.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            'started_at': comp.started_at.strftime('%Y-%m-%d %H:%M:%S') if comp.started_at else 'N/A',
-            'ended_at': comp.ended_at.strftime('%Y-%m-%d %H:%M:%S') if comp.ended_at else 'N/A'
+            'created_at': comp.created_at,
+            'started_at': comp.started_at,
+            'ended_at': comp.ended_at
         })
     
     return render_template('admin/competitions.html', competitions=comp_data, date_filter=date_filter)
@@ -711,6 +712,19 @@ def mock_test_delete(test_id):
     return redirect(url_for('admin.mock_tests_list'))
 
 
+@admin_bp.route('/mock-tests/<int:test_id>/toggle-active', methods=['POST'])
+@login_required
+@admin_required
+def mock_test_toggle_active(test_id):
+    """Toggle a mock test between Active and Draft status."""
+    test = MockTest.query.get_or_404(test_id)
+    test.is_active = not test.is_active
+    db.session.commit()
+    status_label = "activated" if test.is_active else "deactivated (moved to Draft)"
+    flash(f'Mock test "{test.title}" {status_label} successfully.', 'success')
+    return redirect(url_for('admin.mock_tests_list'))
+
+
 @admin_bp.route('/mock-tests/<int:test_id>/sections', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -1006,4 +1020,3 @@ def mock_attempt_reset(attempt_id):
 
     flash(f'Attempt #{attempt_id} for student "{student_name}" was reset successfully. They can now retake this test.', 'success')
     return redirect(url_for('admin.mock_test_attempts', test_id=test_id))
-

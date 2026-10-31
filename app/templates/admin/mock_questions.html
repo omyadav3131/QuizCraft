@@ -1,48 +1,78 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container-fluid px-3 px-md-4 py-4" style="max-width: 1400px;">
+    <!-- Breadcrumbs & Header -->
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
         <div>
-            <div class="text-muted small mb-1">
-                <a href="{{ url_for('admin.mock_tests_list') }}" class="text-primary">Mock Tests</a> / 
-                <a href="{{ url_for('admin.mock_sections_manage', test_id=test.id) }}" class="text-primary">{{ test.title }}</a> / 
-                {{ section.name }}
-            </div>
-            <h1 class="h3 font-weight-bold text-dark mb-0">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb bg-transparent p-0 mb-1 small">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">Admin</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.mock_tests_list') }}">Placement Mocks</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.mock_sections_manage', test_id=test.id) }}">{{ test.title }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ section.name }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3 font-weight-bold text-dark mb-1">
                 <i class="fas fa-list-ol text-primary mr-2"></i> {{ section.name }} — Questions ({{ section.questions|length }})
             </h1>
+            <p class="text-muted mb-0 small">
+                Company: <span class="badge badge-primary">{{ test.company_name }}</span> &bull;
+                Target: <strong>{{ section.num_questions }}</strong> questions &bull;
+                Current: <strong>{{ section.questions|length }}</strong>
+            </p>
         </div>
-        <div class="mt-3 mt-md-0">
-            <a href="{{ url_for('admin.mock_question_new', section_id=section.id) }}" class="btn btn-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add Single Question
+        <div class="mt-3 mt-md-0 d-flex flex-wrap gap-2">
+            <a href="{{ url_for('admin.mock_question_new', section_id=section.id) }}" class="btn btn-primary">
+                <i class="fas fa-plus mr-1"></i> Add Question
             </a>
-            <a href="{{ url_for('admin.mock_questions_bulk_add', section_id=section.id) }}" class="btn btn-success btn-sm ml-2">
-                <i class="fas fa-upload mr-1"></i> Bulk Add Questions
+            <a href="{{ url_for('admin.mock_questions_bulk_add', section_id=section.id) }}" class="btn btn-success ml-md-2">
+                <i class="fas fa-upload mr-1"></i> Bulk Add
             </a>
-            <a href="{{ url_for('admin.mock_sections_manage', test_id=test.id) }}" class="btn btn-outline-secondary btn-sm ml-2">
-                Back to Sections
+            <a href="{{ url_for('admin.mock_sections_manage', test_id=test.id) }}" class="btn btn-outline-secondary ml-md-2">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Sections
             </a>
         </div>
     </div>
 
     {% if section.questions %}
-    <div class="row">
+    <!-- Question Search Filter -->
+    <div class="card shadow-sm border-0 mb-4" style="border-radius: 10px;">
+        <div class="card-body p-3">
+            <div class="row align-items-center">
+                <div class="col-md-7 col-lg-8 mb-2 mb-md-0">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white border-right-0 text-muted"><i class="fas fa-search"></i></span>
+                        </div>
+                        <input type="text" id="mockQuestionSearchInput" class="form-control border-left-0" placeholder="Filter questions by statement or options...">
+                    </div>
+                </div>
+                <div class="col-md-5 col-lg-4 text-md-right text-muted small">
+                    <span class="badge badge-light border px-2 py-1 font-weight-normal" style="font-size: 0.85rem;">
+                        Showing <strong id="visibleQuestionCount">{{ section.questions|length }}</strong> of {{ section.questions|length }} questions
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" id="questionsContainer">
         {% for q in section.questions %}
-        <div class="col-12 mb-3">
+        <div class="col-12 mb-3 mock-question-item" data-search="{{ (q.text ~ ' ' ~ (q.option1 or '') ~ ' ' ~ (q.option2 or '') ~ ' ' ~ (q.option3 or '') ~ ' ' ~ (q.option4 or '') ~ ' ' ~ (q.explanation or ''))|lower }}">
             <div class="card shadow-sm border-0" style="border-radius: 10px;">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-start flex-wrap">
                         <div style="flex: 1; min-width: 250px;">
-                            <span class="badge badge-secondary mr-2">Q{{ loop.index }}</span>
+                            <span class="badge badge-secondary mr-2 font-weight-bold">Q{{ loop.index }}</span>
                             <span class="badge badge-info mr-2">{{ q.marks }} mark{% if q.marks != 1 %}s{% endif %}</span>
                             <h5 class="d-inline font-weight-bold text-dark">{{ q.text }}</h5>
                         </div>
-                        <div class="mt-2 mt-sm-0">
-                            <a href="{{ url_for('admin.mock_question_edit', section_id=section.id, question_id=q.id) }}" class="btn btn-sm btn-outline-primary" title="Edit Question">
+                        <div class="mt-2 mt-sm-0 d-flex align-items-center">
+                            <a href="{{ url_for('admin.mock_question_edit', section_id=section.id, question_id=q.id) }}" class="btn btn-sm btn-outline-primary mr-1" title="Edit Question">
                                 <i class="fas fa-edit mr-1"></i> Edit
                             </a>
-                            <form action="{{ url_for('admin.mock_question_delete', section_id=section.id, question_id=q.id) }}" method="POST" class="d-inline ml-1" onsubmit="return confirm('Delete this question?');">
+                            <form action="{{ url_for('admin.mock_question_delete', section_id=section.id, question_id=q.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this question?');">
                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Question">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
@@ -91,6 +121,11 @@
         </div>
         {% endfor %}
     </div>
+
+    <div id="noQuestionMatches" class="card shadow-sm border-0 text-center p-4 d-none" style="border-radius: 10px;">
+        <p class="text-muted mb-0"><i class="fas fa-search mr-1"></i> No questions match your search filter.</p>
+    </div>
+
     {% else %}
     <div class="card shadow-sm border-0 text-center p-5" style="border-radius: 12px;">
         <div style="font-size: 2.8rem; color: #94a3b8; margin-bottom: 12px;">
@@ -109,4 +144,40 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('mockQuestionSearchInput');
+    if (!searchInput) return;
+
+    const items = document.querySelectorAll('.mock-question-item');
+    const countEl = document.getElementById('visibleQuestionCount');
+    const noMatch = document.getElementById('noQuestionMatches');
+
+    searchInput.addEventListener('input', function() {
+        const q = this.value.trim().toLowerCase();
+        let visible = 0;
+
+        items.forEach(item => {
+            const text = item.getAttribute('data-search') || '';
+            if (text.includes(q)) {
+                item.style.display = '';
+                visible++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        if (countEl) countEl.textContent = visible;
+
+        if (noMatch) {
+            if (visible === 0 && q.length > 0) {
+                noMatch.classList.remove('d-none');
+            } else {
+                noMatch.classList.add('d-none');
+            }
+        }
+    });
+});
+</script>
 {% endblock %}
