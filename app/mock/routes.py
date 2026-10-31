@@ -10,6 +10,20 @@ from . import mock_bp
 
 logger = logging.getLogger(__name__)
 
+IST_OFFSET = timedelta(hours=5, minutes=30)
+
+
+def to_ist(dt):
+    """
+    Convert a UTC datetime (naive or aware) to an IST naive datetime for display.
+    Returns None if dt is None.
+    """
+    if dt is None:
+        return None
+    if getattr(dt, 'tzinfo', None) is not None:
+        dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+    return dt + IST_OFFSET
+
 
 def normalize_utc(dt):
     """
@@ -414,8 +428,10 @@ def record_violation(attempt_id):
     Record an anti-cheat discipline event (tab switch, window blur, fullscreen exit).
     Increments server-side violation_count with 1-second debounce.
     Auto-submits on 3rd violation.
+    Rejects the event entirely when the attempt is no longer in_progress.
+    Uses row-level locking (with_for_update) to prevent concurrent race conditions.
     """
-    attempt = MockAttempt.query.get_or_404(attempt_id)
+    attempt = MockAttempt.query.filter_by(id=attempt_id).with_for_update().first_or_404()
 
     # Security: IDOR verification
     if attempt.user_id != current_user.id:
@@ -424,11 +440,17 @@ def record_violation(attempt_id):
     if not attempt.test.is_active:
         return jsonify({'error': 'This mock test is inactive.'}), 403
 
-    if attempt.status != 'in_progress':
+    # Reject and do NOT log if attempt is already finalized or threshold already met.
+    # This prevents spurious rows after auto-submit (timed_out / disqualified / completed).
+    if attempt.status != 'in_progress' or (attempt.violation_count and attempt.violation_count >= 3):
+        if attempt.status == 'in_progress' and attempt.violation_count >= 3:
+            finalize_mock_attempt(attempt, status='disqualified')
+            db.session.commit()
         return jsonify({
-            'status': 'already_submitted',
+            'status': 'rejected',
+            'reason': 'Attempt already finalized.',
             'redirect_url': url_for('mock.result', attempt_id=attempt.id)
-        }), 200
+        }), 409
 
     now = datetime.utcnow()
     deadline = normalize_utc(attempt.server_deadline)
@@ -436,6 +458,7 @@ def record_violation(attempt_id):
     # Check deadline
     if deadline and now > deadline + timedelta(seconds=5):
         finalize_mock_attempt(attempt, status='timed_out')
+        db.session.commit()
         return jsonify({
             'status': 'expired',
             'redirect_url': url_for('mock.result', attempt_id=attempt.id),
@@ -461,6 +484,14 @@ def record_violation(attempt_id):
                 'max_violations': 3
             }), 200
 
+    # Guard: never insert a row after threshold is reached or attempt finalized
+    if attempt.status != 'in_progress' or attempt.violation_count >= 3:
+        return jsonify({
+            'status': 'rejected',
+            'reason': 'Attempt already finalized.',
+            'redirect_url': url_for('mock.result', attempt_id=attempt.id)
+        }), 409
+
     # Log violation record
     violation = MockViolation(
         attempt_id=attempt.id,
@@ -480,7 +511,7 @@ def record_violation(attempt_id):
             'violation_count': attempt.violation_count,
             'max_violations': 3,
             'redirect_url': url_for('mock.result', attempt_id=attempt.id),
-            'message': 'Maximum discipline warnings (3 of 3) reached. Your assessment has been automatically submitted.'
+            'message': 'Discipline threshold (3 of 3) reached. Your assessment has been automatically submitted.'
         }), 200
 
     db.session.commit()
@@ -605,11 +636,23 @@ def result(attempt_id):
         (attempt.score / sum(s['answered'] for s in section_stats) * 100), 1
     ) if sum(s['answered'] for s in section_stats) > 0 else 0.0
 
+    # Cap violation timeline rows to match violation_count (prevents extra rows from
+    # race conditions or post-finalization events that slipped through in older versions).
+    max_rows = max(0, attempt.violation_count or 0)
+    violations_display = (attempt.violations or [])[:max_rows]
+
+    # IST-converted timestamps for display (Phase 1c)
+    submitted_at_ist = to_ist(attempt.submitted_at)
+    started_at_ist = to_ist(attempt.started_at)
+
     return render_template(
         'mock/result.html',
         attempt=attempt,
         test=attempt.test,
         section_stats=section_stats,
         total_time_spent=total_time_spent,
-        overall_accuracy=overall_accuracy
+        overall_accuracy=overall_accuracy,
+        violations_display=violations_display,
+        submitted_at_ist=submitted_at_ist,
+        started_at_ist=started_at_ist,
     )

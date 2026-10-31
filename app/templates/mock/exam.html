@@ -272,6 +272,91 @@
             align-items: center;
             padding: 20px;
         }
+
+        /* Responsive Polish: Mobile (360px - 576px) and Tablet (768px) */
+        @media (max-width: 768px) {
+            .exam-header {
+                padding: 8px 12px;
+            }
+            .question-card {
+                padding: 16px !important;
+                min-height: auto;
+            }
+            .timer-box {
+                font-size: 1.15rem;
+                padding: 5px 12px;
+                letter-spacing: 1px;
+            }
+            #submitExamBtn {
+                padding: 6px 12px !important;
+                font-size: 0.88rem;
+                margin-left: 8px !important;
+            }
+            .section-tabs-container {
+                gap: 6px;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                padding-bottom: 4px;
+                -webkit-overflow-scrolling: touch;
+            }
+            .section-tab-btn {
+                padding: 5px 12px;
+                font-size: 0.82rem;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+            .mobile-palette-btn {
+                bottom: 15px;
+                right: 15px;
+                padding: 8px 16px;
+                font-size: 0.88rem;
+            }
+        }
+        @media (max-width: 576px) {
+            .exam-actions {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 8px;
+            }
+            .exam-actions > div {
+                display: flex;
+                width: 100%;
+                justify-content: space-between;
+                margin: 0 !important;
+            }
+            .exam-actions button {
+                flex: 1;
+                margin-right: 6px !important;
+                padding-left: 8px !important;
+                padding-right: 8px !important;
+                font-size: 0.84rem !important;
+            }
+            .exam-actions button:last-child {
+                margin-right: 0 !important;
+            }
+            .option-label {
+                padding: 10px 12px;
+                font-size: 0.92rem;
+            }
+            .option-letter {
+                width: 28px;
+                height: 28px;
+                line-height: 28px;
+                margin-right: 10px;
+                font-size: 0.85rem;
+            }
+            .timer-box {
+                font-size: 1.05rem;
+                padding: 4px 8px;
+            }
+            #submitExamBtn {
+                padding: 5px 10px !important;
+                font-size: 0.82rem;
+            }
+            .question-statement {
+                font-size: 1.02rem !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -599,12 +684,12 @@
                     <div class="text-warning mb-3" style="font-size: 2.8rem;">
                         <i class="fas fa-eye-slash"></i>
                     </div>
-                    <h5 class="font-weight-bold text-dark mb-2">Focus Loss / Tab Switch Detected</h5>
+                    <h5 class="font-weight-bold text-dark mb-2">Focus Loss / Fullscreen Exit Detected</h5>
                     <p class="text-muted mb-3" id="warnModalMsg">
-                        You navigated away from the exam window or minimized the screen. This assessment simulates real hiring test discipline and must be completed with continuous focus.
+                        You navigated away from the exam window, minimized the screen, or exited fullscreen mode. This assessment simulates real hiring test discipline and must be completed with continuous focus.
                     </p>
                     <div class="alert alert-danger py-2 px-3 small font-weight-bold mb-0">
-                        <i class="fas fa-shield-alt mr-1"></i> Critical: On the 3rd warning, your test will be automatically submitted!
+                        <i class="fas fa-shield-alt mr-1"></i> Critical: Exiting fullscreen also counts as a violation. On the 3rd warning, your test will be automatically submitted!
                     </div>
                 </div>
                 <div class="modal-footer border-0 bg-light justify-content-center">
@@ -850,9 +935,10 @@
 
         // 4. Tab Switch & Window Blur Detection
         let lastViolationSentAt = 0;
+        let isViolationInFlight = false;
 
         function sendViolationToServer(vType) {
-            if (!hasExamStarted || isSubmitting) return;
+            if (!hasExamStarted || isSubmitting || isViolationInFlight) return;
 
             const now = Date.now();
             // Client-side debounce: 1.2 seconds to prevent double firing between blur and visibilitychange
@@ -860,6 +946,7 @@
                 return;
             }
             lastViolationSentAt = now;
+            isViolationInFlight = true;
 
             fetch(violationUrl, {
                 method: 'POST',
@@ -869,18 +956,27 @@
                 },
                 body: JSON.stringify({ violation_type: vType })
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(res => res.json().then(data => ({ status: res.status, data: data })))
+            .then(({ status, data }) => {
+                isViolationInFlight = false;
                 if (data.status === 'debounced') return;
 
-                if (data.status === 'disqualified') {
+                if (data.status === 'disqualified' || data.status === 'rejected' || status === 409 || data.status === 'expired') {
                     isSubmitting = true;
+                    // Stop any further event logging immediately
+                    window.onblur = null;
                     $('#violationWarningModal').modal('hide');
-                    document.getElementById('viewResultsBtn').href = data.redirect_url;
-                    $('#disqualifiedModal').modal('show');
-                    setTimeout(() => {
-                        window.location.href = data.redirect_url;
-                    }, 2500);
+                    const redirectUrl = data.redirect_url || "{{ url_for('mock.result', attempt_id=attempt.id) }}";
+                    if (data.status === 'disqualified') {
+                        document.getElementById('viewResultsBtn').href = redirectUrl;
+                        $('#disqualifiedModal').modal('show');
+                        setTimeout(() => {
+                            window.location.href = redirectUrl;
+                        }, 2500);
+                    } else {
+                        window.location.href = redirectUrl;
+                    }
+                    return;
                 } else if (data.status === 'warning') {
                     document.getElementById('warnModalCurrent').innerText = data.violation_count;
                     if (data.message) {
@@ -889,7 +985,10 @@
                     $('#violationWarningModal').modal('show');
                 }
             })
-            .catch(err => console.error("Violation reporting issue:", err));
+            .catch(err => {
+                isViolationInFlight = false;
+                console.error("Violation reporting issue:", err);
+            });
         }
 
         document.addEventListener('visibilitychange', function() {

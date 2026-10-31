@@ -128,7 +128,7 @@ BEGIN
 
     -- Verbal Ability Question 1
     INSERT INTO mock_question (section_id, text, option1, option2, option3, option4, correct_option, explanation, marks, created_at)
-    VALUES (v_sec_verb_id, 'Choose the word most nearly SIMILAR in meaning (SYNONYM) to ''TRANSPARENT'' as used in the sentence: ''The auditor found that the company''''s financial records were completely transparent, leaving no room for suspicion.''', 'Ambiguous', 'Clear', 'Complex', 'Deceptive', 2, '''Transparent'' in this context means easily understood, clear, and free from deceit or concealment. ''Clear'' is the exact synonym.', 1, NOW());
+    VALUES (v_sec_verb_id, 'Choose the word most nearly SIMILAR in meaning (SYNONYM) to ''TRANSPARENT'' as used in the sentence: ''The auditor found that the company''s financial records were completely transparent, leaving no room for suspicion.''', 'Ambiguous', 'Clear', 'Complex', 'Deceptive', 2, '''Transparent'' in this context means easily understood, clear, and free from deceit or concealment. ''Clear'' is the exact synonym.', 1, NOW());
 
     -- Verbal Ability Question 2
     INSERT INTO mock_question (section_id, text, option1, option2, option3, option4, correct_option, explanation, marks, created_at)
@@ -194,7 +194,7 @@ S: These high transaction volumes demand automated security mechanisms.', 'Q-S-R
 
     -- Reasoning Ability Question 3
     INSERT INTO mock_question (section_id, text, option1, option2, option3, option4, correct_option, explanation, marks, created_at)
-    VALUES (v_sec_reas_id, 'Pointing to a photograph of a boy, Suresh said: ''He is the only son of my father''''s only son.'' How is the boy related to Suresh?', 'Brother', 'Son', 'Nephew', 'Uncle', 2, 'Suresh is a male speaker. ''My father''''s only son'' refers to Suresh himself. The statement therefore means: ''He is the only son of Suresh.'' Thus, the boy is Suresh''''s son.', 1, NOW());
+    VALUES (v_sec_reas_id, 'Pointing to a photograph of a boy, Suresh said: ''He is the only son of my father''s only son.'' How is the boy related to Suresh?', 'Brother', 'Son', 'Nephew', 'Uncle', 2, 'Suresh is a male speaker. ''My father''s only son'' refers to Suresh himself. The statement therefore means: ''He is the only son of Suresh.'' Thus, the boy is Suresh''s son.', 1, NOW());
 
     -- Reasoning Ability Question 4
     INSERT INTO mock_question (section_id, text, option1, option2, option3, option4, correct_option, explanation, marks, created_at)
@@ -212,7 +212,7 @@ Which conclusion(s) logically follow?', 'Only conclusion 1 follows', 'Only concl
 
     -- Reasoning Ability Question 6
     INSERT INTO mock_question (section_id, text, option1, option2, option3, option4, correct_option, explanation, marks, created_at)
-    VALUES (v_sec_reas_id, 'In a row of 40 students facing North, Priya is 15th from the left end. What is Priya''''s position from the right end of the row?', '24th', '25th', '26th', '27th', 3, 'Position from Right = Total Students - Position from Left + 1 = 40 - 15 + 1 = 26th.', 1, NOW());
+    VALUES (v_sec_reas_id, 'In a row of 40 students facing North, Priya is 15th from the left end. What is Priya''s position from the right end of the row?', '24th', '25th', '26th', '27th', 3, 'Position from Right = Total Students - Position from Left + 1 = 40 - 15 + 1 = 26th.', 1, NOW());
 
     -- Reasoning Ability Question 7
     INSERT INTO mock_question (section_id, text, option1, option2, option3, option4, correct_option, explanation, marks, created_at)

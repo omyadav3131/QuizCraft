@@ -1,206 +1,389 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container py-5" style="max-width: 960px;">
-    <!-- Top Result Banner -->
+<style>
+    /* Scannable Compact Result Styles */
+    .result-metric-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px 16px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .result-metric-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    .metric-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+    .metric-value {
+        font-size: 1.6rem;
+        font-weight: 800;
+        line-height: 1.1;
+    }
+    .section-stat-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px 16px;
+        height: 100%;
+    }
+    .question-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        margin-bottom: 12px;
+        padding: 14px 16px;
+        transition: border-color 0.15s ease;
+    }
+    .question-card:hover {
+        border-color: #cbd5e1;
+    }
+    .filter-chip-group {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 6px;
+        padding-bottom: 4px;
+        -webkit-overflow-scrolling: touch;
+    }
+    .filter-chip {
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 5px 12px;
+        border-radius: 20px;
+        white-space: nowrap;
+        cursor: pointer;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #475569;
+        transition: all 0.15s ease;
+    }
+    .filter-chip:hover {
+        background: #f1f5f9;
+        color: #1e293b;
+    }
+    .filter-chip.active {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #ffffff;
+    }
+    .ans-box {
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 0.88rem;
+        min-height: 40px;
+        word-break: break-word;
+    }
+    .ans-box-correct {
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        color: #065f46;
+        font-weight: 600;
+    }
+    .ans-box-wrong {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        font-weight: 600;
+    }
+    .ans-box-unattempted {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #64748b;
+        font-style: italic;
+    }
+
+    /* Print Optimization */
+    @media print {
+        header, nav, footer, .navbar, .btn, .filter-chip-group, #sectionFilter, .no-print, .modal {
+            display: none !important;
+        }
+        .container {
+            max-width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .collapse {
+            display: block !important;
+            height: auto !important;
+            visibility: visible !important;
+        }
+        .question-card, .section-stat-card, .result-metric-card {
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: none !important;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            margin-bottom: 10px !important;
+            padding: 10px !important;
+        }
+        body {
+            background: #ffffff !important;
+            color: #000000 !important;
+            font-size: 11pt;
+        }
+    }
+</style>
+
+<div class="container py-3 py-md-4" style="max-width: 980px;">
+    <!-- Breadcrumb & Header Action -->
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb bg-transparent p-0 mb-1 small">
+                <li class="breadcrumb-item"><a href="{{ url_for('mock.test_list') }}">Placement Mocks</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ test.company_name }} Scorecard</li>
+            </ol>
+        </nav>
+        <div class="no-print">
+            <button onclick="window.print()" class="btn btn-sm btn-outline-secondary mr-2" title="Print or save as PDF">
+                <i class="fas fa-print mr-1"></i> Print / PDF
+            </button>
+            <a href="{{ url_for('mock.test_list') }}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-arrow-left mr-1"></i> All Mocks
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Card -->
     <div class="card shadow-sm border-0 mb-4" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
-        <div class="card-header bg-primary text-white p-4">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div>
-                    <span class="badge badge-light text-primary font-weight-bold px-3 py-1 mb-2 text-uppercase letter-spacing">
-                        <i class="fas fa-building mr-1"></i> {{ test.company_name }} Placement Mock Scorecard
+        <!-- Header Banner with Status Chip -->
+        <div class="card-header bg-white border-bottom p-3 p-md-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap">
+                <div class="pr-2 mb-2 mb-sm-0">
+                    <span class="badge badge-pill badge-primary px-3 py-1 mb-2 font-weight-bold" style="font-size: 0.78rem;">
+                        <i class="fas fa-building mr-1"></i> {{ test.company_name }} PLACEMENT MOCK
                     </span>
-                    <h2 class="h3 font-weight-bold mb-0">{{ test.title }}</h2>
-                    <p class="mb-0 text-white-50 small mt-1">Detailed Performance Diagnostics & Question Analysis</p>
+                    <h1 class="h4 font-weight-bold text-dark mb-1">{{ test.title }}</h1>
+                    <div class="small text-muted">
+                        <span><i class="far fa-calendar-alt mr-1"></i> Submitted: {{ (submitted_at_ist or attempt.submitted_at)|to_ist('%d %b %Y, %I:%M %p') }} IST</span>
+                        {% if started_at_ist or attempt.started_at %}
+                        <span class="mx-2">&bull;</span>
+                        <span><i class="far fa-clock mr-1"></i> Started: {{ (started_at_ist or attempt.started_at)|to_ist('%I:%M %p') }} IST</span>
+                        {% endif %}
+                    </div>
                 </div>
-                <div class="mt-3 mt-sm-0">
+                <div>
                     {% if attempt.status == 'timed_out' %}
-                    <span class="badge badge-warning px-3 py-2 font-weight-bold shadow-sm" style="font-size: 0.95rem;">
-                        <i class="fas fa-clock mr-1"></i> Auto-submitted when time ended
+                    <span class="badge badge-warning px-3 py-2 font-weight-bold text-dark shadow-sm" style="font-size: 0.88rem; border-radius: 20px;">
+                        <i class="fas fa-clock mr-1"></i> Auto-submitted: time ended
                     </span>
                     {% elif attempt.status == 'disqualified' %}
-                    <span class="badge badge-danger px-3 py-2 font-weight-bold shadow-sm" style="font-size: 0.95rem;">
-                        <i class="fas fa-shield-alt mr-1"></i> Auto-submitted due to 3 discipline violations
+                    <span class="badge badge-danger px-3 py-2 font-weight-bold shadow-sm" style="font-size: 0.88rem; border-radius: 20px;">
+                        <i class="fas fa-shield-alt mr-1"></i> Auto-submitted: violations
                     </span>
                     {% else %}
-                    <span class="badge badge-success px-3 py-2 font-weight-bold shadow-sm" style="font-size: 0.95rem;">
-                        <i class="fas fa-check-circle mr-1"></i> Assessment Completed
+                    <span class="badge badge-success px-3 py-2 font-weight-bold shadow-sm" style="font-size: 0.88rem; border-radius: 20px;">
+                        <i class="fas fa-check-circle mr-1"></i> Completed
                     </span>
                     {% endif %}
                 </div>
             </div>
-        </div>
 
-        <div class="card-body p-4 p-md-5">
             {% if attempt.status == 'disqualified' %}
-            <div class="alert alert-danger py-3 px-4 mb-4 font-weight-bold" style="border-radius: 8px;">
-                <i class="fas fa-exclamation-triangle mr-2"></i> Auto-submitted due to 3 discipline violations
-                <div class="font-weight-normal small mt-1 text-dark">
-                    Your assessment was automatically submitted because maximum discipline warnings were exceeded. Your score is calculated from all answers saved before submission (unanswered questions receive 0 marks, with zero negative marking).
-                </div>
+            <div class="alert alert-danger py-2 px-3 mt-3 mb-0 small font-weight-bold" style="border-radius: 8px;">
+                <i class="fas fa-exclamation-triangle mr-2"></i> Auto-submitted due to 3 discipline violations (loss of focus / tab switches / fullscreen exit). Score is evaluated from all answers saved prior to disqualification.
             </div>
             {% elif attempt.status == 'timed_out' %}
-            <div class="alert alert-warning py-3 px-4 mb-4 font-weight-bold text-dark" style="border-radius: 8px;">
-                <i class="fas fa-clock mr-2"></i> Auto-submitted when time ended
-                <div class="font-weight-normal small mt-1 text-dark">
-                    Your assessment was automatically submitted because examination time elapsed. Your score is calculated from all answers saved before the deadline (unanswered questions receive 0 marks, with zero negative marking).
-                </div>
+            <div class="alert alert-warning py-2 px-3 mt-3 mb-0 small font-weight-bold text-dark" style="border-radius: 8px;">
+                <i class="fas fa-clock mr-2"></i> Auto-submitted when time ended. Examination time expired. Score is evaluated from all answers saved prior to the deadline.
             </div>
             {% endif %}
-            <!-- Score Overview Cards Row -->
-            <div class="row text-center mb-4">
-                <div class="col-6 col-md-3 mb-3">
-                    <div class="p-3 bg-light rounded border">
-                        <div class="text-muted small font-weight-bold text-uppercase">Total Score</div>
-                        <h2 class="font-weight-bold text-primary mb-0 mt-1">
-                            {{ attempt.score }} <span style="font-size: 1rem; color: #64748b;">/ {{ attempt.total_marks }}</span>
-                        </h2>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3 mb-3">
-                    <div class="p-3 bg-light rounded border">
-                        <div class="text-muted small font-weight-bold text-uppercase">Percentage</div>
-                        {% set pct = ((attempt.score / attempt.total_marks * 100)|round(1)) if attempt.total_marks > 0 else 0 %}
-                        <h2 class="font-weight-bold text-dark mb-0 mt-1">{{ pct }}%</h2>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3 mb-3">
-                    <div class="p-3 bg-light rounded border">
-                        <div class="text-muted small font-weight-bold text-uppercase">Accuracy</div>
-                        <h2 class="font-weight-bold text-success mb-0 mt-1">{{ overall_accuracy }}%</h2>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3 mb-3">
-                    <div class="p-3 bg-light rounded border">
-                        <div class="text-muted small font-weight-bold text-uppercase">Time Taken</div>
-                        <h2 class="font-weight-bold text-dark mb-0 mt-1">
-                            {{ (total_time_spent // 60) }}m {{ (total_time_spent % 60) }}s
-                        </h2>
-                    </div>
-                </div>
-            </div>
+        </div>
 
-            <!-- Anti-Cheat & Discipline Report Card -->
-            <div class="card bg-light border p-3 mb-4" style="border-radius: 8px;">
-                <div class="d-flex justify-content-between align-items-center flex-wrap">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-shield-alt text-primary mr-2" style="font-size: 1.25rem;"></i>
-                        <div>
-                            <strong class="text-dark">Exam Discipline & Proctoring Summary:</strong>
-                            {% if attempt.violation_count == 0 %}
-                            <span class="text-success font-weight-bold ml-2">
-                                <i class="fas fa-check-circle mr-1"></i> Clean Session (0 tab switch / window blur events)
-                            </span>
-                            {% else %}
-                            <span class="text-danger font-weight-bold ml-2">
-                                <i class="fas fa-exclamation-triangle mr-1"></i> {{ attempt.violation_count }} violation event(s) recorded
-                            </span>
-                            {% endif %}
+        <div class="card-body p-3 p-md-4">
+            <!-- 1. One Compact Summary Row: Score, Percentage, Accuracy, Time -->
+            {% set pct = ((attempt.score / attempt.total_marks * 100)|round(1)) if attempt.total_marks > 0 else 0 %}
+            <div class="row no-gutters mx-n1 mb-4">
+                <div class="col-6 col-md-3 px-1 mb-2 mb-md-0">
+                    <div class="result-metric-card text-center">
+                        <div class="metric-label">Total Score</div>
+                        <div class="metric-value text-primary">
+                            {{ attempt.score }}<span style="font-size: 0.95rem; font-weight: 600; color: #64748b;"> / {{ attempt.total_marks }}</span>
                         </div>
                     </div>
-                    <div class="mt-2 mt-md-0">
-                        <span class="badge badge-secondary px-2 py-1">Practice Mode Discipline</span>
+                </div>
+                <div class="col-6 col-md-3 px-1 mb-2 mb-md-0">
+                    <div class="result-metric-card text-center">
+                        <div class="metric-label">Percentage</div>
+                        <div class="metric-value text-dark">{{ pct }}%</div>
                     </div>
                 </div>
-
-                {% if attempt.violations %}
-                <div class="mt-3 pt-2 border-top">
-                    <div class="small font-weight-bold text-muted mb-2">Recorded Event Timeline:</div>
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered bg-white mb-0 text-left" style="font-size: 0.85rem;">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>#</th>
-                                    <th>Event Type</th>
-                                    <th>Timestamp (UTC)</th>
-                                    <th>Discipline Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for v in attempt.violations %}
-                                <tr>
-                                    <td class="font-weight-bold text-muted">{{ loop.index }}</td>
-                                    <td>
-                                        <span class="badge badge-warning text-dark font-weight-bold">
-                                            {{ v.violation_type|replace('_', ' ')|title }}
-                                        </span>
-                                    </td>
-                                    <td>{{ v.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                                    <td>
-                                        {% if loop.index < 3 %}
-                                        <span class="text-warning font-weight-bold">Warning {{ loop.index }} of 3</span>
-                                        {% else %}
-                                        <span class="text-danger font-weight-bold">Auto-Submitted (Disqualified)</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                <div class="col-6 col-md-3 px-1">
+                    <div class="result-metric-card text-center">
+                        <div class="metric-label">Accuracy</div>
+                        <div class="metric-value text-success">{{ overall_accuracy }}%</div>
                     </div>
                 </div>
-                {% endif %}
+                <div class="col-6 col-md-3 px-1">
+                    <div class="result-metric-card text-center">
+                        <div class="metric-label">Time Taken</div>
+                        <div class="metric-value text-dark" style="font-size: 1.35rem; padding-top: 2px;">
+                            {{ (total_time_spent // 60) }}m {{ (total_time_spent % 60) }}s
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Section-wise Performance Breakdown -->
-            <h5 class="font-weight-bold text-dark mb-3">
-                <i class="fas fa-chart-pie text-primary mr-2"></i> Section-Wise Performance & Accuracy
-            </h5>
-            <div class="table-responsive mb-4">
-                <table class="table table-bordered text-center mb-0" style="font-size: 0.95rem;">
-                    <thead class="thead-light">
-                        <tr>
-                            <th class="text-left">Section</th>
-                            <th>Total Qs</th>
-                            <th>Score</th>
-                            <th>Attempted</th>
-                            <th>Correct</th>
-                            <th>Accuracy</th>
-                            <th>Time Spent</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for sec_stat in section_stats %}
-                        <tr>
-                            <td class="text-left font-weight-bold text-dark">{{ sec_stat.section.name }}</td>
-                            <td>{{ sec_stat.total_questions }}</td>
-                            <td><strong class="text-primary">{{ sec_stat.score }}</strong> / {{ sec_stat.total_marks }}</td>
-                            <td>{{ sec_stat.answered }} / {{ sec_stat.total_questions }}</td>
-                            <td><span class="text-success font-weight-bold">{{ sec_stat.correct }}</span></td>
-                            <td>{{ sec_stat.accuracy }}%</td>
-                            <td>{{ (sec_stat.time_spent // 60) }}m {{ (sec_stat.time_spent % 60) }}s</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Detailed Question-by-Question Review with Explanations -->
-            <h5 class="font-weight-bold text-dark mb-3 mt-5">
-                <i class="fas fa-tasks text-primary mr-2"></i> Detailed Question-by-Question Analysis
-            </h5>
-
-            {% for sec_stat in section_stats %}
+            <!-- 2. Section Performance as Small Cards with Progress Bar -->
             <div class="mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                    <h6 class="font-weight-bold text-primary mb-0">
-                        Section: {{ sec_stat.section.name }} ({{ sec_stat.score }}/{{ sec_stat.total_marks }} Marks)
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="font-weight-bold text-dark mb-0" style="font-size: 0.92rem;">
+                        <i class="fas fa-chart-pie text-primary mr-1"></i> Section Performance Breakdown
                     </h6>
-                    <span class="badge badge-light border text-muted">{{ sec_stat.accuracy }}% Accuracy</span>
+                    <span class="small text-muted">{{ section_stats|length }} Sections</span>
                 </div>
+                <div class="row">
+                    {% for sec_stat in section_stats %}
+                    {% set sec_pct = ((sec_stat.score / sec_stat.total_marks * 100)|round(1)) if sec_stat.total_marks > 0 else 0 %}
+                    <div class="col-12 col-md-4 mb-2 mb-md-0">
+                        <div class="section-stat-card">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong class="text-dark small text-truncate" title="{{ sec_stat.section.name }}">{{ sec_stat.section.name }}</strong>
+                                <span class="badge badge-light border text-primary font-weight-bold">
+                                    {{ sec_stat.score }}/{{ sec_stat.total_marks }}
+                                </span>
+                            </div>
+                            <div class="progress mb-2" style="height: 6px; background-color: #f1f5f9; border-radius: 4px;">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ sec_pct }}%;" aria-valuenow="{{ sec_pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted" style="font-size: 0.78rem;">
+                                <span>Attempted: <strong>{{ sec_stat.answered }}/{{ sec_stat.total_questions }}</strong></span>
+                                <span>Accuracy: <strong class="text-success">{{ sec_stat.accuracy }}%</strong></span>
+                                <span>Time: <strong>{{ (sec_stat.time_spent // 60) }}m</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
 
+            <!-- 3. Discipline Summary in a Small Collapsible Block -->
+            {% set violations_list = violations_display if violations_display is defined else (attempt.violations or [])[:(attempt.violation_count or 0)] %}
+            <div class="card bg-light border mb-4" style="border-radius: 8px;">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="d-flex align-items-center pr-2">
+                            <i class="fas fa-shield-alt text-primary mr-2" style="font-size: 1.15rem;"></i>
+                            <div>
+                                <span class="font-weight-bold text-dark small">Exam Discipline & Proctoring Summary:</span>
+                                {% if attempt.violation_count == 0 %}
+                                <span class="badge badge-success ml-2 font-weight-bold">
+                                    <i class="fas fa-check-circle mr-1"></i> Clean Session (0 violations)
+                                </span>
+                                {% else %}
+                                <span class="badge badge-danger ml-2 font-weight-bold">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i> {{ attempt.violation_count }} violation event(s) recorded
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if violations_list %}
+                        <div class="mt-2 mt-sm-0 no-print">
+                            <button class="btn btn-sm btn-outline-secondary font-weight-bold py-1 px-2" type="button" data-toggle="collapse" data-target="#disciplineTimeline" aria-expanded="false" style="font-size: 0.8rem;">
+                                View Timeline <i class="fas fa-chevron-down ml-1"></i>
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if violations_list %}
+                    <div class="collapse mt-3 pt-3 border-top" id="disciplineTimeline">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered bg-white mb-0 text-left" style="font-size: 0.82rem;">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th style="width: 40px;">#</th>
+                                        <th>Event Type</th>
+                                        <th>Timestamp (IST)</th>
+                                        <th>Action Taken</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for v in violations_list %}
+                                    <tr>
+                                        <td class="font-weight-bold text-muted text-center">{{ loop.index }}</td>
+                                        <td>
+                                            <span class="badge badge-warning text-dark font-weight-bold">
+                                                {{ v.violation_type|replace('_', ' ')|title }}
+                                            </span>
+                                        </td>
+                                        <td class="text-muted">{{ v.timestamp|to_ist('%d %b %Y, %I:%M:%S %p') }} IST</td>
+                                        <td>
+                                            {% if loop.index < 3 %}
+                                            <span class="text-warning font-weight-bold">Warning {{ loop.index }} of 3</span>
+                                            {% else %}
+                                            <span class="text-danger font-weight-bold">Auto-Submitted (Disqualified)</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 4. Client-side Filter Chips & Section Filter -->
+            {% set total_answered = section_stats|sum(attribute='answered') %}
+            {% set total_correct = section_stats|sum(attribute='correct') %}
+            {% set total_questions = section_stats|sum(attribute='total_questions') %}
+            {% set total_unattempted = total_questions - total_answered %}
+            {% set total_wrong = total_answered - total_correct %}
+
+            <div class="d-flex justify-content-between align-items-center flex-wrap mb-3 pt-2 border-top no-print">
+                <div class="filter-chip-group mb-2 mb-md-0">
+                    <button type="button" class="filter-chip active" data-filter="all">
+                        All <span class="badge badge-light ml-1 font-weight-bold">{{ total_questions }}</span>
+                    </button>
+                    <button type="button" class="filter-chip" data-filter="correct">
+                        <i class="fas fa-check text-success mr-1"></i> Correct <span class="badge badge-light ml-1 font-weight-bold">{{ total_correct }}</span>
+                    </button>
+                    <button type="button" class="filter-chip" data-filter="wrong">
+                        <i class="fas fa-times text-danger mr-1"></i> Wrong <span class="badge badge-light ml-1 font-weight-bold">{{ total_wrong }}</span>
+                    </button>
+                    <button type="button" class="filter-chip" data-filter="unattempted">
+                        <i class="fas fa-minus text-muted mr-1"></i> Unattempted <span class="badge badge-light ml-1 font-weight-bold">{{ total_unattempted }}</span>
+                    </button>
+                </div>
+                <div>
+                    <select id="sectionFilter" class="custom-select custom-select-sm" style="font-size: 0.84rem; max-width: 200px;">
+                        <option value="all">All Sections ({{ section_stats|length }})</option>
+                        {% for sec_stat in section_stats %}
+                        <option value="sec-{{ sec_stat.section.id }}">{{ sec_stat.section.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- 5. Question Review List: Compact Card Per Question -->
+            <div id="questionsReviewContainer">
+                {% set question_global_index = namespace(val=0) %}
+                {% for sec_stat in section_stats %}
                 {% for item in sec_stat.questions_detail %}
+                {% set question_global_index.val = question_global_index.val + 1 %}
                 {% set q = item.question %}
                 {% set u_choice = item.user_choice %}
                 {% set opt_map = {1: q.option1, 2: q.option2, 3: q.option3, 4: q.option4} %}
-                <div class="card border mb-3 shadow-sm" style="border-radius: 8px;">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-2 px-3 flex-wrap">
-                        <div class="d-flex align-items-center my-1">
-                            <span class="badge badge-secondary mr-2">Q{{ loop.index }}</span>
+                {% set status_class = 'unattempted' if u_choice is none else ('correct' if item.is_correct else 'wrong') %}
+
+                <div class="question-card" data-status="{{ status_class }}" data-section="sec-{{ sec_stat.section.id }}">
+                    <!-- Card Meta Row -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
+                        <div class="d-flex align-items-center flex-wrap my-1">
+                            <span class="badge badge-dark mr-2 font-weight-bold" style="font-size: 0.8rem;">Q{{ question_global_index.val }}</span>
+                            <span class="badge badge-light border text-muted mr-2 small">{{ sec_stat.section.name }}</span>
                             {% if item.marked_for_review %}
-                            <span class="badge badge-warning text-dark mr-2"><i class="fas fa-bookmark mr-1"></i> Review Flagged</span>
+                            <span class="badge badge-warning text-dark mr-2 small" title="Question was marked for review"><i class="fas fa-bookmark mr-1"></i> Review</span>
                             {% endif %}
-                            <span class="badge badge-light border text-muted mr-2"><i class="far fa-clock mr-1"></i> {{ item.time_spent }}s</span>
+                            <span class="text-muted small"><i class="far fa-clock mr-1"></i> {{ item.time_spent }}s</span>
                         </div>
                         <div class="my-1">
                             {% if u_choice is none %}
@@ -212,41 +395,63 @@
                             {% endif %}
                         </div>
                     </div>
-                    <div class="card-body p-3">
-                        <p class="font-weight-bold text-dark mb-3" style="font-size: 1.05rem;">{{ q.text }}</p>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-2">
-                                <div class="small text-muted mb-1 font-weight-bold">Your Response:</div>
-                                <div class="p-2 rounded border {% if u_choice is none %}bg-light text-muted{% elif item.is_correct %}bg-success text-white font-weight-bold{% else %}bg-danger text-white font-weight-bold{% endif %}">
-                                    {% if u_choice %}
-                                    Option {{ u_choice }}: {{ opt_map.get(u_choice) or '—' }}
-                                    {% else %}
-                                    <em>Not Attempted</em>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-2">
-                                <div class="small text-muted mb-1 font-weight-bold">Correct Answer:</div>
-                                <div class="p-2 rounded border bg-light text-success font-weight-bold">
-                                    Option {{ q.correct_option }}: {{ opt_map.get(q.correct_option) or '—' }}
-                                    <i class="fas fa-check-circle float-right mt-1"></i>
-                                </div>
-                            </div>
-                        </div>
-
-                        {% if q.explanation %}
-                        <div class="alert alert-light border small mt-2 mb-0" style="background: #f8fafc; border-left: 4px solid #3b82f6 !important;">
-                            <strong><i class="fas fa-lightbulb text-warning mr-1"></i> Explanation:</strong> {{ q.explanation }}
-                        </div>
-                        {% endif %}
+                    <!-- Question Text -->
+                    <div class="text-dark font-weight-bold mb-3" style="font-size: 0.95rem; line-height: 1.55;">
+                        {{ q.text }}
                     </div>
+
+                    <!-- Your Answer vs Correct Answer -->
+                    <div class="row">
+                        <div class="col-12 col-md-6 mb-2 mb-md-0">
+                            <div class="small font-weight-bold text-muted mb-1">Your Response:</div>
+                            {% if u_choice is none %}
+                            <div class="ans-box ans-box-unattempted">
+                                <em>Not Attempted</em>
+                            </div>
+                            {% elif item.is_correct %}
+                            <div class="ans-box ans-box-correct">
+                                <i class="fas fa-check mr-1"></i> Option {{ u_choice }}: {{ opt_map.get(u_choice) or '—' }}
+                            </div>
+                            {% else %}
+                            <div class="ans-box ans-box-wrong">
+                                <i class="fas fa-times mr-1"></i> Option {{ u_choice }}: {{ opt_map.get(u_choice) or '—' }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="small font-weight-bold text-muted mb-1">Correct Answer:</div>
+                            <div class="ans-box ans-box-correct">
+                                <i class="fas fa-check-circle mr-1"></i> Option {{ q.correct_option }}: {{ opt_map.get(q.correct_option) or '—' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Explanation Toggle (Collapsed by Default) -->
+                    {% if q.explanation %}
+                    <div class="mt-2 pt-2 border-top">
+                        <button class="btn btn-sm btn-link text-primary p-0 font-weight-bold no-print" type="button" data-toggle="collapse" data-target="#exp-{{ q.id }}" aria-expanded="false" style="font-size: 0.82rem; text-decoration: none;">
+                            <i class="fas fa-lightbulb text-warning mr-1"></i> <span class="exp-toggle-text">Show Explanation</span>
+                        </button>
+                        <div class="collapse mt-2" id="exp-{{ q.id }}">
+                            <div class="p-2 rounded small" style="background: #f8fafc; border-left: 3px solid #3b82f6; color: #334155; line-height: 1.5;">
+                                <strong>Explanation:</strong> {{ q.explanation }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
                 {% endfor %}
-            </div>
-            {% endfor %}
+                {% endfor %}
 
-            <div class="text-center mt-5 pt-3 border-top">
+                <div id="noMatchingQuestions" class="text-center py-5" style="display: none;">
+                    <div class="text-muted mb-2"><i class="fas fa-filter fa-2x"></i></div>
+                    <h6 class="text-muted font-weight-bold">No questions match the selected filters.</h6>
+                </div>
+            </div>
+
+            <!-- Footer Actions -->
+            <div class="text-center mt-4 pt-3 border-top no-print">
                 <a href="{{ url_for('mock.test_list') }}" class="btn btn-outline-primary px-4 py-2 font-weight-bold mr-2">
                     <i class="fas fa-list mr-1"></i> Back to Placement Mocks
                 </a>
@@ -261,4 +466,64 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chips = document.querySelectorAll('.filter-chip');
+    const secSelect = document.getElementById('sectionFilter');
+    const qCards = document.querySelectorAll('.question-card');
+    const noMatchEl = document.getElementById('noMatchingQuestions');
+
+    let currentStatus = 'all';
+    let currentSection = 'all';
+
+    function applyFilters() {
+        let visibleCount = 0;
+        qCards.forEach(function(card) {
+            const cardStatus = card.getAttribute('data-status');
+            const cardSection = card.getAttribute('data-section');
+
+            const matchStatus = (currentStatus === 'all') || (cardStatus === currentStatus);
+            const matchSection = (currentSection === 'all') || (cardSection === currentSection);
+
+            if (matchStatus && matchSection) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        if (noMatchEl) {
+            noMatchEl.style.display = (visibleCount === 0) ? 'block' : 'none';
+        }
+    }
+
+    chips.forEach(function(chip) {
+        chip.addEventListener('click', function() {
+            chips.forEach(function(c) { c.classList.remove('active'); });
+            this.classList.add('active');
+            currentStatus = this.getAttribute('data-filter');
+            applyFilters();
+        });
+    });
+
+    if (secSelect) {
+        secSelect.addEventListener('change', function() {
+            currentSection = this.value;
+            applyFilters();
+        });
+    }
+
+    // Toggle button label between Show Explanation and Hide Explanation
+    if (window.jQuery) {
+        $('.collapse').on('show.bs.collapse', function() {
+            const btn = $('[data-target="#' + this.id + '"]');
+            btn.find('.exp-toggle-text').text('Hide Explanation');
+        }).on('hide.bs.collapse', function() {
+            const btn = $('[data-target="#' + this.id + '"]');
+            btn.find('.exp-toggle-text').text('Show Explanation');
+        });
+    }
+});
+</script>
 {% endblock %}

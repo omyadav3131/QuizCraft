@@ -378,8 +378,13 @@ class MockEngineTestCase(unittest.TestCase):
         ]
         for url in admin_urls:
             resp = self.client.get(url)
-            # admin_required redirects non-admins (302)
-            self.assertEqual(resp.status_code, 302, f"Failed for {url}")
+            # admin_required returns 403 Forbidden for authenticated non-admins
+            self.assertEqual(resp.status_code, 403, f"Failed for {url}")
+
+        # Unauthenticated users are redirected to login (302)
+        self.client.get('/auth/logout')
+        unauth_resp = self.client.get('/admin/mock-tests')
+        self.assertEqual(unauth_resp.status_code, 302)
 
     # 12. Question Form & Bulk Add Strictly Validate Correct Option 1-4
     def test_12_question_validation_rejects_invalid_correct_option(self):
@@ -737,8 +742,115 @@ class MockEngineTestCase(unittest.TestCase):
         self.assertEqual(viol_resp.status_code, 200)
         self.assertEqual(viol_resp.get_json()['status'], 'debounced')
 
+    # 22. Phase 1a: Duplicate / Concurrent Final Violation Calls Cannot Exceed 3 Rows
+    def test_22_duplicate_final_violation_calls_cannot_exceed_three_rows(self):
+        self.login_as(self.student1)
+        self.client.post(f'/mock/test/{self.test.id}/start')
+        attempt = MockAttempt.query.filter_by(user_id=self.student1.id, test_id=self.test.id).first()
+
+        # Violation 1
+        r1 = self.client.post(f'/mock/attempt/{attempt.id}/violation', json={'violation_type': 'tab_switch'})
+        self.assertEqual(r1.status_code, 200)
+        v1 = MockViolation.query.filter_by(attempt_id=attempt.id).order_by(MockViolation.timestamp.desc()).first()
+        v1.timestamp = datetime.utcnow() - timedelta(seconds=2)
+        db.session.commit()
+
+        # Violation 2
+        r2 = self.client.post(f'/mock/attempt/{attempt.id}/violation', json={'violation_type': 'window_blur'})
+        self.assertEqual(r2.status_code, 200)
+        v2 = MockViolation.query.filter_by(attempt_id=attempt.id).order_by(MockViolation.timestamp.desc()).first()
+        v2.timestamp = datetime.utcnow() - timedelta(seconds=2)
+        db.session.commit()
+
+        # Violation 3 -> Triggers auto-submit / disqualification
+        r3 = self.client.post(f'/mock/attempt/{attempt.id}/violation', json={'violation_type': 'fullscreen_exit'})
+        self.assertEqual(r3.status_code, 200)
+        self.assertEqual(r3.get_json()['status'], 'disqualified')
+
+        # Fast forward time beyond debounce to simulate duplicate/late call
+        v3 = MockViolation.query.filter_by(attempt_id=attempt.id).order_by(MockViolation.timestamp.desc()).first()
+        v3.timestamp = datetime.utcnow() - timedelta(seconds=2)
+        db.session.commit()
+
+        # Duplicate / sequential 4th violation call must be REJECTED (409)
+        r4 = self.client.post(f'/mock/attempt/{attempt.id}/violation', json={'violation_type': 'tab_switch'})
+        self.assertEqual(r4.status_code, 409)
+        self.assertEqual(r4.get_json()['status'], 'rejected')
+
+        # Critical assertion: Database MUST contain EXACTLY 3 violation rows
+        db.session.refresh(attempt)
+        violations = MockViolation.query.filter_by(attempt_id=attempt.id).all()
+        self.assertEqual(len(violations), 3)
+        self.assertEqual(attempt.violation_count, 3)
+        self.assertEqual(attempt.status, 'disqualified')
+
+        # Result page loads cleanly with capped timeline
+        res_page = self.client.get(f'/mock/attempt/{attempt.id}/result')
+        self.assertEqual(res_page.status_code, 200)
+
+    # 23. Phase 1b: Verify No Question Text/Option/Explanation Contains Doubled Apostrophes
+    def test_23_seed_questions_contain_no_doubled_apostrophes(self):
+        import os
+        from scripts.seed_tcs_mock import TCS_QUESTIONS_DATA
+
+        doubled = []
+        for section, questions in TCS_QUESTIONS_DATA.items():
+            for idx, q in enumerate(questions, 1):
+                for field in ('text', 'option1', 'option2', 'option3', 'option4', 'explanation'):
+                    val = q.get(field, '') or ''
+                    if "''" in val:
+                        doubled.append((section, idx, field, val))
+        self.assertEqual(doubled, [], f"Found doubled apostrophes in question data: {doubled}")
+
+        # Also verify seed_tcs_mock_supabase.sql has no four-apostrophe escaping errors
+        sql_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'seed_tcs_mock_supabase.sql'))
+        if os.path.exists(sql_path):
+            with open(sql_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            self.assertNotIn("''''", content, "Found four consecutive apostrophes in seed_tcs_mock_supabase.sql")
+
+    # 24. Phase 2: Admin Mock Test Toggle Active/Draft Status
+    def test_24_admin_mock_test_toggle_active_status(self):
+        # 1. Student cannot access toggle-active endpoint (HTTP 403 Forbidden)
+        self.login_as(self.student1)
+        student_resp = self.client.post(f'/admin/mock-tests/{self.test.id}/toggle-active')
+        self.assertEqual(student_resp.status_code, 403)
+
+        # 2. Admin toggles from Active (True) to Draft (False)
+        self.login_as(self.admin)
+        self.assertTrue(self.test.is_active)
+        resp1 = self.client.post(f'/admin/mock-tests/{self.test.id}/toggle-active', follow_redirects=True)
+        self.assertEqual(resp1.status_code, 200)
+        self.assertIn('deactivated (moved to Draft)', resp1.get_data(as_text=True))
+
+        db.session.refresh(self.test)
+        self.assertFalse(self.test.is_active)
+
+        # 3. Admin toggles back from Draft (False) to Active (True)
+        resp2 = self.client.post(f'/admin/mock-tests/{self.test.id}/toggle-active', follow_redirects=True)
+        self.assertEqual(resp2.status_code, 200)
+        self.assertIn('activated successfully', resp2.get_data(as_text=True))
+
+        db.session.refresh(self.test)
+        self.assertTrue(self.test.is_active)
+
+    # 25. Security: Admin POST actions reject normal users with HTTP 403 Forbidden
+    def test_25_admin_post_actions_reject_normal_users_with_403(self):
+        self.login_as(self.student1)
+        post_endpoints = [
+            f'/admin/mock-tests/{self.test.id}/toggle-active',
+            f'/admin/mock-tests/{self.test.id}/delete',
+            f'/admin/mock-tests/sections/{self.sec1.id}/delete',
+            f'/admin/mock-attempts/999/reset',
+            '/admin/categories',
+            '/admin/question/new',
+            '/admin/user/new',
+            '/admin/questions/bulk-add',
+        ]
+        for ep in post_endpoints:
+            r = self.client.post(ep, data={})
+            self.assertEqual(r.status_code, 403, f"Non-admin POST to {ep} did not return 403, got {r.status_code}")
+
 
 if __name__ == '__main__':
     unittest.main()
-
-

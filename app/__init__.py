@@ -39,6 +39,18 @@ def create_app(config_class=Config):
     from werkzeug.middleware.proxy_fix import ProxyFix
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
+    # Register IST template filter for UTC -> IST display (UTC+5:30)
+    @app.template_filter('to_ist')
+    def to_ist_filter(dt, fmt='%d %b %Y, %I:%M %p'):
+        if dt is None:
+            return '-'
+        if isinstance(dt, str):
+            return dt
+        from datetime import timezone, timedelta
+        if getattr(dt, 'tzinfo', None) is not None:
+            dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+        ist_dt = dt + timedelta(hours=5, minutes=30)
+        return ist_dt.strftime(fmt)
 
     # Register blueprints
     from app.auth import auth_bp

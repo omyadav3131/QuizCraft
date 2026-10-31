@@ -129,7 +129,7 @@ TCS_QUESTIONS_DATA = {
     ],
     "Verbal Ability": [
         {
-            "text": "Choose the word most nearly SIMILAR in meaning (SYNONYM) to 'TRANSPARENT' as used in the sentence: 'The auditor found that the company''s financial records were completely transparent, leaving no room for suspicion.'",
+            "text": "Choose the word most nearly SIMILAR in meaning (SYNONYM) to 'TRANSPARENT' as used in the sentence: 'The auditor found that the company's financial records were completely transparent, leaving no room for suspicion.'",
             "option1": "Ambiguous",
             "option2": "Clear",
             "option3": "Complex",
@@ -239,13 +239,13 @@ TCS_QUESTIONS_DATA = {
             "explanation": "Each letter is shifted forward by 1 position in the alphabet (+1 shift): T(+1)→U, I(+1)→J, G(+1)→H, E(+1)→F, R(+1)→S. Hence, 'TIGER' becomes 'UJHFS'."
         },
         {
-            "text": "Pointing to a photograph of a boy, Suresh said: 'He is the only son of my father''s only son.' How is the boy related to Suresh?",
+            "text": "Pointing to a photograph of a boy, Suresh said: 'He is the only son of my father's only son.' How is the boy related to Suresh?",
             "option1": "Brother",
             "option2": "Son",
             "option3": "Nephew",
             "option4": "Uncle",
             "correct_option": 2,
-            "explanation": "Suresh is a male speaker. 'My father''s only son' refers to Suresh himself. The statement therefore means: 'He is the only son of Suresh.' Thus, the boy is Suresh''s son."
+            "explanation": "Suresh is a male speaker. 'My father's only son' refers to Suresh himself. The statement therefore means: 'He is the only son of Suresh.' Thus, the boy is Suresh's son."
         },
         {
             "text": "Ankit starts from point P and walks 20 meters North. He turns right and walks 15 meters, then turns right again and walks 20 meters. Finally, he turns left and walks 10 meters to reach point Q. In which direction and at what straight-line distance is point Q from point P?",
@@ -266,7 +266,7 @@ TCS_QUESTIONS_DATA = {
             "explanation": "Roses ⊆ Flowers ⊆ Plants. Transitivity implies Roses ⊆ Plants, so Conclusion 1 definitely follows. Since the set of roses is non-empty, Plants ∩ Roses is non-empty, so Conclusion 2 ('Some plants are roses') also definitely follows. Hence, both follow."
         },
         {
-            "text": "In a row of 40 students facing North, Priya is 15th from the left end. What is Priya''s position from the right end of the row?",
+            "text": "In a row of 40 students facing North, Priya is 15th from the left end. What is Priya's position from the right end of the row?",
             "option1": "24th",
             "option2": "25th",
             "option3": "26th",
