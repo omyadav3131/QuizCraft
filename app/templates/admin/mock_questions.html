@@ -1,20 +1,21 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container-fluid px-3 px-md-4 py-4" style="max-width: 1400px;">
+<div class="container-fluid px-3 px-md-4 py-4 w-100">
     <!-- Breadcrumbs & Header -->
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
         <div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb bg-transparent p-0 mb-1 small">
-                    <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">Admin</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url_for('admin.mock_tests_list') }}">Placement Mocks</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url_for('admin.mock_sections_manage', test_id=test.id) }}">{{ test.title }}</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">{{ section.name }}</li>
+            <nav aria-label="breadcrumb" class="mb-2">
+                <ol class="breadcrumb bg-transparent p-0 m-0 small font-weight-semibold">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}" class="text-primary">Admin</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.mock_tests_list') }}" class="text-primary">Placement Mocks</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.mock_sections_manage', test_id=test.id) }}" class="text-primary">{{ test.title }}</a></li>
+                    <li class="breadcrumb-item active text-muted" aria-current="page">{{ section.name }}</li>
                 </ol>
             </nav>
             <h1 class="h3 font-weight-bold text-dark mb-1">
-                <i class="fas fa-list-ol text-primary mr-2"></i> {{ section.name }} — Questions ({{ section.questions|length }})
+                <i class="fas fa-list-ol text-primary mr-2"></i> {{ section.name }} — Questions ({{
+                section.questions|length }})
             </h1>
             <p class="text-muted mb-0 small">
                 Company: <span class="badge badge-primary">{{ test.company_name }}</span> &bull;
@@ -26,10 +27,12 @@
             <a href="{{ url_for('admin.mock_question_new', section_id=section.id) }}" class="btn btn-primary">
                 <i class="fas fa-plus mr-1"></i> Add Question
             </a>
-            <a href="{{ url_for('admin.mock_questions_bulk_add', section_id=section.id) }}" class="btn btn-success ml-md-2">
+            <a href="{{ url_for('admin.mock_questions_bulk_add', section_id=section.id) }}"
+                class="btn btn-success ml-md-2">
                 <i class="fas fa-upload mr-1"></i> Bulk Add
             </a>
-            <a href="{{ url_for('admin.mock_sections_manage', test_id=test.id) }}" class="btn btn-outline-secondary ml-md-2">
+            <a href="{{ url_for('admin.mock_sections_manage', test_id=test.id) }}"
+                class="btn btn-outline-secondary ml-md-2">
                 <i class="fas fa-arrow-left mr-1"></i> Back to Sections
             </a>
         </div>
@@ -43,14 +46,17 @@
                 <div class="col-md-7 col-lg-8 mb-2 mb-md-0">
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <span class="input-group-text bg-white border-right-0 text-muted"><i class="fas fa-search"></i></span>
+                            <span class="input-group-text bg-white border-right-0 text-muted"><i
+                                    class="fas fa-search"></i></span>
                         </div>
-                        <input type="text" id="mockQuestionSearchInput" class="form-control border-left-0" placeholder="Filter questions by statement or options...">
+                        <input type="text" id="mockQuestionSearchInput" class="form-control border-left-0"
+                            placeholder="Filter questions by statement or options...">
                     </div>
                 </div>
                 <div class="col-md-5 col-lg-4 text-md-right text-muted small">
                     <span class="badge badge-light border px-2 py-1 font-weight-normal" style="font-size: 0.85rem;">
-                        Showing <strong id="visibleQuestionCount">{{ section.questions|length }}</strong> of {{ section.questions|length }} questions
+                        Showing <strong id="visibleQuestionCount">{{ section.questions|length }}</strong> of {{
+                        section.questions|length }} questions
                     </span>
                 </div>
             </div>
@@ -59,20 +65,25 @@
 
     <div class="row" id="questionsContainer">
         {% for q in section.questions %}
-        <div class="col-12 mb-3 mock-question-item" data-search="{{ (q.text ~ ' ' ~ (q.option1 or '') ~ ' ' ~ (q.option2 or '') ~ ' ' ~ (q.option3 or '') ~ ' ' ~ (q.option4 or '') ~ ' ' ~ (q.explanation or ''))|lower }}">
+        <div class="col-12 mb-3 mock-question-item"
+            data-search="{{ (q.text ~ ' ' ~ (q.option1 or '') ~ ' ' ~ (q.option2 or '') ~ ' ' ~ (q.option3 or '') ~ ' ' ~ (q.option4 or '') ~ ' ' ~ (q.explanation or ''))|lower }}">
             <div class="card shadow-sm border-0" style="border-radius: 10px;">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-start flex-wrap">
                         <div style="flex: 1; min-width: 250px;">
                             <span class="badge badge-secondary mr-2 font-weight-bold">Q{{ loop.index }}</span>
-                            <span class="badge badge-info mr-2">{{ q.marks }} mark{% if q.marks != 1 %}s{% endif %}</span>
+                            <span class="badge badge-info mr-2">{{ q.marks }} mark{% if q.marks != 1 %}s{% endif
+                                %}</span>
                             <h5 class="d-inline font-weight-bold text-dark">{{ q.text }}</h5>
                         </div>
                         <div class="mt-2 mt-sm-0 d-flex align-items-center">
-                            <a href="{{ url_for('admin.mock_question_edit', section_id=section.id, question_id=q.id) }}" class="btn btn-sm btn-outline-primary mr-1" title="Edit Question">
+                            <a href="{{ url_for('admin.mock_question_edit', section_id=section.id, question_id=q.id) }}"
+                                class="btn btn-sm btn-outline-primary mr-1" title="Edit Question">
                                 <i class="fas fa-edit mr-1"></i> Edit
                             </a>
-                            <form action="{{ url_for('admin.mock_question_delete', section_id=section.id, question_id=q.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this question?');">
+                            <form
+                                action="{{ url_for('admin.mock_question_delete', section_id=section.id, question_id=q.id) }}"
+                                method="POST" class="d-inline" onsubmit="return confirm('Delete this question?');">
                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Question">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
@@ -82,30 +93,38 @@
 
                     <div class="row mt-3">
                         <div class="col-md-6 mb-2">
-                            <div class="p-2 border rounded {% if q.correct_option == 1 %}border-success bg-light text-success font-weight-bold{% endif %}">
+                            <div
+                                class="p-2 border rounded {% if q.correct_option == 1 %}border-success bg-light text-success font-weight-bold{% endif %}">
                                 <strong>A)</strong> {{ q.option1 or '—' }}
-                                {% if q.correct_option == 1 %} <i class="fas fa-check-circle float-right mt-1"></i>{% endif %}
+                                {% if q.correct_option == 1 %} <i class="fas fa-check-circle float-right mt-1"></i>{%
+                                endif %}
                             </div>
                         </div>
                         <div class="col-md-6 mb-2">
-                            <div class="p-2 border rounded {% if q.correct_option == 2 %}border-success bg-light text-success font-weight-bold{% endif %}">
+                            <div
+                                class="p-2 border rounded {% if q.correct_option == 2 %}border-success bg-light text-success font-weight-bold{% endif %}">
                                 <strong>B)</strong> {{ q.option2 or '—' }}
-                                {% if q.correct_option == 2 %} <i class="fas fa-check-circle float-right mt-1"></i>{% endif %}
+                                {% if q.correct_option == 2 %} <i class="fas fa-check-circle float-right mt-1"></i>{%
+                                endif %}
                             </div>
                         </div>
                         {% if q.option3 %}
                         <div class="col-md-6 mb-2">
-                            <div class="p-2 border rounded {% if q.correct_option == 3 %}border-success bg-light text-success font-weight-bold{% endif %}">
+                            <div
+                                class="p-2 border rounded {% if q.correct_option == 3 %}border-success bg-light text-success font-weight-bold{% endif %}">
                                 <strong>C)</strong> {{ q.option3 }}
-                                {% if q.correct_option == 3 %} <i class="fas fa-check-circle float-right mt-1"></i>{% endif %}
+                                {% if q.correct_option == 3 %} <i class="fas fa-check-circle float-right mt-1"></i>{%
+                                endif %}
                             </div>
                         </div>
                         {% endif %}
                         {% if q.option4 %}
                         <div class="col-md-6 mb-2">
-                            <div class="p-2 border rounded {% if q.correct_option == 4 %}border-success bg-light text-success font-weight-bold{% endif %}">
+                            <div
+                                class="p-2 border rounded {% if q.correct_option == 4 %}border-success bg-light text-success font-weight-bold{% endif %}">
                                 <strong>D)</strong> {{ q.option4 }}
-                                {% if q.correct_option == 4 %} <i class="fas fa-check-circle float-right mt-1"></i>{% endif %}
+                                {% if q.correct_option == 4 %} <i class="fas fa-check-circle float-right mt-1"></i>{%
+                                endif %}
                             </div>
                         </div>
                         {% endif %}
@@ -113,7 +132,8 @@
 
                     {% if q.explanation %}
                     <div class="alert alert-light border small mt-2 mb-0 text-muted">
-                        <strong><i class="fas fa-lightbulb text-warning mr-1"></i> Explanation:</strong> {{ q.explanation }}
+                        <strong><i class="fas fa-lightbulb text-warning mr-1"></i> Explanation:</strong> {{
+                        q.explanation }}
                     </div>
                     {% endif %}
                 </div>
@@ -134,10 +154,12 @@
         <h4 class="text-dark font-weight-bold">No Questions in This Section</h4>
         <p class="text-muted mb-4">Add questions one-by-one or use the bulk importer.</p>
         <div>
-            <a href="{{ url_for('admin.mock_question_new', section_id=section.id) }}" class="btn btn-primary px-3 py-2 mr-2">
+            <a href="{{ url_for('admin.mock_question_new', section_id=section.id) }}"
+                class="btn btn-primary px-3 py-2 mr-2">
                 <i class="fas fa-plus mr-1"></i> Add Single Question
             </a>
-            <a href="{{ url_for('admin.mock_questions_bulk_add', section_id=section.id) }}" class="btn btn-success px-3 py-2">
+            <a href="{{ url_for('admin.mock_questions_bulk_add', section_id=section.id) }}"
+                class="btn btn-success px-3 py-2">
                 <i class="fas fa-upload mr-1"></i> Bulk Add Questions
             </a>
         </div>
@@ -146,38 +168,38 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('mockQuestionSearchInput');
-    if (!searchInput) return;
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('mockQuestionSearchInput');
+        if (!searchInput) return;
 
-    const items = document.querySelectorAll('.mock-question-item');
-    const countEl = document.getElementById('visibleQuestionCount');
-    const noMatch = document.getElementById('noQuestionMatches');
+        const items = document.querySelectorAll('.mock-question-item');
+        const countEl = document.getElementById('visibleQuestionCount');
+        const noMatch = document.getElementById('noQuestionMatches');
 
-    searchInput.addEventListener('input', function() {
-        const q = this.value.trim().toLowerCase();
-        let visible = 0;
+        searchInput.addEventListener('input', function () {
+            const q = this.value.trim().toLowerCase();
+            let visible = 0;
 
-        items.forEach(item => {
-            const text = item.getAttribute('data-search') || '';
-            if (text.includes(q)) {
-                item.style.display = '';
-                visible++;
-            } else {
-                item.style.display = 'none';
+            items.forEach(item => {
+                const text = item.getAttribute('data-search') || '';
+                if (text.includes(q)) {
+                    item.style.display = '';
+                    visible++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            if (countEl) countEl.textContent = visible;
+
+            if (noMatch) {
+                if (visible === 0 && q.length > 0) {
+                    noMatch.classList.remove('d-none');
+                } else {
+                    noMatch.classList.add('d-none');
+                }
             }
         });
-
-        if (countEl) countEl.textContent = visible;
-
-        if (noMatch) {
-            if (visible === 0 && q.length > 0) {
-                noMatch.classList.remove('d-none');
-            } else {
-                noMatch.classList.add('d-none');
-            }
-        }
     });
-});
 </script>
 {% endblock %}

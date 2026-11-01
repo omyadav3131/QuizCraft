@@ -416,15 +416,19 @@ nav::before {
     padding: 2rem 1rem;
 }
 
+.quiz-container > .card {
+    max-width: 700px;
+}
+
 .card {
     border: none !important;
     border-radius: 10px !important;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08) !important;
-    max-width: 700px;
+    max-width: 100% !important;
     width: 100%;
 }
 
-.card-header {
+.quiz-container .card-header {
     background: linear-gradient(135deg, #0d6efd, #0dcaf0) !important;
     color: white !important;
     border: none !important;
@@ -667,15 +671,14 @@ nav::before {
 .admin-container {
     min-height: calc(100vh - 70px);
     background-color: #f4f6f9;
-    padding: 2rem 1rem;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
+    padding: 1.5rem 1rem;
+    width: 100%;
+    display: block;
 }
 
 .admin-wrapper {
     width: 100%;
-    max-width: 1200px;
+    max-width: 100% !important;
 }
 
 .admin-header {
@@ -703,6 +706,14 @@ nav::before {
     border-radius: 10px;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
     padding: 1.5rem;
+}
+
+.card > .table-responsive,
+.card-body > .table-responsive {
+    background: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
 }
 
 .table {
